@@ -2,10 +2,14 @@ package configuration
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"encoding/json"
+	"net"
+	"strings"
+	"errors"
+	"strconv"
 )
 
 type ConfigType struct {
@@ -13,21 +17,40 @@ type ConfigType struct {
 	Port			string	`json:"port"`
 }
 
-func (config *ConfigType) Save() {
+func CheckIPAddress(ip, port string) (string, error) {
+	ipAddr := strings.Join([]string{ip, port}, ":")
+	if net.ParseIP(ip) == nil {
+		return ipAddr, errors.New(strings.Join([]string{"Error:", ip, "is invalid IP address"}, " "))
+	}
+	p, err := strconv.Atoi(port);
+	if err != nil {
+		return ipAddr, errors.New(strings.Join([]string{"Error:", port, "is invalid port number"}, " "))
+	}
+	if (p <= 1024) {
+		return ipAddr, errors.New(strings.Join([]string{"Error:", "Port", port, "must greater than", "1024"}, " "))
+	}
+	return ipAddr, nil 
+}
+
+func (config *ConfigType) Save() error {
+	if _, err := CheckIPAddress(config.IpAddress, config.Port); err != nil {
+		return err
+	}
 	data, err := json.Marshal(config);
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	f, err := os.OpenFile(filepath.FromSlash(fmt.Sprintf("%s%s%s", RootPath, "/", "config.json")), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	if _, err := f.Write(data); err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	if err := f.Close(); err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
+	return nil
 }
 
 var (
@@ -38,25 +61,24 @@ var (
 func init() {
 	ex, err := os.Executable()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	RootPath = filepath.Dir(ex)
 	configPath := filepath.FromSlash(fmt.Sprintf("%s%s%s", RootPath, "/", "config.json"))
-	log.Print(configPath)
+	log.Info("Config Path: " + configPath)
 	if data, err := os.ReadFile(configPath); err != nil {
-		log.Print(err)
+		log.Error(err)
 		json := []byte("{}")
 		if err := os.WriteFile(configPath, json, 0644); err != nil {
-			panic(err)
+			log.Panic(err)
 		} else {
 			if _, err := os.ReadFile(configPath); err != nil {
-				panic(err)
+				log.Panic(err)
 			}
 		}
 	} else {
 		if err := json.Unmarshal(data, &Config); err != nil {
-			panic(err)
+			log.Panic(err)
 		}
 	}
-	log.Print(Config.IpAddress, ":", Config.Port)
 }
