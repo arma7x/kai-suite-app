@@ -1,10 +1,13 @@
 package websocketserver
 
-import ( 
+import (
+	"io"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"github.com/gorilla/websocket"
 	"context"
+	"kai-suite/types/client"
+	"kai-suite/types/message"
 )
 
 var (
@@ -17,30 +20,42 @@ var (
 	}
 	Status bool = false
 	Server http.Server
+	Client *client.Client
 )
 
-var client *websocket.Conn
-
-func connect(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
+func handler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Error("upgrade:", err)
 		return
 	}
-	client = c
-	defer client.Close()
+	Client = client.CreateClient("", "", false, conn);
+	defer Client.GetConn().Close()
 	for {
-		mt, message, err := c.ReadMessage()
+		mt, msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Error("read:", err)
+			if websocket.IsCloseError(err, websocket.CloseGoingAway) || err == io.EOF {
+				log.Error(err)
+				break
+			}
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Error(err)
+				break
+			}
+			log.Error(err)
 			break
 		}
-		log.Info("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Error("write:", err)
-			break
+		switch mt {
+			case websocket.TextMessage:
+				wsmsg := message.WebsocketMessage{}
+				wsmsg.UnmarshalJSON(msg);
+				log.Info("recv: ", wsmsg)
 		}
+		//err = conn.WriteMessage(mt, msg)
+		//if err != nil {
+			//log.Error("write:", err)
+			//break
+		//}
 	}
 }
 
@@ -49,7 +64,7 @@ func Start(addr string, fn func(bool, error)) {
 	fn(Status, nil)
 	m := http.NewServeMux()
 	Server = http.Server{Addr: addr, Handler: m}
-	m.HandleFunc("/", connect)
+	m.HandleFunc("/", handler)
 	if err := Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		Status = false
 		fn(Status, err)
@@ -60,7 +75,11 @@ func Stop(fn func(bool, error)) {
 	if err := Server.Shutdown(context.Background()); err != nil {
 		fn(Status, err)
 	} else {
-		client.Close()
+		if Client != nil {
+			Client.GetConn().WriteMessage(websocket.CloseMessage, []byte{})
+			Client.GetConn().Close()
+			Client = nil
+		}
 		Status = false
 		fn(Status, nil)
 	}
