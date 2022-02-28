@@ -1,6 +1,7 @@
 package websocketserver
 
 import (
+	"fmt"
 	"io"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -24,12 +25,18 @@ var (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Upgrade") != "websocket" && r.Header.Get("Connection") != "Upgrade" {
+		fmt.Fprintf(w, "PC Suite for KaiOS device")
+		return
+	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Error("upgrade:", err)
 		return
 	}
+	// id as time
 	Client = client.CreateClient("", "", false, conn);
+	log.Info("upgrade success")
 	defer Client.GetConn().Close()
 	for {
 		mt, msg, err := conn.ReadMessage()
