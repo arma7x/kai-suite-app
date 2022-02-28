@@ -8,10 +8,11 @@ type Kind int64
 
 // TODO
 const (
-	SMS						Kind = iota
-	SMS_SYNC 			// bulk
+	VERIFY				Kind = iota
+	SMS
+	SMS_SYNC // bulk
 	CONTACT
-	CONTACT_SYNC	// bulk
+	CONTACT_SYNC // bulk
 	// CALENDAR
 	// CALENDAR_SYNC // bulk
 	// CALL ??
