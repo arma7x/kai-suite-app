@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"strconv"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -11,25 +12,41 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var port string = "4444"
 var buttonText = make(chan string)
 var statusLabel = widget.NewLabel("KaiOS PC Suite")
-var ipPortLabel = widget.NewLabel("Ip Address: nil")
+var ipPortLabel = widget.NewLabel("Ip Address: " + getLocalIP() + ":" + port)
 var button = widget.NewButton("Connect", func() {
 	if websocketserver.Status == false {
-		addr, err := configuration.CheckIPAddress(configuration.Config.IpAddress, configuration.Config.Port);
+		addr, err := configuration.CheckIPAddress(getLocalIP(), port);
 		if err != nil {
 			log.Warn(err.Error())
 			return
 		}
 		log.Info(addr)
 		ipPortLabel.SetText("Ip Address: " + addr)
-		go websocketserver.Start(addr, onChange)
+		go websocketserver.Start(addr, onStatusChange)
 	} else {
-		websocketserver.Stop(onChange)
+		websocketserver.Stop(onStatusChange)
 	}
 })
 
-func onChange(status bool, err error) {
+func getLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
+}
+
+func onStatusChange(status bool, err error) {
 	if (status) {
 		log.Info("Connected")
 		statusLabel.SetText("Connected")
