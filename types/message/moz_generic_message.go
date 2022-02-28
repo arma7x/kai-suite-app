@@ -125,14 +125,14 @@ func (m MozGenericMessage) MarshalJSON() ([]byte, error) {
 }
 
 func (m MozGenericMessage) UnmarshalJSON(data []byte) (MozGenericMessageInterface, error) {
-	var public *publicMozGenericMessage
-	if err := json.Unmarshal(data, &public); err != nil {
+	var generic *publicMozGenericMessage
+	if err := json.Unmarshal(data, &generic); err != nil {
 		return m, err
 	}
-	if (public.MozType == "sms") {
+	if (generic.MozType == "sms") {
 		sms := &MozSmsMessage{}
 		return sms.UnmarshalJSON(data)
-	} else if (public.MozType == "mms") {
+	} else if (generic.MozType == "mms") {
 		mms := &MozMmsMessage{}
 		return mms.UnmarshalJSON(data)
 	}

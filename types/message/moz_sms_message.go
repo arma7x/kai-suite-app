@@ -73,20 +73,20 @@ func (m MozSmsMessage) MarshalJSON() ([]byte, error) {
 }
 
 func (m MozSmsMessage) UnmarshalJSON(data []byte) (MozGenericMessageInterface, error) {
-	var public *publicMozSmsMessage
-	if err := json.Unmarshal(data, &public); err != nil {
+	var cast *publicMozSmsMessage
+	if err := json.Unmarshal(data, &cast); err != nil {
 		return m, err
 	}
-	m.setType(public.MozType)
-	m.setId(public.Id)
-	m.setThreadId(public.ThreadId)
-	m.setBody(public.Body)
-	m.setDelivery(public.Delivery)
-	m.setDeliveryStatus(public.DeliveryStatus)
-	m.setRead(public.Read)
-	m.setReceiver(public.Receiver)
-	m.setSender(public.Sender)
-	m.setTimestamp(public.Timestamp)
-	m.setMessageClass(public.MessageClass)
+	m.setType(cast.MozType)
+	m.setId(cast.Id)
+	m.setThreadId(cast.ThreadId)
+	m.setBody(cast.Body)
+	m.setDelivery(cast.Delivery)
+	m.setDeliveryStatus(cast.DeliveryStatus)
+	m.setRead(cast.Read)
+	m.setReceiver(cast.Receiver)
+	m.setSender(cast.Sender)
+	m.setTimestamp(cast.Timestamp)
+	m.setMessageClass(cast.MessageClass)
 	return m, nil
 }
