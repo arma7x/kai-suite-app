@@ -54,7 +54,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 		switch mt {
 			case websocket.TextMessage:
-				wsmsg := message.WebsocketMessage{}
+				wsmsg := message.ReadMessage{}
 				wsmsg.UnmarshalJSON(msg);
 				log.Info("recv: ", wsmsg)
 		}
