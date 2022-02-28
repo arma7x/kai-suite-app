@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 )
 
-type Kind int64
+type Kind int
 
 // TODO
 const (
-	VERIFY				Kind = iota
-	SMS
+	VERIFY				  Kind = iota
+	DELETE_MESSAGE
 	SMS_SYNC // bulk
 	CONTACT
 	CONTACT_SYNC // bulk
