@@ -10,6 +10,7 @@ import (
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
 	"kai-suite/utils/configuration"
+	"kai-suite/utils/google"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -135,6 +136,7 @@ func renderGAContent() {
 }
 
 func main() {
+	google.GetAuth();
 	go func() {
 		for {
 			select {
