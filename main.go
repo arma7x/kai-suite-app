@@ -112,6 +112,17 @@ func renderContactsContent() {
 	)
 }
 
+func renderCalendarsContent() {
+	for _, l := range content.Objects {
+		content.Remove(l);
+	}
+	content.Add(
+		container.NewVBox(
+			widget.NewLabel("Calendars"),
+		),
+	)
+}
+
 func renderGAContent() {
 	for _, l := range content.Objects {
 		content.Remove(l);
@@ -146,6 +157,10 @@ func main() {
 		}),
 		widget.NewButton("Contacts", func() {
 			renderContactsContent()
+			content.Refresh()
+		}),
+		widget.NewButton("Calendars", func() {
+			renderCalendarsContent()
 			content.Refresh()
 		}),
 		widget.NewButton("Google Account", func() {
