@@ -3,6 +3,7 @@ package main
 import (
 	"net"
 	"strconv"
+	"net/http"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -136,9 +137,7 @@ func renderGAContent() {
 }
 
 func main() {
-	client := google.GetAuth()
-	google.People(client)
-	google.Calendar(client)
+	var googleAccount *http.Client
 	go func() {
 		for {
 			select {
@@ -160,14 +159,21 @@ func main() {
 			content.Refresh()
 		}),
 		widget.NewButton("Contacts", func() {
+			if googleAccount != nil {
+				google.People(googleAccount)
+			}
 			renderContactsContent()
 			content.Refresh()
 		}),
 		widget.NewButton("Calendars", func() {
+			if googleAccount != nil {
+				google.Calendar(googleAccount)
+			}
 			renderCalendarsContent()
 			content.Refresh()
 		}),
 		widget.NewButton("Google Account", func() {
+			googleAccount = google.GetAuth()
 			renderGAContent()
 			content.Refresh()
 		}),

@@ -18,19 +18,30 @@ func People(client *http.Client) {
 		log.Fatalf("Unable to create people Client %v", err)
 	}
 
-	r, err := srv.People.Connections.List("people/me").PageSize(10).
-		PersonFields("names,emailAddresses").Do()
-	if err != nil {
-		log.Fatalf("Unable to retrieve people. %v", err)
-	}
-	if len(r.Connections) > 0 {
-		fmt.Print("List 10 connection names:\n")
-		for _, c := range r.Connections {
-			names := c.Names
-			if len(names) > 0 {
-				name := names[0].DisplayName
-				fmt.Printf("%s\n", name)
+	run := true;
+	fields := "addresses,birthdays,genders,nicknames,phoneNumbers,names,emailAddresses"
+	var connections []*people.Person
+	var r *people.ListConnectionsResponse
+	var rErr error
+	r, rErr = srv.People.Connections.List("people/me").PageSize(20).PersonFields(fields).Do()
+	for (run) {
+		if rErr != nil {
+			log.Fatalf("Unable to retrieve people. %v", err)
+			run = false
+		} else {
+			fmt.Print(r.NextPageToken, "\n")
+			connections = append(connections, r.Connections...)
+			if r.NextPageToken == "" {
+				run = false
+			} else {
+				r, rErr = srv.People.Connections.List("people/me").PageSize(20).PersonFields(fields).PageToken(r.NextPageToken).Do()
 			}
+		}
+	}
+	if len(connections) > 0 {
+		fmt.Print("List 10 connection names:\n")
+		for i, c := range connections {
+			fmt.Print(i, " ", c.Names[0].DisplayName, "\n")
 		}
 	} else {
 		fmt.Print("No connections found.")
