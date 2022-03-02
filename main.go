@@ -136,7 +136,9 @@ func renderGAContent() {
 }
 
 func main() {
-	google.GetAuth();
+	client := google.GetAuth()
+	google.People(client)
+	google.Calendar(client)
 	go func() {
 		for {
 			select {
