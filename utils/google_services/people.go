@@ -19,7 +19,7 @@ func People(client *http.Client) {
 	}
 
 	run := true;
-	fields := "addresses,birthdays,genders,nicknames,phoneNumbers,names,emailAddresses,metadata"
+	fields := "names,phoneNumbers,emailAddresses,addresses,birthdays,metadata"
 	var connections []*people.Person // type Person struct
 	var r *people.ListConnectionsResponse
 	var rErr error
