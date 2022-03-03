@@ -25,7 +25,7 @@ func Calendar(client *http.Client) {
 		log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
 	}
 	fmt.Println("Upcoming events:")
-	if len(events.Items) == 0 {
+	if len(events.Items) == 0 { // type Event struct
 		fmt.Println("No upcoming events found.")
 	} else {
 		for _, item := range events.Items {

@@ -20,7 +20,7 @@ func People(client *http.Client) {
 
 	run := true;
 	fields := "addresses,birthdays,genders,nicknames,phoneNumbers,names,emailAddresses"
-	var connections []*people.Person
+	var connections []*people.Person // type Person struct
 	var r *people.ListConnectionsResponse
 	var rErr error
 	r, rErr = srv.People.Connections.List("people/me").PageSize(20).PersonFields(fields).Do()
