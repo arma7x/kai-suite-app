@@ -8,9 +8,9 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
-	"kai-suite/utils/configuration"
 	"kai-suite/utils/google"
 	log "github.com/sirupsen/logrus"
 )
@@ -22,7 +22,7 @@ var statusLabel = widget.NewLabel("Disconnected")
 var ipPortLabel = widget.NewLabel("Ip Address: " + getLocalIP() + ":" + port)
 var buttonConnect = widget.NewButton("Connect", func() {
 	if websocketserver.Status == false {
-		addr, err := configuration.CheckIPAddress(getLocalIP(), port);
+		addr, err := global.CheckIPAddress(getLocalIP(), port);
 		if err != nil {
 			log.Warn(err.Error())
 			return
@@ -63,20 +63,6 @@ func onStatusChange(status bool, err error) {
 	if err != nil {
 		log.Warn(strconv.FormatBool(status), err.Error())
 	}
-}
-
-func saveIpPort(addr, port string) error {
-	if _, err := configuration.CheckIPAddress(addr, port); err != nil {
-		log.Warn(err.Error())
-		return err
-	}
-	configuration.Config.IpAddress = addr
-	configuration.Config.Port = port
-	if err := configuration.Config.Save(); err != nil {
-		log.Warn(err.Error())
-		return err
-	}
-	return nil
 }
 
 func renderConnectContent() {
@@ -146,7 +132,7 @@ func main() {
 			}
 		}
 	}()
-	log.Info("main", configuration.RootPath)
+	log.Info("main", global.ROOT_PATH)
 	app := app.New()
 	window := app.NewWindow("Kai Suite")
 	var menu *fyne.Container = container.NewVBox(

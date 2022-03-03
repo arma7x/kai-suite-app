@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"kai-suite/utils/global"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
@@ -20,7 +21,7 @@ func getClient(config *oauth2.Config) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first
 	// time.
-	tokFile := "token.json"
+	tokFile := global.ResolvePath("token.json")
 	tok, err := tokenFromFile(tokFile)
 	if err != nil {
 		tok = getTokenFromWeb(config)
@@ -70,7 +71,7 @@ func saveToken(path string, token *oauth2.Token) {
 }
 
 func GetAuth() *http.Client {
-	b, err := ioutil.ReadFile("credentials.json")
+	b, err := ioutil.ReadFile(global.ResolvePath("credentials.json"))
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
