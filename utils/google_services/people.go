@@ -10,7 +10,7 @@ import (
 	"google.golang.org/api/people/v1"
 )
 
-func People(client *http.Client) {
+func GetContacts(client *http.Client) {
 	ctx := context.Background()
 
 	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
@@ -23,7 +23,7 @@ func People(client *http.Client) {
 	var connections []*people.Person // type Person struct
 	var r *people.ListConnectionsResponse
 	var rErr error
-	r, rErr = srv.People.Connections.List("people/me").PageSize(20).PersonFields(fields).Do()
+	r, rErr = srv.People.Connections.List("people/me").PageSize(1000).PersonFields(fields).Do()
 	for (run) {
 		if rErr != nil {
 			log.Fatalf("Unable to retrieve people. %v", err)
@@ -49,3 +49,11 @@ func People(client *http.Client) {
 		fmt.Print("No connections found.")
 	}
 }
+
+func CreateContacts() {}
+
+func UpdateContacts() {}
+
+func DeleteContacts() {}
+
+func SearchContacts() {}

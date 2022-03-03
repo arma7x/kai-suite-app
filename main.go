@@ -151,7 +151,7 @@ func main() {
 		}),
 		widget.NewButton("Contacts", func() {
 			if google_services.AuthInstance != nil {
-				google_services.People(google_services.AuthInstance)
+				google_services.GetContacts(google_services.AuthInstance)
 			}
 			renderContactsContent()
 			content.Refresh()
