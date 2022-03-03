@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"fyne.io/fyne/v2/dialog"
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
@@ -132,7 +133,7 @@ func main() {
 	}()
 	log.Info("main", global.ROOT_PATH)
 	app := app.New()
-	window := app.NewWindow("Kai Suite")
+	global.WINDOW = app.NewWindow("Kai Suite")
 	var menu *fyne.Container = container.NewVBox(
 		widget.NewButton("Connection", func() {
 			renderConnectContent()
@@ -158,6 +159,26 @@ func main() {
 		}),
 		widget.NewButton("Google Account", func() {
 			google_services.AuthInstance = google_services.GetAuth()
+			if google_services.AuthInstance == nil {
+				if cfg, err := google_services.GetConfig(); err == nil {
+					if err := google_services.GetTokenFromWeb(cfg); err == nil {
+						var authCode string
+						d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
+							authCode = str
+						}, global.WINDOW)
+						d.SetOnClosed(func() {
+							if _, err := google_services.SaveToken(cfg, global.ResolvePath("token.json"), authCode); err == nil {
+								google_services.AuthInstance = google_services.GetAuth()
+							} else {
+								log.Warn(err)
+							}
+						})
+						d.Show()
+					} else {
+						log.Warn(err)
+					}
+				}
+			}
 			renderGAContent()
 			content.Refresh()
 		}),
@@ -167,13 +188,13 @@ func main() {
 	menu.Resize(size)
 	content = container.NewMax()
 	renderConnectContent()
-	window.SetContent(container.NewVBox(
+	global.WINDOW.SetContent(container.NewVBox(
 		container.NewHBox(widget.NewLabel("KaiOS PC Suite")),
 		container.NewHBox(
 			menu,
 			content,
 		),
 	))
-	window.ShowAndRun()
+	global.WINDOW.ShowAndRun()
 }
 

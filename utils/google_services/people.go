@@ -41,7 +41,9 @@ func People(client *http.Client) {
 	if len(connections) > 0 {
 		fmt.Print("List 10 connection names:\n")
 		for i, c := range connections {
-			fmt.Print(i, " ", c.Metadata.Sources[0].UpdateTime, " ", c.Names[0].DisplayName, "\n")
+			// fmt.Print(i, " ", c.Metadata.Sources[0].UpdateTime, " ", c.Names[0].DisplayName, "\n\n")
+			b, _ := c.MarshalJSON();
+			fmt.Print(i, string(b), "\n\n")
 		}
 	} else {
 		fmt.Print("No connections found.")

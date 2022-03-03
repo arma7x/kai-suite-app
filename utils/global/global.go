@@ -9,10 +9,12 @@ import (
 	"strings"
 	"errors"
 	"strconv"
+	"fyne.io/fyne/v2"
 )
 
 var (
 	ROOT_PATH string
+	WINDOW fyne.Window
 )
 
 func init() {
