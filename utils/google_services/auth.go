@@ -1,4 +1,4 @@
-package google
+package google_services
 
 import (
 	"context"
@@ -15,6 +15,18 @@ import (
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/people/v1"
 )
+
+var(
+	AuthInstance *http.Client
+)
+
+func init() {
+	_, err_cre := ioutil.ReadFile(global.ResolvePath("credentials.json"))
+	_, err_tok := ioutil.ReadFile(global.ResolvePath("token.json"))
+	if err_cre == nil && err_tok == nil {
+		AuthInstance = GetAuth()
+	}
+}
 
 // Retrieve a token, saves the token, then returns the generated client.
 func getClient(config *oauth2.Config) *http.Client {

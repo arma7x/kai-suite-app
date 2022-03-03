@@ -3,7 +3,6 @@ package main
 import (
 	"net"
 	"strconv"
-	"net/http"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -11,7 +10,7 @@ import (
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
-	"kai-suite/utils/google"
+	"kai-suite/utils/google_services"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -123,7 +122,6 @@ func renderGAContent() {
 }
 
 func main() {
-	var googleAccount *http.Client
 	go func() {
 		for {
 			select {
@@ -145,21 +143,21 @@ func main() {
 			content.Refresh()
 		}),
 		widget.NewButton("Contacts", func() {
-			if googleAccount != nil {
-				google.People(googleAccount)
+			if google_services.AuthInstance != nil {
+				google_services.People(google_services.AuthInstance)
 			}
 			renderContactsContent()
 			content.Refresh()
 		}),
 		widget.NewButton("Calendars", func() {
-			if googleAccount != nil {
-				google.Calendar(googleAccount)
+			if google_services.AuthInstance != nil {
+				google_services.Calendar(google_services.AuthInstance)
 			}
 			renderCalendarsContent()
 			content.Refresh()
 		}),
 		widget.NewButton("Google Account", func() {
-			googleAccount = google.GetAuth()
+			google_services.AuthInstance = google_services.GetAuth()
 			renderGAContent()
 			content.Refresh()
 		}),
