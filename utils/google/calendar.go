@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
+	"google.golang.org/api/calendar/v3"
 )
 
 func Calendar(client *http.Client) {

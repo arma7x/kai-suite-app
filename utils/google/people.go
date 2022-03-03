@@ -19,7 +19,7 @@ func People(client *http.Client) {
 	}
 
 	run := true;
-	fields := "addresses,birthdays,genders,nicknames,phoneNumbers,names,emailAddresses"
+	fields := "addresses,birthdays,genders,nicknames,phoneNumbers,names,emailAddresses,metadata"
 	var connections []*people.Person // type Person struct
 	var r *people.ListConnectionsResponse
 	var rErr error
@@ -41,7 +41,7 @@ func People(client *http.Client) {
 	if len(connections) > 0 {
 		fmt.Print("List 10 connection names:\n")
 		for i, c := range connections {
-			fmt.Print(i, " ", c.Names[0].DisplayName, "\n")
+			fmt.Print(i, " ", c.Metadata.Sources[0].UpdateTime, " ", c.Names[0].DisplayName, "\n")
 		}
 	} else {
 		fmt.Print("No connections found.")
