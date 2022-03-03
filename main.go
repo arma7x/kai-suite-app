@@ -13,6 +13,7 @@ import (
 	"kai-suite/utils/websocketserver"
 	"kai-suite/utils/google_services"
 	log "github.com/sirupsen/logrus"
+	"github.com/tidwall/buntdb"
 )
 
 var port string = "4444"
@@ -123,6 +124,11 @@ func renderGAContent() {
 }
 
 func main() {
+	db, err := buntdb.Open(global.ResolvePath("database.db"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 	go func() {
 		for {
 			select {
