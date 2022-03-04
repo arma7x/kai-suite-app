@@ -10,19 +10,27 @@ import (
 	"errors"
 	"strconv"
 	"fyne.io/fyne/v2"
+	"github.com/tidwall/buntdb"
 )
 
 var (
 	ROOT_PATH string
 	WINDOW fyne.Window
+	DB *buntdb.DB
 )
 
 func init() {
 	ex, err := os.Executable()
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 	ROOT_PATH = filepath.Dir(ex)
+	var errdB error
+	DB, errdB = buntdb.Open(ResolvePath("database.db"))
+	if errdB != nil {
+		log.Fatal(errdB)
+	}
+	DB.Shrink()
 }
 
 func ResolvePath(dirs... string) string {

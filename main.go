@@ -3,17 +3,23 @@ package main
 import (
 	"net"
 	"strconv"
+	"strings"
+	"errors"
+	_ "time"
+	"encoding/json"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/theme"
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
 	"kai-suite/utils/google_services"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/buntdb"
+	"google.golang.org/api/people/v1"
 )
 
 var port string = "4444"
@@ -118,17 +124,100 @@ func renderGAContent() {
 	}
 	content.Add(
 		container.NewVBox(
-			widget.NewLabel("Google Account"),
+			widget.NewButton("Google Account", func() {
+				google_services.AuthInstance = google_services.GetAuth()
+				if google_services.AuthInstance == nil {
+					if cfg, err := google_services.GetConfig(); err == nil {
+						if err := google_services.GetTokenFromWeb(cfg); err == nil {
+							var authCode string
+							d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
+								authCode = str
+							}, global.WINDOW)
+							d.SetOnClosed(func() {
+								if _, err := google_services.SaveToken(cfg, global.ResolvePath("token.json"), authCode); err == nil {
+									google_services.AuthInstance = google_services.GetAuth()
+								} else {
+									log.Warn(err)
+								}
+							})
+							d.Show()
+						} else {
+							log.Warn(err)
+						}
+					}
+				}
+			}),
+			widget.NewButton("Sync Contacs", func() {
+				if google_services.AuthInstance != nil {
+					connections := google_services.GetContacts(google_services.AuthInstance)
+					if len(connections) > 0 {
+						updateList := make(map[string]string)
+						syncList := make(map[string]people.Person)
+						for _, cloudCursor := range connections {
+							// log.Info(i, " ", cloudCursor.Metadata.Sources[0].UpdateTime, " ", cloudCursor.Names[0].DisplayName, "\n\n")
+							// log.Info(i, string(b), "\n\n")
+							key := strings.Replace(cloudCursor.ResourceName, "/", ":", 1)
+							if err := global.DB.View(func(tx *buntdb.Tx) error {
+								val, err := tx.Get(key)
+								if err != nil {
+									b, _ := cloudCursor.MarshalJSON()
+									updateList[key] = string(b)
+									return err
+								}
+								var localCursor people.Person
+								if err := json.Unmarshal([]byte(val), &localCursor); err != nil {
+									return err
+								}
+
+								if cloudCursor.Metadata.Sources[0].UpdateTime > localCursor.Metadata.Sources[0].UpdateTime {
+									b, _ := cloudCursor.MarshalJSON()
+									updateList[key] = string(b)
+									return errors.New("outdated local data" + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].GivenName)
+								} else if cloudCursor.Metadata.Sources[0].UpdateTime < localCursor.Metadata.Sources[0].UpdateTime {
+									log.Info(cloudCursor.Metadata.Sources[0].UpdateTime, " ", localCursor.Metadata.Sources[0].UpdateTime, "\n")
+									syncList[cloudCursor.ResourceName] = localCursor
+									return errors.New("outdated cloud data " + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].GivenName)
+								} else {
+									log.Info(key, " ", localCursor.Metadata.Sources[0].UpdateTime == cloudCursor.Metadata.Sources[0].UpdateTime, "\n")
+									//if key == "people:c9181097719823060915" {
+										//localCursor.Names[0].GivenName = "Ahmad " + time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+										//localCursor.Metadata.Sources[0].UpdateTime = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+										//log.Info(key, " to update ", localCursor.Names[0].GivenName, "\n")
+										//b, _ := localCursor.MarshalJSON()
+										//updateList[key] = string(b)
+									//}
+								}
+								return nil
+							}); err != nil {
+								log.Warn(key, " ", err)
+							}
+							if len(updateList) > 0 {
+								global.DB.Update(func(tx *buntdb.Tx) error {
+									for k, v := range updateList {
+										tx.Set(k, v, nil)
+									}
+									return nil
+								})
+							}
+							if len(syncList) > 0 {
+								log.Info("syncList start\n")
+								google_services.UpdateContacts(google_services.AuthInstance, syncList)
+								log.Info("syncList end\n")
+							}
+						}
+					}
+				}
+			}),
+			widget.NewButton("Sync Calendars", func() {
+				if google_services.AuthInstance != nil {
+					google_services.Calendar(google_services.AuthInstance)
+				}
+			}),
 		),
 	)
 }
 
 func main() {
-	db, err := buntdb.Open(global.ResolvePath("database.db"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
 	go func() {
 		for {
 			select {
@@ -137,9 +226,11 @@ func main() {
 			}
 		}
 	}()
+	defer global.DB.Close()
 	log.Info("main", global.ROOT_PATH)
 	app := app.New()
 	global.WINDOW = app.NewWindow("Kai Suite")
+	fyne.CurrentApp().Settings().SetTheme(theme.LightTheme())
 	var menu *fyne.Container = container.NewVBox(
 		widget.NewButton("Connection", func() {
 			renderConnectContent()
@@ -150,41 +241,14 @@ func main() {
 			content.Refresh()
 		}),
 		widget.NewButton("Contacts", func() {
-			if google_services.AuthInstance != nil {
-				google_services.GetContacts(google_services.AuthInstance)
-			}
 			renderContactsContent()
 			content.Refresh()
 		}),
 		widget.NewButton("Calendars", func() {
-			if google_services.AuthInstance != nil {
-				google_services.Calendar(google_services.AuthInstance)
-			}
 			renderCalendarsContent()
 			content.Refresh()
 		}),
 		widget.NewButton("Google Account", func() {
-			google_services.AuthInstance = google_services.GetAuth()
-			if google_services.AuthInstance == nil {
-				if cfg, err := google_services.GetConfig(); err == nil {
-					if err := google_services.GetTokenFromWeb(cfg); err == nil {
-						var authCode string
-						d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
-							authCode = str
-						}, global.WINDOW)
-						d.SetOnClosed(func() {
-							if _, err := google_services.SaveToken(cfg, global.ResolvePath("token.json"), authCode); err == nil {
-								google_services.AuthInstance = google_services.GetAuth()
-							} else {
-								log.Warn(err)
-							}
-						})
-						d.Show()
-					} else {
-						log.Warn(err)
-					}
-				}
-			}
 			renderGAContent()
 			content.Refresh()
 		}),
