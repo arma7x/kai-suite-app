@@ -3,10 +3,6 @@ package main
 import (
 	"net"
 	"strconv"
-	"strings"
-	"errors"
-	_ "time"
-	"encoding/json"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -18,8 +14,6 @@ import (
 	"kai-suite/utils/websocketserver"
 	"kai-suite/utils/google_services"
 	log "github.com/sirupsen/logrus"
-	"github.com/tidwall/buntdb"
-	"google.golang.org/api/people/v1"
 )
 
 var port string = "4444"
@@ -149,63 +143,7 @@ func renderGAContent() {
 			}),
 			widget.NewButton("Sync Contacs", func() {
 				if google_services.AuthInstance != nil {
-					connections := google_services.GetContacts(google_services.AuthInstance)
-					if len(connections) > 0 {
-						updateList := make(map[string]string)
-						syncList := make(map[string]people.Person)
-						for _, cloudCursor := range connections {
-							// log.Info(i, " ", cloudCursor.Metadata.Sources[0].UpdateTime, " ", cloudCursor.Names[0].DisplayName, "\n\n")
-							// log.Info(i, string(b), "\n\n")
-							key := strings.Replace(cloudCursor.ResourceName, "/", ":", 1)
-							if err := global.DB.View(func(tx *buntdb.Tx) error {
-								val, err := tx.Get(key)
-								if err != nil {
-									b, _ := cloudCursor.MarshalJSON()
-									updateList[key] = string(b)
-									return err
-								}
-								var localCursor people.Person
-								if err := json.Unmarshal([]byte(val), &localCursor); err != nil {
-									return err
-								}
-
-								if cloudCursor.Metadata.Sources[0].UpdateTime > localCursor.Metadata.Sources[0].UpdateTime {
-									b, _ := cloudCursor.MarshalJSON()
-									updateList[key] = string(b)
-									return errors.New("outdated local data" + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].GivenName)
-								} else if cloudCursor.Metadata.Sources[0].UpdateTime < localCursor.Metadata.Sources[0].UpdateTime {
-									log.Info(cloudCursor.Metadata.Sources[0].UpdateTime, " ", localCursor.Metadata.Sources[0].UpdateTime, "\n")
-									syncList[cloudCursor.ResourceName] = localCursor
-									return errors.New("outdated cloud data " + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].GivenName)
-								} else {
-									log.Info(key, " ", localCursor.Metadata.Sources[0].UpdateTime == cloudCursor.Metadata.Sources[0].UpdateTime, "\n")
-									//if key == "people:c9181097719823060915" {
-										//localCursor.Names[0].GivenName = "Ahmad " + time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-										//localCursor.Metadata.Sources[0].UpdateTime = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-										//log.Info(key, " to update ", localCursor.Names[0].GivenName, "\n")
-										//b, _ := localCursor.MarshalJSON()
-										//updateList[key] = string(b)
-									//}
-								}
-								return nil
-							}); err != nil {
-								log.Warn(key, " ", err)
-							}
-							if len(updateList) > 0 {
-								global.DB.Update(func(tx *buntdb.Tx) error {
-									for k, v := range updateList {
-										tx.Set(k, v, nil)
-									}
-									return nil
-								})
-							}
-							if len(syncList) > 0 {
-								log.Info("syncList start\n")
-								google_services.UpdateContacts(google_services.AuthInstance, syncList)
-								log.Info("syncList end\n")
-							}
-						}
-					}
+					google_services.Sync(google_services.AuthInstance)
 				}
 			}),
 			widget.NewButton("Sync Calendars", func() {

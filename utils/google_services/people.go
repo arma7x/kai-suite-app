@@ -3,7 +3,16 @@ package google_services
 import (
 	"context"
 	"net/http"
+	"errors"
+	"strings"
+	_ "time"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 
+	"kai-suite/utils/global"
+	"github.com/tidwall/buntdb"
+	_ "kai-suite/utils/logger"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"google.golang.org/api/people/v1"
@@ -57,8 +66,9 @@ func UpdateContacts(client *http.Client, contacts map[string]people.Person) ([]*
 	var success []*people.Person
 	var fail		[]*people.Person
 	for key, pr := range contacts {
-		if p, err := srv.People.UpdateContact(key, &pr).UpdatePersonFields(updateFields).Do(); err == nil {
-			log.Info("SUCCESS Person: ", p.Metadata.Sources[0].UpdateTime)
+		if p, err := srv.People.UpdateContact(key, &pr).PersonFields(fields).UpdatePersonFields(updateFields).Do(); err == nil {
+			b, _ := p.MarshalJSON()
+			log.Info("SUCCESS Person: ", string(b))
 			success = append(success, p)
 		} else {
 			log.Info("FAIL Person: ", err)
@@ -66,23 +76,99 @@ func UpdateContacts(client *http.Client, contacts map[string]people.Person) ([]*
 		}
 	}
 	return success, fail
-	//batch := people.BatchUpdateContactsRequest{
-		//Contacts: contacts,
-		//UpdateMask: updateFields,
-	//}
-	//if response, err := srv.People.BatchUpdateContacts(&batch).Do(); err == nil {
-		//log.Warn("Batch update success: ", len(response.UpdateResult), " ", len(contacts))
-		//for key, pr := range response.UpdateResult {
-			//b, _ := pr.Person.MarshalJSON()
-			//log.Info("Updated Person: ", key, ": ", string(b))
-		//}
-	//} else {
-		//log.Warn("Batch update fails: ", err)
-	//}
-	// PeopleBatchUpdateContactsCall
-	// PeopleUpdateContactCall
 }
 
 func DeleteContacts() {}
 
 func SearchContacts() {}
+
+func Sync(client *http.Client) {
+	connections := GetContacts(client)
+	if len(connections) > 0 {
+		updateList := make(map[string]*people.Person)
+		syncList := make(map[string]people.Person)
+		for _, cloudCursor := range connections {
+			// log.Info(i, " ", cloudCursor.Metadata.Sources[0].UpdateTime, " ", cloudCursor.Names[0].DisplayName, "\n\n")
+			// log.Info(i, string(b), "\n\n")
+			key := strings.Replace(cloudCursor.ResourceName, "/", ":", 1)
+			if err := global.DB.View(func(tx *buntdb.Tx) error {
+				val, err := tx.Get(key)
+				localHash, errH := tx.Get("hash:" + key)
+				if err != nil || errH != nil {
+					updateList[key] = cloudCursor
+					return err
+				}
+
+				var localCursor people.Person
+				if err := json.Unmarshal([]byte(val), &localCursor); err != nil {
+					return err
+				}
+
+				tempTime := cloudCursor.Metadata.Sources[0].UpdateTime
+				cloudCursor.Metadata.Sources[0].UpdateTime = ""
+				b2, _ := cloudCursor.MarshalJSON()
+				tempHash := sha256.Sum256(b2)
+				hashCloud := hex.EncodeToString(tempHash[:])
+				cloudCursor.Metadata.Sources[0].UpdateTime = tempTime
+
+				if hashCloud != localHash {
+					if cloudCursor.Metadata.Sources[0].UpdateTime > localCursor.Metadata.Sources[0].UpdateTime {
+						updateList[key] = cloudCursor
+						return errors.New("outdated local data" + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].GivenName)
+					} else if cloudCursor.Metadata.Sources[0].UpdateTime < localCursor.Metadata.Sources[0].UpdateTime {
+						log.Info(cloudCursor.Metadata.Sources[0].UpdateTime, " ", localCursor.Metadata.Sources[0].UpdateTime, "\n")
+						syncList[cloudCursor.ResourceName] = localCursor
+						return errors.New("outdated cloud data " + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].GivenName)
+					}
+				} else {
+					log.Info(key, " ", localCursor.Metadata.Sources[0].UpdateTime == cloudCursor.Metadata.Sources[0].UpdateTime, "\n")
+					if key == "people:c9181097719823060915" {
+						log.Info(localCursor.Names[0].DisplayName)
+						//localCursor.Names[0].GivenName = "Ahmad " + time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+						//localCursor.Names[0].UnstructuredName = localCursor.Names[0].GivenName + " " + localCursor.Names[0].FamilyName
+						//localCursor.Metadata.Sources[0].UpdateTime = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+						//log.Info(key, " to update ", localCursor.Names[0].GivenName, "\n")
+						//updateList[key] = &localCursor
+					}
+				}
+				return nil
+			}); err != nil {
+				log.Warn(key, " ", err)
+			}
+			if len(updateList) > 0 {
+				global.DB.Update(func(tx *buntdb.Tx) error {
+					for k, v := range updateList {
+						tempTime := v.Metadata.Sources[0].UpdateTime
+						v.Metadata.Sources[0].UpdateTime = ""
+						b2, _ := v.MarshalJSON()
+						hash := sha256.Sum256(b2)
+						tx.Set("hash:" + k, hex.EncodeToString(hash[:]), nil)
+						v.Metadata.Sources[0].UpdateTime = tempTime
+						b, _ := v.MarshalJSON()
+						tx.Set(k, string(b), nil)
+					}
+					return nil
+				})
+			}
+			if len(syncList) > 0 {
+				log.Info("syncList start\n")
+				success, _ := UpdateContacts(client, syncList)
+				global.DB.Update(func(tx *buntdb.Tx) error {
+					for _, person := range success {
+						key := strings.Replace(person.ResourceName, "/", ":", 1)
+						tempTime := person.Metadata.Sources[0].UpdateTime
+						person.Metadata.Sources[0].UpdateTime = ""
+						b2, _ := person.MarshalJSON()
+						hash := sha256.Sum256(b2)
+						tx.Set("hash:" + key, hex.EncodeToString(hash[:]), nil)
+						person.Metadata.Sources[0].UpdateTime = tempTime
+						b, _ := person.MarshalJSON()
+						tx.Set(key, string(b), nil)
+					}
+					return nil
+				})
+				log.Info("syncList end\n")
+			}
+		}
+	}
+}
