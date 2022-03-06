@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	fields = "names,phoneNumbers,emailAddresses,addresses,birthdays,metadata"
-	updateFields = "names,phoneNumbers,emailAddresses,addresses,birthdays"
+	fields = "names,phoneNumbers,emailAddresses,metadata"
+	updateFields = "names,phoneNumbers,emailAddresses"
 )
 
 func GetContacts(client *http.Client) []*people.Person {
@@ -171,4 +171,5 @@ func Sync(client *http.Client) {
 			}
 		}
 	}
+	global.DB.Shrink()
 }

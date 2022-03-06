@@ -9,17 +9,19 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/data/binding"
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
 	"kai-suite/utils/google_services"
+	"kai-suite/utils/contacts"
 	log "github.com/sirupsen/logrus"
 )
 
 var port string = "4444"
 var content *fyne.Container
+var contentTitle binding.String
 var buttonText = make(chan string)
-var statusLabel = widget.NewLabel("Disconnected")
 var ipPortLabel = widget.NewLabel("Ip Address: " + getLocalIP() + ":" + port)
 var buttonConnect = widget.NewButton("Connect", func() {
 	if websocketserver.Status == false {
@@ -54,10 +56,10 @@ func getLocalIP() string {
 func onStatusChange(status bool, err error) {
 	if (status) {
 		log.Info("Connected")
-		statusLabel.SetText("Connected")
+		contentTitle.Set("Connected")
 		buttonText <- "Disconnect"
 	} else {
-		statusLabel.SetText("Disconnected")
+		contentTitle.Set("Disconnected")
 		log.Info("Disconnected")
 		buttonText <- "Connect"
 	}
@@ -70,9 +72,13 @@ func renderConnectContent() {
 	for _, l := range content.Objects {
 		content.Remove(l);
 	}
+	if websocketserver.Status == false {
+		contentTitle.Set("Disconnected")
+	} else {
+		contentTitle.Set("Connected")
+	}
 	content.Add(
 		container.NewVBox(
-			statusLabel,
 			ipPortLabel,
 			buttonConnect,
 		),
@@ -83,9 +89,10 @@ func renderMessagesContent() {
 	for _, l := range content.Objects {
 		content.Remove(l);
 	}
+	contentTitle.Set("Messages")
 	content.Add(
 		container.NewVBox(
-			widget.NewLabel("Messages"),
+			widget.NewLabel("Messages Content"),
 		),
 	)
 }
@@ -94,20 +101,19 @@ func renderContactsContent() {
 	for _, l := range content.Objects {
 		content.Remove(l);
 	}
-	content.Add(
-		container.NewVBox(
-			widget.NewLabel("Contacts"),
-		),
-	)
+	contentTitle.Set("Contacts")
+	box := container.NewVScroll(contacts.GetContacts())
+	content.Add(box)
 }
 
 func renderCalendarsContent() {
 	for _, l := range content.Objects {
 		content.Remove(l);
 	}
+	contentTitle.Set("Calendars")
 	content.Add(
 		container.NewVBox(
-			widget.NewLabel("Calendars"),
+			widget.NewLabel("Calendars Content"),
 		),
 	)
 }
@@ -116,6 +122,7 @@ func renderGAContent() {
 	for _, l := range content.Objects {
 		content.Remove(l);
 	}
+	contentTitle.Set("Google Account")
 	content.Add(
 		container.NewVBox(
 			widget.NewButton("Google Account", func() {
@@ -156,6 +163,9 @@ func renderGAContent() {
 }
 
 func main() {
+	contentTitle = binding.NewString()
+	contentTitle.Set("")
+	contentLabel := widget.NewLabelWithData(contentTitle)
 	go func() {
 		for {
 			select {
@@ -168,8 +178,9 @@ func main() {
 	log.Info("main", global.ROOT_PATH)
 	app := app.New()
 	global.WINDOW = app.NewWindow("Kai Suite")
+	global.WINDOW.Resize(fyne.NewSize(800, 600))
 	fyne.CurrentApp().Settings().SetTheme(theme.LightTheme())
-	var menu *fyne.Container = container.NewVBox(
+	var menuButton *fyne.Container = container.NewVBox(
 		widget.NewButton("Connection", func() {
 			renderConnectContent()
 			content.Refresh()
@@ -191,18 +202,18 @@ func main() {
 			content.Refresh()
 		}),
 	)
-	size := menu.Size()
-	size.Width = 20
-	menu.Resize(size)
+	menuBox := container.NewVScroll(menuButton)
+	menu := container.NewMax()
+	menu.Add(menuBox)
 	content = container.NewMax()
 	renderConnectContent()
-	global.WINDOW.SetContent(container.NewVBox(
-		container.NewHBox(widget.NewLabel("KaiOS PC Suite")),
-		container.NewHBox(
-			menu,
-			content,
-		),
-	))
+	global.WINDOW.SetContent(container.NewBorder(
+		nil,
+		nil,
+		container.NewBorder(widget.NewLabel("KaiOS PC Suite"), nil, nil, nil, menu),
+		nil,
+		container.NewBorder(contentLabel, nil, nil, nil, content)),
+	)
 	global.WINDOW.ShowAndRun()
 }
 

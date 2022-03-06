@@ -30,7 +30,7 @@ func init() {
 	if errdB != nil {
 		log.Fatal(errdB)
 	}
-	DB.Shrink()
+	DB.CreateIndex("key", "people:*", buntdb.IndexString)
 }
 
 func ResolvePath(dirs... string) string {
