@@ -8,14 +8,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/people/v1"
 	"fyne.io/fyne/v2"
-	//"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/layout"
 )
 
-func GetContacts() (*fyne.Container) {
+func GetContactCards() (*fyne.Container) {
 	var persons []*people.Person
-	if err := global.DB.View(func(tx *buntdb.Tx) error {
+	if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("key", func(key, val string) bool {
 			var person people.Person
 			if err := json.Unmarshal([]byte(val), &person); err != nil {
@@ -50,6 +50,11 @@ func GetContacts() (*fyne.Container) {
 		} else {
 			card.SetSubTitle("-")
 		}
+		card.SetContent(container.NewHBox(
+			widget.NewButton("Detail", func() {}),
+			widget.NewButton("Edit", func() {}),
+			widget.NewButton("Delete", func() {}),
+		))
 		contactCards = append(contactCards, card)
 	}
 	return fyne.NewContainerWithLayout(layout.NewGridLayout(4), contactCards...)

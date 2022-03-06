@@ -102,7 +102,7 @@ func renderContactsContent() {
 		content.Remove(l);
 	}
 	contentTitle.Set("Contacts")
-	box := container.NewVScroll(contacts.GetContacts())
+	box := container.NewVScroll(contacts.GetContactCards())
 	content.Add(box)
 }
 
@@ -174,7 +174,7 @@ func main() {
 			}
 		}
 	}()
-	defer global.DB.Close()
+	defer global.CONTACTS_DB.Close()
 	log.Info("main", global.ROOT_PATH)
 	app := app.New()
 	global.WINDOW = app.NewWindow("Kai Suite")

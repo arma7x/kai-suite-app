@@ -16,7 +16,7 @@ import (
 var (
 	ROOT_PATH string
 	WINDOW fyne.Window
-	DB *buntdb.DB
+	CONTACTS_DB *buntdb.DB
 )
 
 func init() {
@@ -26,11 +26,11 @@ func init() {
 	}
 	ROOT_PATH = filepath.Dir(ex)
 	var errdB error
-	DB, errdB = buntdb.Open(ResolvePath("database.db"))
+	CONTACTS_DB, errdB = buntdb.Open(ResolvePath("db/contacts.db"))
 	if errdB != nil {
 		log.Fatal(errdB)
 	}
-	DB.CreateIndex("key", "people:*", buntdb.IndexString)
+	CONTACTS_DB.CreateIndex("key", "people:*", buntdb.IndexString)
 }
 
 func ResolvePath(dirs... string) string {

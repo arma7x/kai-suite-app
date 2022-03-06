@@ -91,7 +91,7 @@ func Sync(client *http.Client) {
 			// log.Info(i, " ", cloudCursor.Metadata.Sources[0].UpdateTime, " ", cloudCursor.Names[0].DisplayName, "\n\n")
 			// log.Info(i, string(b), "\n\n")
 			key := strings.Replace(cloudCursor.ResourceName, "/", ":", 1)
-			if err := global.DB.View(func(tx *buntdb.Tx) error {
+			if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 				val, err := tx.Get(key)
 				localHash, errH := tx.Get("hash:" + key)
 				if err != nil || errH != nil {
@@ -136,7 +136,7 @@ func Sync(client *http.Client) {
 				log.Warn(key, " ", err)
 			}
 			if len(updateList) > 0 {
-				global.DB.Update(func(tx *buntdb.Tx) error {
+				global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
 					for k, v := range updateList {
 						tempTime := v.Metadata.Sources[0].UpdateTime
 						v.Metadata.Sources[0].UpdateTime = ""
@@ -153,7 +153,7 @@ func Sync(client *http.Client) {
 			if len(syncList) > 0 {
 				log.Info("syncList start\n")
 				success, _ := UpdateContacts(client, syncList)
-				global.DB.Update(func(tx *buntdb.Tx) error {
+				global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
 					for _, person := range success {
 						key := strings.Replace(person.ResourceName, "/", ":", 1)
 						tempTime := person.Metadata.Sources[0].UpdateTime
@@ -171,5 +171,5 @@ func Sync(client *http.Client) {
 			}
 		}
 	}
-	global.DB.Shrink()
+	global.CONTACTS_DB.Shrink()
 }
