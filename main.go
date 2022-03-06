@@ -123,50 +123,49 @@ func renderGAContent() {
 		content.Remove(l);
 	}
 	contentTitle.Set("Google Account")
-	google_services.AuthInstance = google_services.GetAuth()
-	if google_services.AuthInstance != nil {
-		log.Info("Fetch USERINFO\n")
-		if u, err := google_services.FetchUserInfo(google_services.AuthInstance); err == nil {
-			b, _ := u.MarshalJSON()
-			log.Info(u.Id, " > " , string(b), "\n")
-		} else {
-			log.Warn(err, "\n")
-		}
-	}
+	//if config, err := google_services.GetConfig(); err == nil {
+		//google_services.AuthInstance = google_services.GetAuthClient(config)
+		//if google_services.AuthInstance != nil {
+			//log.Info("Fetch UserInfo\n")
+			//if u, err := google_services.FetchUserInfo(google_services.AuthInstance); err == nil {
+				//b, _ := u.MarshalJSON()
+				//log.Info(u.Id, " > " , string(b), "\n")
+			//} else {
+				//log.Warn(err, "\n")
+			//}
+		//}
+	//}
 	content.Add(
 		container.NewVBox(
 			widget.NewButton("Google Account", func() {
-				google_services.AuthInstance = google_services.GetAuth()
-				if google_services.AuthInstance == nil {
-					if cfg, err := google_services.GetConfig(); err == nil {
-						if err := google_services.GetTokenFromWeb(cfg); err == nil {
-							var authCode string
-							d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
-								authCode = str
-							}, global.WINDOW)
-							d.SetOnClosed(func() {
-								if _, err := google_services.SaveToken(cfg, global.ResolvePath("token.json"), authCode); err == nil {
-									google_services.AuthInstance = google_services.GetAuth()
-								} else {
-									log.Warn(err)
-								}
-							})
-							d.Show()
-						} else {
-							log.Warn(err)
-						}
+				if authConfig, err := google_services.GetConfig(); err == nil {
+					if err := google_services.GetTokenFromWeb(authConfig); err == nil {
+						var authCode string
+						d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
+							authCode = str
+						}, global.WINDOW)
+						d.SetOnClosed(func() {
+							if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
+								log.Info("TokenRepository: ",len(google_services.TokenRepository))
+							} else {
+								log.Warn(err)
+							}
+						})
+						d.Show()
+					} else {
+						log.Warn(err)
 					}
 				}
 			}),
 			widget.NewButton("Sync Contacs", func() {
-				if google_services.AuthInstance != nil {
-					google_services.Sync(google_services.AuthInstance)
-				}
+				//if google_services.AuthInstance != nil {
+					//google_services.Sync(google_services.AuthInstance)
+				//}
 			}),
 			widget.NewButton("Sync Calendars", func() {
-				if google_services.AuthInstance != nil {
-					google_services.Calendar(google_services.AuthInstance)
-				}
+				//if google_services.AuthInstance != nil {
+					//google_services.Calendar(google_services.AuthInstance)
+				//}
 			}),
 		),
 	)

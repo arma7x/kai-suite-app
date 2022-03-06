@@ -30,7 +30,7 @@ func init() {
 	if errdB != nil {
 		log.Fatal(errdB)
 	}
-	CONTACTS_DB.CreateIndex("key", "people:*", buntdb.IndexString)
+	//CONTACTS_DB.CreateIndex("key", "*:people:*", buntdb.IndexString)
 }
 
 func ResolvePath(dirs... string) string {
