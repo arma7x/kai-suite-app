@@ -17,6 +17,7 @@ func GetContactCards() (*fyne.Container) {
 	var persons []*people.Person
 	if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("key", func(key, val string) bool {
+			log.Info(key, "\n")
 			var person people.Person
 			if err := json.Unmarshal([]byte(val), &person); err != nil {
 				return false

@@ -16,6 +16,8 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/people/v1"
+	"google.golang.org/api/option"
+	google_oauth2 "google.golang.org/api/oauth2/v2"
 )
 
 var(
@@ -89,7 +91,7 @@ func GetConfig() (*oauth2.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return google.ConfigFromJSON(b, calendar.CalendarScope, people.ContactsScope)
+	return google.ConfigFromJSON(b, calendar.CalendarScope, people.ContactsScope, google_oauth2.UserinfoProfileScope)
 }
 
 func GetAuth() *http.Client {
@@ -98,4 +100,17 @@ func GetAuth() *http.Client {
 		log.Warn("Unable to parse client secret file to config: %v ", err)
 	}
 	return getClient(config)
+}
+
+func FetchUserInfo(client *http.Client) (*google_oauth2.Userinfo, error) {
+	config, _ := GetConfig()
+	restoredToken, _ := tokenFromFile(global.ResolvePath("token.json"))
+	tokenSource := config.TokenSource(oauth2.NoContext, restoredToken)
+	newclient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+	ctx := context.Background()
+	srv, err := google_oauth2.NewService(ctx, option.WithHTTPClient(newclient))
+	if err != nil {
+		log.Warn("Unable to create oauth2 Client: ", err)
+	}
+	return srv.Userinfo.V2.Me.Get().Do()
 }

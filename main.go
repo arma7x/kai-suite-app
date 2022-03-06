@@ -123,6 +123,16 @@ func renderGAContent() {
 		content.Remove(l);
 	}
 	contentTitle.Set("Google Account")
+	google_services.AuthInstance = google_services.GetAuth()
+	if google_services.AuthInstance != nil {
+		log.Info("Fetch USERINFO\n")
+		if u, err := google_services.FetchUserInfo(google_services.AuthInstance); err == nil {
+			b, _ := u.MarshalJSON()
+			log.Info(u.Id, " > " , string(b), "\n")
+		} else {
+			log.Warn(err, "\n")
+		}
+	}
 	content.Add(
 		container.NewVBox(
 			widget.NewButton("Google Account", func() {
