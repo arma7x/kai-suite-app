@@ -13,8 +13,8 @@ import (
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
-	_ "kai-suite/utils/google_services"
-	"kai-suite/utils/contacts"
+	"kai-suite/utils/google_services"
+	_ "kai-suite/utils/contacts"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -68,6 +68,24 @@ func onStatusChange(status bool, err error) {
 	}
 }
 
+func genDummyCards(list *fyne.Container) {
+	for len(list.Objects) != 0 {
+		for idx, l := range list.Objects {
+			log.Info("Remove card: ", idx , "\n")
+			list.Remove(l)
+		}
+	}
+	//var cards []fyne.CanvasObject
+	for i := 1; i <= 10; i++ {
+		card := &widget.Card{}
+		card.SetTitle("Title")
+		card.SetSubTitle("Subtitle")
+		list.Add(card)
+		//cards = append(cards, card)
+	}
+	//return cards
+}
+
 func renderConnectContent() {
 	for _, l := range content.Objects {
 		content.Remove(l);
@@ -102,7 +120,9 @@ func renderContactsContent() {
 		content.Remove(l);
 	}
 	contentTitle.Set("Contacts")
-	box := container.NewVScroll(contacts.GetContactCards())
+	list := container.NewAdaptiveGrid(3)
+	genDummyCards(list)
+	box := container.NewVScroll(container.NewVBox(list))
 	content.Add(box)
 }
 
@@ -118,22 +138,39 @@ func renderCalendarsContent() {
 	)
 }
 
-func getGoogleAccountProfileCard(list *fyne.Container) {
+func genGoogleAccountCards(list *fyne.Container, accounts map[string]google_services.UserInfoAndToken) {
 	for len(list.Objects) != 0 {
-		for idx, l := range list.Objects {
-			log.Info("Remove card: ", idx , "\n")
+		for _, l := range list.Objects {
 			list.Remove(l)
 		}
 	}
-	//var cards []fyne.CanvasObject
-	for i := 1; i <= 10; i++ {
+	for _, acc := range accounts {
 		card := &widget.Card{}
-		card.SetTitle("Title")
-		card.SetSubTitle("Subtitle")
+		card.SetTitle(acc.User.Name)
+		card.SetSubTitle(acc.User.Email)
+		card.SetContent(container.NewAdaptiveGrid(
+			2,
+			widget.NewButton("Sync Contact", func() {
+				log.Info("Sync Contact ", acc.User.Email)
+			}),
+			widget.NewButton("Sync Calendar", func() {
+				log.Info("Sync Calendar ", acc.User.Email)
+			}),
+			widget.NewButton("Contact List", func() {
+				log.Info("Contact List ", acc.User.Email)
+			}),
+			widget.NewButton("Calendar Events", func() {
+				log.Info("Calendar Events ", acc.User.Email)
+			}),
+			widget.NewButton("Remove", func() {
+				log.Info("Remove ", acc.User.Email)
+			}),
+			widget.NewButton("Remove(all data)", func() {
+				log.Info("Remove(all data) ", acc.User.Email)
+			}),
+		))
 		list.Add(card)
-		//cards = append(cards, card)
 	}
-	//return cards
 }
 
 func renderGAContent() {
@@ -142,31 +179,31 @@ func renderGAContent() {
 	}
 	contentTitle.Set("Google Account")
 	list := container.NewAdaptiveGrid(3)
+	genGoogleAccountCards(list, google_services.TokenRepository)
 	box := container.NewBorder(
-			widget.NewButton("Google Account", func() {
-				getGoogleAccountProfileCard(list)
-				//if authConfig, err := google_services.GetConfig(); err == nil {
-					//if err := google_services.GetTokenFromWeb(authConfig); err == nil {
-						//var authCode string
-						//d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
-							//authCode = str
-						//}, global.WINDOW)
-						//d.SetOnClosed(func() {
-							//if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
-								//log.Info("TokenRepository: ",len(google_services.TokenRepository))
-							//} else {
-								//log.Warn(err)
-							//}
-						//})
-						//d.Show()
-					//} else {
-						//log.Warn(err)
-					//}
+		widget.NewButton("Google Account", func() {
+			//if authConfig, err := google_services.GetConfig(); err == nil {
+				//if err := google_services.GetTokenFromWeb(authConfig); err == nil {
+					//var authCode string
+					//d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
+						//authCode = str
+					//}, global.WINDOW)
+					//d.SetOnClosed(func() {
+						//if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
+							//log.Info("TokenRepository: ",len(google_services.TokenRepository))
+						//} else {
+							//log.Warn(err)
+						//}
+					//})
+					//d.Show()
+				//} else {
+					//log.Warn(err)
 				//}
-			}),
-			nil, nil, nil,
-			container.NewVScroll(list),
-		)
+			//}
+		}),
+		nil, nil, nil,
+		container.NewVScroll(container.NewVBox(list)),
+	)
 	content.Add(box)
 }
 
