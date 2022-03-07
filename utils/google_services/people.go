@@ -14,6 +14,7 @@ import (
 	"github.com/tidwall/buntdb"
 	_ "kai-suite/utils/logger"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/people/v1"
 )
@@ -82,7 +83,13 @@ func DeleteContacts() {}
 
 func SearchContacts() {}
 
-func Sync(client *http.Client) {
+func Sync(config *oauth2.Config, account UserInfoAndToken) {
+	index := strings.Join([]string{account.User.Id, "people", "*"}, ":")
+	indexName := strings.Join([]string{account.User.Id, "people"}, "_")
+	log.Info(indexName, " ", index)
+	return
+	client := GetAuthClient(config, account.Token)
+	global.CONTACTS_DB.CreateIndex(indexName, index, buntdb.IndexString)
 	connections := GetContacts(client)
 	if len(connections) > 0 {
 		updateList := make(map[string]*people.Person)

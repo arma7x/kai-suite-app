@@ -151,22 +151,25 @@ func genGoogleAccountCards(list *fyne.Container, accounts map[string]google_serv
 		card.SetContent(container.NewAdaptiveGrid(
 			2,
 			widget.NewButton("Sync Contact", func() {
-				log.Info("Sync Contact ", acc.User.Email)
+				if authConfig, err := google_services.GetConfig(); err == nil {
+					google_services.Sync(authConfig, google_services.TokenRepository[acc.User.Id]);
+				}
+				log.Info("Sync Contact ", acc.User.Id)
 			}),
 			widget.NewButton("Sync Calendar", func() {
-				log.Info("Sync Calendar ", acc.User.Email)
+				log.Info("Sync Calendar ", acc.User.Id)
 			}),
 			widget.NewButton("Contact List", func() {
-				log.Info("Contact List ", acc.User.Email)
+				log.Info("Contact List ", acc.User.Id)
 			}),
 			widget.NewButton("Calendar Events", func() {
-				log.Info("Calendar Events ", acc.User.Email)
+				log.Info("Calendar Events ", acc.User.Id)
 			}),
 			widget.NewButton("Remove", func() {
-				log.Info("Remove ", acc.User.Email)
+				log.Info("Remove ", acc.User.Id)
 			}),
 			widget.NewButton("Remove(all data)", func() {
-				log.Info("Remove(all data) ", acc.User.Email)
+				log.Info("Remove(all data) ", acc.User.Id)
 			}),
 		))
 		list.Add(card)
