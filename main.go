@@ -7,7 +7,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	_ "fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/data/binding"
 	"kai-suite/utils/global"
@@ -184,26 +184,31 @@ func renderGAContent() {
 	list := container.NewAdaptiveGrid(3)
 	genGoogleAccountCards(list, google_services.TokenRepository)
 	box := container.NewBorder(
-		widget.NewButton("Google Account", func() {
-			//if authConfig, err := google_services.GetConfig(); err == nil {
-				//if err := google_services.GetTokenFromWeb(authConfig); err == nil {
-					//var authCode string
-					//d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
-						//authCode = str
-					//}, global.WINDOW)
-					//d.SetOnClosed(func() {
-						//if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
-							//log.Info("TokenRepository: ",len(google_services.TokenRepository))
-						//} else {
-							//log.Warn(err)
-						//}
-					//})
-					//d.Show()
-				//} else {
-					//log.Warn(err)
-				//}
-			//}
-		}),
+		container.NewHBox(
+			widget.NewButton("Add Google Account", func() {
+				if authConfig, err := google_services.GetConfig(); err == nil {
+					if err := google_services.GetTokenFromWeb(authConfig); err == nil {
+						var authCode string
+						d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
+							authCode = str
+						}, global.WINDOW)
+						d.SetOnClosed(func() {
+							if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
+								log.Info("TokenRepository: ",len(google_services.TokenRepository))
+								genGoogleAccountCards(list, google_services.TokenRepository)
+							} else {
+								log.Warn(err)
+							}
+						})
+						d.Show()
+					} else {
+						log.Warn(err)
+					}
+				}
+			}),
+			widget.NewButton("Local Contacts", func() {}),
+			widget.NewButton("Local Events", func() {}),
+		),
 		nil, nil, nil,
 		container.NewVScroll(container.NewVBox(list)),
 	)
