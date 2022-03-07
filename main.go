@@ -7,13 +7,13 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"fyne.io/fyne/v2/dialog"
+	_ "fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/data/binding"
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
-	"kai-suite/utils/google_services"
+	_ "kai-suite/utils/google_services"
 	"kai-suite/utils/contacts"
 	log "github.com/sirupsen/logrus"
 )
@@ -118,57 +118,56 @@ func renderCalendarsContent() {
 	)
 }
 
+func getGoogleAccountProfileCard(list *fyne.Container) {
+	for len(list.Objects) != 0 {
+		for idx, l := range list.Objects {
+			log.Info("Remove card: ", idx , "\n")
+			list.Remove(l)
+		}
+	}
+	//var cards []fyne.CanvasObject
+	for i := 1; i <= 10; i++ {
+		card := &widget.Card{}
+		card.SetTitle("Title")
+		card.SetSubTitle("Subtitle")
+		list.Add(card)
+		//cards = append(cards, card)
+	}
+	//return cards
+}
+
 func renderGAContent() {
 	for _, l := range content.Objects {
 		content.Remove(l);
 	}
 	contentTitle.Set("Google Account")
-	//if config, err := google_services.GetConfig(); err == nil {
-		//google_services.AuthInstance = google_services.GetAuthClient(config)
-		//if google_services.AuthInstance != nil {
-			//log.Info("Fetch UserInfo\n")
-			//if u, err := google_services.FetchUserInfo(google_services.AuthInstance); err == nil {
-				//b, _ := u.MarshalJSON()
-				//log.Info(u.Id, " > " , string(b), "\n")
-			//} else {
-				//log.Warn(err, "\n")
-			//}
-		//}
-	//}
-	content.Add(
-		container.NewVBox(
+	list := container.NewAdaptiveGrid(3)
+	box := container.NewBorder(
 			widget.NewButton("Google Account", func() {
-				if authConfig, err := google_services.GetConfig(); err == nil {
-					if err := google_services.GetTokenFromWeb(authConfig); err == nil {
-						var authCode string
-						d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
-							authCode = str
-						}, global.WINDOW)
-						d.SetOnClosed(func() {
-							if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
-								log.Info("TokenRepository: ",len(google_services.TokenRepository))
-							} else {
-								log.Warn(err)
-							}
-						})
-						d.Show()
-					} else {
-						log.Warn(err)
-					}
-				}
-			}),
-			widget.NewButton("Sync Contacs", func() {
-				//if google_services.AuthInstance != nil {
-					//google_services.Sync(google_services.AuthInstance)
+				getGoogleAccountProfileCard(list)
+				//if authConfig, err := google_services.GetConfig(); err == nil {
+					//if err := google_services.GetTokenFromWeb(authConfig); err == nil {
+						//var authCode string
+						//d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
+							//authCode = str
+						//}, global.WINDOW)
+						//d.SetOnClosed(func() {
+							//if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
+								//log.Info("TokenRepository: ",len(google_services.TokenRepository))
+							//} else {
+								//log.Warn(err)
+							//}
+						//})
+						//d.Show()
+					//} else {
+						//log.Warn(err)
+					//}
 				//}
 			}),
-			widget.NewButton("Sync Calendars", func() {
-				//if google_services.AuthInstance != nil {
-					//google_services.Calendar(google_services.AuthInstance)
-				//}
-			}),
-		),
-	)
+			nil, nil, nil,
+			container.NewVScroll(list),
+		)
+	content.Add(box)
 }
 
 func main() {

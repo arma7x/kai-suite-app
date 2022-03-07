@@ -34,7 +34,7 @@ func GetContactCards() (*fyne.Container) {
 	})
 	var contactCards []fyne.CanvasObject
 	log.Info("Length > ", len(persons))
-	for _, p := range persons {
+	for i, p := range persons {
 		// log.Info(i, " ", p.Names[0].DisplayName)
 		card := &widget.Card{}
 		if len(p.Names) > 0 {
@@ -52,9 +52,15 @@ func GetContactCards() (*fyne.Container) {
 			card.SetSubTitle("-")
 		}
 		card.SetContent(container.NewHBox(
-			widget.NewButton("Detail", func() {}),
-			widget.NewButton("Edit", func() {}),
-			widget.NewButton("Delete", func() {}),
+			widget.NewButton("Detail", func() {
+				log.Info(i, " detail ", p.Names[0].DisplayName)
+			}),
+			widget.NewButton("Edit", func() {
+				log.Info(i, " edit ", p.Names[0].DisplayName)
+			}),
+			widget.NewButton("Delete", func() {
+				log.Info(i, " delete ", p.Names[0].DisplayName)
+			}),
 		))
 		contactCards = append(contactCards, card)
 	}

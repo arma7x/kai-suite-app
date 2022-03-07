@@ -26,7 +26,7 @@ type UserInfoAndToken struct {
 
 var(
 	AuthInstance *http.Client
-	TokenRepository = make(map[string]*UserInfoAndToken)
+	TokenRepository = make(map[string]UserInfoAndToken)
 )
 
 func init() {
@@ -64,7 +64,7 @@ func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
 	if user, err = FetchUserInfo(GetAuthClient(config, token)); err != nil {
 		return nil, err
 	}
-	TokenRepository[user.Id] = &UserInfoAndToken{user, token}
+	TokenRepository[user.Id] = UserInfoAndToken{user, token}
 
 	var b []byte
 	b, err = json.Marshal(&TokenRepository)
@@ -108,7 +108,7 @@ func GetConfig() (*oauth2.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return google.ConfigFromJSON(b, calendar.CalendarScope, people.ContactsScope, google_oauth2.UserinfoProfileScope)
+	return google.ConfigFromJSON(b, calendar.CalendarScope, people.ContactsScope, google_oauth2.UserinfoProfileScope, google_oauth2.UserinfoEmailScope)
 }
 
 func GetAuthClient(config *oauth2.Config, token *oauth2.Token) *http.Client {
