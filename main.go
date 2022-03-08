@@ -3,22 +3,27 @@ package main
 import (
 	"net"
 	"strconv"
+	"math"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/data/binding"
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
 	"kai-suite/utils/google_services"
-	"kai-suite/types/misc"
 	"kai-suite/utils/contacts"
+	"kai-suite/types/misc"
+	"kai-suite/theme"
+	"google.golang.org/api/people/v1"
 	log "github.com/sirupsen/logrus"
 )
 
+var _ fyne.Theme = (*custom_theme.LightMode)(nil)
+var _ fyne.Theme = (*custom_theme.DarkMode)(nil)
 var port string = "4444"
 var content *fyne.Container
 var contentTitle binding.String
@@ -71,15 +76,12 @@ func onStatusChange(status bool, err error) {
 
 func genDummyCards(list *fyne.Container) {
 	list.Objects = nil
-	//var cards []fyne.CanvasObject
 	for i := 1; i <= 10; i++ {
 		card := &widget.Card{}
 		card.SetTitle("Title")
 		card.SetSubTitle("Subtitle")
 		list.Add(card)
-		//cards = append(cards, card)
 	}
-	//return cards
 }
 
 func renderConnectContent() {
@@ -110,14 +112,73 @@ func renderMessagesContent() {
 func renderContactsContent() {
 	content.Objects = nil
 	contentTitle.Set("Contacts")
-	list := container.NewAdaptiveGrid(3)
-	for key, _ := range google_services.TokenRepository {
-		for _, card := range contacts.GetPeopleContactCards(key) {
-			list.Add(card)
+	var cards []fyne.CanvasObject
+	list := container.NewAdaptiveGrid(4)
+	personsArr := make(map[string][]*people.Person)
+	for namespace, _ := range google_services.TokenRepository {
+		_persons := contacts.GetPeopleContacts(namespace)
+		contacts.SortContacts(_persons)
+		// log.Info(_persons[len(_persons) - 1].Names[0].DisplayName)
+		personsArr[namespace] = _persons
+	}
+	for namespace, persons := range personsArr {
+		for _, person := range persons {
+			cards = append(cards, contacts.MakeContactCardWidget(namespace, person))
 		}
 	}
-	box := container.NewVScroll(container.NewVBox(list))
+	str := binding.NewString()
+	paginationLabel := widget.NewLabelWithData(str)
+	page := 1
+	max := int(math.Ceil(float64(len(cards)) / float64(40)))
+	seg := page - 1
+	high := (seg * 40) + 40
+	if high >= len(cards) {
+		high = len(cards)
+	}
+	list.Objects = cards[seg * 40:high]
+	// log.Info("Length: ", len(cards), " ", max, high)
+	str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
+	box := container.NewBorder(
+		container.NewHBox(
+			widget.NewButton("Prev Page", func() {
+				if page - 1 <= 0 {
+					return
+				}
+				page = page - 1
+				seg = page - 1
+				high = (seg * 40) + 40
+				if high >= len(cards) {
+					high = len(cards)
+				}
+				list.Objects = cards[seg * 40:high]
+				list.Refresh()
+				str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
+				// log.Info(page, " ", max, " ", seg, " ", high)
+			}),
+			layout.NewSpacer(),
+			paginationLabel,
+			layout.NewSpacer(),
+			widget.NewButton("Next Page", func() {
+				if page + 1 > max {
+					return
+				}
+				page = page + 1
+				seg = page - 1
+				high = (seg * 40) + 40
+				if high >= len(cards) {
+					high = len(cards)
+				}
+				list.Objects = cards[seg * 40:high]
+				list.Refresh()
+				str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
+				// log.Info(page, " ", max, " ", seg, " ", high)
+			}),
+		),
+		nil, nil, nil,
+		container.NewVScroll(container.NewVBox(list)),
+	)
 	content.Add(box)
+	list.Refresh()
 }
 
 func renderCalendarsContent() {
@@ -149,7 +210,7 @@ func genGoogleAccountCards(list *fyne.Container, accounts map[string]misc.UserIn
 			}),
 			widget.NewButton("Contact List", func() {
 				log.Info("Contact List ", acc.User.Id)
-				contacts.GetPeopleContactCards(acc.User.Id)
+				contacts.GetPeopleContacts(acc.User.Id)
 			}),
 			widget.NewButton("Calendar Events", func() {
 				log.Info("Calendar Events ", acc.User.Id)
@@ -219,7 +280,7 @@ func main() {
 	app := app.New()
 	global.WINDOW = app.NewWindow("Kai Suite")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
-	fyne.CurrentApp().Settings().SetTheme(theme.LightTheme())
+	fyne.CurrentApp().Settings().SetTheme(&custom_theme.LightMode{})
 	var menuButton *fyne.Container = container.NewVBox(
 		widget.NewButton("Connection", func() {
 			renderConnectContent()

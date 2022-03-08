@@ -14,7 +14,44 @@ import (
 	custom_widget "kai-suite/widgets"
 )
 
-func GetPeopleContactCards(namespace string) []fyne.CanvasObject {
+func MakeContactCardWidget(namespace string, person *people.Person) fyne.CanvasObject {
+	card := &widget.Card{}
+	if len(person.Names) > 0 {
+		card.SetTitle(person.Names[0].UnstructuredName)
+	} else {
+		card.SetTitle("-")
+	}
+	if len(person.PhoneNumbers) > 0 {
+		val := person.PhoneNumbers[0].CanonicalForm
+		if val == "" {
+			val = person.PhoneNumbers[0].Value
+		}
+		card.SetSubTitle(val)
+	} else {
+		card.SetSubTitle("-")
+	}
+	id := namespace + ":" + strings.Replace(person.ResourceName, "/", ":", 1)
+	card.SetContent(container.NewHBox(
+		custom_widget.NewButton(id, "Detail", func(nmsp string) {
+			log.Info("Clicked detail ", nmsp)
+		}),
+		custom_widget.NewButton(id, "Edit", func(nmsp string) {
+			log.Info("Clicked edit ", nmsp)
+		}),
+		custom_widget.NewButton(id, "Delete", func(nmsp string) {
+			log.Info("Clicked delete ", nmsp)
+		}),
+	))
+	return card
+}
+
+func SortContacts(persons []*people.Person) {
+	sort.Slice(persons, func(i, j int) bool {
+		return persons[i].Names[0].DisplayName < persons[j].Names[0].DisplayName
+	})
+}
+
+func GetPeopleContacts(namespace string) []*people.Person {
 	indexName := strings.Join([]string{namespace, "people"}, "_")
 	var persons []*people.Person
 	if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
@@ -31,40 +68,5 @@ func GetPeopleContactCards(namespace string) []fyne.CanvasObject {
 	}); err != nil {
 		log.Warn(err)
 	}
-	sort.Slice(persons, func(i, j int) bool {
-		return persons[i].Names[0].DisplayName < persons[j].Names[0].DisplayName
-	})
-	var contactCards []fyne.CanvasObject
-	log.Info("Contacts length > ", len(persons))
-	for _, p := range persons {
-		card := &widget.Card{}
-		if len(p.Names) > 0 {
-			card.SetTitle(p.Names[0].DisplayName)
-		} else {
-			card.SetTitle("-")
-		}
-		if len(p.PhoneNumbers) > 0 {
-			val := p.PhoneNumbers[0].CanonicalForm
-			if val == "" {
-				val = p.PhoneNumbers[0].Value
-			}
-			card.SetSubTitle(val)
-		} else {
-			card.SetSubTitle("-")
-		}
-		id := namespace + ":" + strings.Replace(p.ResourceName, "/", ":", 1)
-		card.SetContent(container.NewHBox(
-			custom_widget.NewButton(id, "Detail", func(nmsp string) {
-				log.Info("Clicked detail ", nmsp)
-			}),
-			custom_widget.NewButton(id, "Edit", func(nmsp string) {
-				log.Info("Clicked edit ", nmsp)
-			}),
-			custom_widget.NewButton(id, "Delete", func(nmsp string) {
-				log.Info("Clicked delete ", nmsp)
-			}),
-		))
-		contactCards = append(contactCards, card)
-	}
-	return contactCards
+	return persons
 }
