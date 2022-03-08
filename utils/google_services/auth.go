@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"fyne.io/fyne/v2"
+	"kai-suite/types/misc"
 	"kai-suite/utils/global"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -19,22 +20,12 @@ import (
 	google_oauth2 "google.golang.org/api/oauth2/v2"
 )
 
-type UserInfoAndToken struct {
-	User	*google_oauth2.Userinfo	`json:"user"`
-	Token	*oauth2.Token 					`json:"token"`
-}
-
 var(
 	AuthInstance *http.Client
-	TokenRepository = make(map[string]UserInfoAndToken)
+	TokenRepository = make(map[string]misc.UserInfoAndToken)
 )
 
 func init() {
-	//_, err_cre := ioutil.ReadFile(global.ResolvePath("credentials.json"))
-	//_, err_tok := ioutil.ReadFile(global.ResolvePath("token.json"))
-	//if err_cre == nil && err_tok == nil {
-		//AuthInstance = GetAuthClient()
-	//}
 	tokenFromFile()
 	log.Info("TokenRepository: ",len(TokenRepository))
 }
@@ -64,7 +55,7 @@ func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
 	if user, err = FetchUserInfo(GetAuthClient(config, token)); err != nil {
 		return nil, err
 	}
-	TokenRepository[user.Id] = UserInfoAndToken{user, token}
+	TokenRepository[user.Id] = misc.UserInfoAndToken{user, token}
 
 	var b []byte
 	b, err = json.Marshal(&TokenRepository)
@@ -81,6 +72,7 @@ func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
 		return nil, err
 	}
 	defer f.Close()
+	global.RefreshDBIndex(TokenRepository)
 	return token, nil
 }
 
@@ -100,6 +92,7 @@ func tokenFromFile() error {
 		}
 	}
 	json.Unmarshal(b, &TokenRepository)
+	global.RefreshDBIndex(TokenRepository)
 	return nil
 }
 

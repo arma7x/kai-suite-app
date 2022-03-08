@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"fyne.io/fyne/v2"
 	"github.com/tidwall/buntdb"
+	"kai-suite/types/misc"
 )
 
 var (
@@ -50,4 +51,14 @@ func CheckIPAddress(ip, port string) (string, error) {
 		return ipAddr, errors.New(strings.Join([]string{"Error:", "Port", port, "must greater than", "1024"}, " "))
 	}
 	return ipAddr, nil 
+}
+
+func RefreshDBIndex(accounts map[string]misc.UserInfoAndToken) {
+	for key, _ := range accounts {
+		index := strings.Join([]string{key, "people", "*"}, ":")
+		indexName := strings.Join([]string{key, "people"}, "_")
+		log.Info("indexName: ", indexName)
+		log.Info("index: ", index)
+		CONTACTS_DB.CreateIndex(indexName, index, buntdb.IndexString)
+	}
 }

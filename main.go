@@ -14,7 +14,8 @@ import (
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
 	"kai-suite/utils/google_services"
-	_ "kai-suite/utils/contacts"
+	"kai-suite/types/misc"
+	"kai-suite/utils/contacts"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -69,12 +70,7 @@ func onStatusChange(status bool, err error) {
 }
 
 func genDummyCards(list *fyne.Container) {
-	for len(list.Objects) != 0 {
-		for idx, l := range list.Objects {
-			log.Info("Remove card: ", idx , "\n")
-			list.Remove(l)
-		}
-	}
+	list.Objects = nil
 	//var cards []fyne.CanvasObject
 	for i := 1; i <= 10; i++ {
 		card := &widget.Card{}
@@ -87,9 +83,7 @@ func genDummyCards(list *fyne.Container) {
 }
 
 func renderConnectContent() {
-	for _, l := range content.Objects {
-		content.Remove(l);
-	}
+	content.Objects = nil
 	if websocketserver.Status == false {
 		contentTitle.Set("Disconnected")
 	} else {
@@ -104,9 +98,7 @@ func renderConnectContent() {
 }
 
 func renderMessagesContent() {
-	for _, l := range content.Objects {
-		content.Remove(l);
-	}
+	content.Objects = nil
 	contentTitle.Set("Messages")
 	content.Add(
 		container.NewVBox(
@@ -116,20 +108,20 @@ func renderMessagesContent() {
 }
 
 func renderContactsContent() {
-	for _, l := range content.Objects {
-		content.Remove(l);
-	}
+	content.Objects = nil
 	contentTitle.Set("Contacts")
 	list := container.NewAdaptiveGrid(3)
-	genDummyCards(list)
+	for key, _ := range google_services.TokenRepository {
+		for _, card := range contacts.GetPeopleContactCards(key) {
+			list.Add(card)
+		}
+	}
 	box := container.NewVScroll(container.NewVBox(list))
 	content.Add(box)
 }
 
 func renderCalendarsContent() {
-	for _, l := range content.Objects {
-		content.Remove(l);
-	}
+	content.Objects = nil
 	contentTitle.Set("Calendars")
 	content.Add(
 		container.NewVBox(
@@ -138,12 +130,8 @@ func renderCalendarsContent() {
 	)
 }
 
-func genGoogleAccountCards(list *fyne.Container, accounts map[string]google_services.UserInfoAndToken) {
-	for len(list.Objects) != 0 {
-		for _, l := range list.Objects {
-			list.Remove(l)
-		}
-	}
+func genGoogleAccountCards(list *fyne.Container, accounts map[string]misc.UserInfoAndToken) {
+	list.Objects = nil
 	for _, acc := range accounts {
 		card := &widget.Card{}
 		card.SetTitle(acc.User.Name)
@@ -151,16 +139,17 @@ func genGoogleAccountCards(list *fyne.Container, accounts map[string]google_serv
 		card.SetContent(container.NewAdaptiveGrid(
 			2,
 			widget.NewButton("Sync Contact", func() {
+				log.Info("Sync Contact ", acc.User.Id)
 				if authConfig, err := google_services.GetConfig(); err == nil {
 					google_services.Sync(authConfig, google_services.TokenRepository[acc.User.Id]);
 				}
-				log.Info("Sync Contact ", acc.User.Id)
 			}),
 			widget.NewButton("Sync Calendar", func() {
 				log.Info("Sync Calendar ", acc.User.Id)
 			}),
 			widget.NewButton("Contact List", func() {
 				log.Info("Contact List ", acc.User.Id)
+				contacts.GetPeopleContactCards(acc.User.Id)
 			}),
 			widget.NewButton("Calendar Events", func() {
 				log.Info("Calendar Events ", acc.User.Id)
@@ -177,9 +166,7 @@ func genGoogleAccountCards(list *fyne.Container, accounts map[string]google_serv
 }
 
 func renderGAContent() {
-	for _, l := range content.Objects {
-		content.Remove(l);
-	}
+	content.Objects = nil
 	contentTitle.Set("Google Account")
 	list := container.NewAdaptiveGrid(3)
 	genGoogleAccountCards(list, google_services.TokenRepository)

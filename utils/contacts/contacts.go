@@ -2,6 +2,7 @@ package contacts
 
 import (
 	"sort"
+	"strings"
 	"encoding/json"
 	"kai-suite/utils/global"
 	"github.com/tidwall/buntdb"
@@ -10,14 +11,15 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"fyne.io/fyne/v2/layout"
+	custom_widget "kai-suite/widgets"
 )
 
-func GetContactCards() (*fyne.Container) {
+func GetPeopleContactCards(namespace string) []fyne.CanvasObject {
+	indexName := strings.Join([]string{namespace, "people"}, "_")
 	var persons []*people.Person
 	if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
-		tx.Ascend("key", func(key, val string) bool {
-			log.Info(key, "\n")
+		tx.Ascend(indexName, func(key, val string) bool {
+			// log.Info(key, "\n")
 			var person people.Person
 			if err := json.Unmarshal([]byte(val), &person); err != nil {
 				return false
@@ -33,9 +35,8 @@ func GetContactCards() (*fyne.Container) {
 		return persons[i].Names[0].DisplayName < persons[j].Names[0].DisplayName
 	})
 	var contactCards []fyne.CanvasObject
-	log.Info("Length > ", len(persons))
-	for i, p := range persons {
-		// log.Info(i, " ", p.Names[0].DisplayName)
+	log.Info("Contacts length > ", len(persons))
+	for _, p := range persons {
 		card := &widget.Card{}
 		if len(p.Names) > 0 {
 			card.SetTitle(p.Names[0].DisplayName)
@@ -51,18 +52,19 @@ func GetContactCards() (*fyne.Container) {
 		} else {
 			card.SetSubTitle("-")
 		}
+		id := namespace + ":" + strings.Replace(p.ResourceName, "/", ":", 1)
 		card.SetContent(container.NewHBox(
-			widget.NewButton("Detail", func() {
-				log.Info(i, " detail ", p.Names[0].DisplayName)
+			custom_widget.NewButton(id, "Detail", func(nmsp string) {
+				log.Info("Clicked detail ", nmsp)
 			}),
-			widget.NewButton("Edit", func() {
-				log.Info(i, " edit ", p.Names[0].DisplayName)
+			custom_widget.NewButton(id, "Edit", func(nmsp string) {
+				log.Info("Clicked edit ", nmsp)
 			}),
-			widget.NewButton("Delete", func() {
-				log.Info(i, " delete ", p.Names[0].DisplayName)
+			custom_widget.NewButton(id, "Delete", func(nmsp string) {
+				log.Info("Clicked delete ", nmsp)
 			}),
 		))
 		contactCards = append(contactCards, card)
 	}
-	return fyne.NewContainerWithLayout(layout.NewGridLayout(4), contactCards...)
+	return contactCards
 }
