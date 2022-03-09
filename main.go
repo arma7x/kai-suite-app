@@ -18,7 +18,6 @@ import (
 	"kai-suite/utils/contacts"
 	"kai-suite/types/misc"
 	"kai-suite/theme"
-	"google.golang.org/api/people/v1"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -109,22 +108,18 @@ func renderMessagesContent() {
 	)
 }
 
-func renderContactsContent() {
+func renderContactsContent(title, namespace string) {
+	if _, exist := google_services.TokenRepository[namespace]; exist == false {
+		return
+	}
 	content.Objects = nil
-	contentTitle.Set("Contacts")
+	contentTitle.Set(title)
 	var cards []fyne.CanvasObject
 	list := container.NewAdaptiveGrid(4)
-	personsArr := make(map[string][]*people.Person)
-	for namespace, _ := range google_services.TokenRepository {
-		_persons := contacts.GetPeopleContacts(namespace)
-		contacts.SortContacts(_persons)
-		// log.Info(_persons[len(_persons) - 1].Names[0].DisplayName)
-		personsArr[namespace] = _persons
-	}
-	for namespace, persons := range personsArr {
-		for _, person := range persons {
-			cards = append(cards, contacts.MakeContactCardWidget(namespace, person))
-		}
+	personsArr := contacts.GetPeopleContacts(namespace)
+	contacts.SortContacts(personsArr)
+	for _, person := range personsArr {
+		cards = append(cards, contacts.MakeContactCardWidget(namespace, person))
 	}
 	str := binding.NewString()
 	paginationLabel := widget.NewLabelWithData(str)
@@ -136,7 +131,6 @@ func renderContactsContent() {
 		high = len(cards)
 	}
 	list.Objects = cards[seg * 40:high]
-	// log.Info("Length: ", len(cards), " ", max, high)
 	str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
 	box := container.NewBorder(
 		container.NewHBox(
@@ -153,7 +147,6 @@ func renderContactsContent() {
 				list.Objects = cards[seg * 40:high]
 				list.Refresh()
 				str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
-				// log.Info(page, " ", max, " ", seg, " ", high)
 			}),
 			layout.NewSpacer(),
 			paginationLabel,
@@ -171,7 +164,6 @@ func renderContactsContent() {
 				list.Objects = cards[seg * 40:high]
 				list.Refresh()
 				str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
-				// log.Info(page, " ", max, " ", seg, " ", high)
 			}),
 		),
 		nil, nil, nil,
@@ -193,7 +185,7 @@ func renderCalendarsContent() {
 
 func genGoogleAccountCards(list *fyne.Container, accounts map[string]misc.UserInfoAndToken) {
 	list.Objects = nil
-	for _, acc := range accounts {
+	for namespace, acc := range accounts {
 		card := &widget.Card{}
 		card.SetTitle(acc.User.Name)
 		card.SetSubTitle(acc.User.Email)
@@ -210,7 +202,7 @@ func genGoogleAccountCards(list *fyne.Container, accounts map[string]misc.UserIn
 			}),
 			widget.NewButton("Contact List", func() {
 				log.Info("Contact List ", acc.User.Id)
-				contacts.GetPeopleContacts(acc.User.Id)
+				renderContactsContent(acc.User.Email + " Contacts", namespace)
 			}),
 			widget.NewButton("Calendar Events", func() {
 				log.Info("Calendar Events ", acc.User.Id)
@@ -291,7 +283,7 @@ func main() {
 			content.Refresh()
 		}),
 		widget.NewButton("Contacts", func() {
-			renderContactsContent()
+			renderContactsContent("Local Contacts", "local")
 			content.Refresh()
 		}),
 		widget.NewButton("Calendars", func() {
