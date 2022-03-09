@@ -183,8 +183,8 @@ func renderCalendarsContent() {
 	)
 }
 
-func genGoogleAccountCards(list *fyne.Container, accounts map[string]misc.UserInfoAndToken) {
-	list.Objects = nil
+func genGoogleAccountCards(accountList *fyne.Container, accounts map[string]misc.UserInfoAndToken) {
+	accountList.Objects = nil
 	for namespace, acc := range accounts {
 		card := &widget.Card{}
 		card.SetTitle(acc.User.Name)
@@ -214,15 +214,15 @@ func genGoogleAccountCards(list *fyne.Container, accounts map[string]misc.UserIn
 				log.Info("Remove(all data) ", acc.User.Id)
 			}),
 		))
-		list.Add(card)
+		accountList.Add(card)
 	}
 }
 
 func renderGAContent() {
 	content.Objects = nil
 	contentTitle.Set("Google Account")
-	list := container.NewAdaptiveGrid(3)
-	genGoogleAccountCards(list, google_services.TokenRepository)
+	accountList := container.NewAdaptiveGrid(3)
+	genGoogleAccountCards(accountList, google_services.TokenRepository)
 	box := container.NewBorder(
 		container.NewHBox(
 			widget.NewButton("Add Google Account", func() {
@@ -235,7 +235,7 @@ func renderGAContent() {
 						d.SetOnClosed(func() {
 							if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
 								log.Info("TokenRepository: ",len(google_services.TokenRepository))
-								genGoogleAccountCards(list, google_services.TokenRepository)
+								genGoogleAccountCards(accountList, google_services.TokenRepository)
 							} else {
 								log.Warn(err)
 							}
@@ -250,7 +250,7 @@ func renderGAContent() {
 			widget.NewButton("Local Events", func() {}),
 		),
 		nil, nil, nil,
-		container.NewVScroll(container.NewVBox(list)),
+		container.NewVScroll(container.NewVBox(accountList)),
 	)
 	content.Add(box)
 }
