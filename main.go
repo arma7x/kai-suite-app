@@ -20,6 +20,7 @@ import (
 	"kai-suite/types/misc"
 	"kai-suite/theme"
 	log "github.com/sirupsen/logrus"
+	custom_widget "kai-suite/widgets"
 )
 
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
@@ -109,11 +110,11 @@ func renderMessagesContent() {
 	)
 }
 
-func renderContactsContent(title, namespace string) {
+func renderContactsContent(c *fyne.Container, title, namespace string) {
 	if _, exist := google_services.TokenRepository[namespace]; exist == false {
 		return
 	}
-	content.Objects = nil
+	c.Objects = nil
 	contentTitle.Set(title)
 	var cards []fyne.CanvasObject
 	list := container.NewAdaptiveGrid(4)
@@ -145,6 +146,7 @@ func renderContactsContent(title, namespace string) {
 				if high >= len(cards) {
 					high = len(cards)
 				}
+				list.Objects = nil
 				list.Objects = cards[seg * 40:high]
 				list.Refresh()
 				str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
@@ -162,6 +164,7 @@ func renderContactsContent(title, namespace string) {
 				if high >= len(cards) {
 					high = len(cards)
 				}
+				list.Objects = nil
 				list.Objects = cards[seg * 40:high]
 				list.Refresh()
 				str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
@@ -170,7 +173,7 @@ func renderContactsContent(title, namespace string) {
 		nil, nil, nil,
 		container.NewVScroll(container.NewVBox(list)),
 	)
-	content.Add(box)
+	c.Add(box)
 	list.Refresh()
 }
 
@@ -184,7 +187,7 @@ func renderCalendarsContent() {
 	)
 }
 
-func genGoogleAccountCards(accountList *fyne.Container, accounts map[string]misc.UserInfoAndToken) {
+func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accounts map[string]misc.UserInfoAndToken) {
 	accountList.Objects = nil
 	namespaceArr := make([]string, 0, len(accounts))
 	for name := range accounts {
@@ -197,18 +200,18 @@ func genGoogleAccountCards(accountList *fyne.Container, accounts map[string]misc
 		card.SetSubTitle(accounts[namespace].User.Email)
 		card.SetContent(container.NewAdaptiveGrid(
 			2,
-			widget.NewButton("Sync Contact", func() {
-				log.Info("Sync Contact ", accounts[namespace].User.Id)
+			custom_widget.NewButton(namespace, "Sync Contact", func(idx string) {
+				log.Info("Sync Contact ", accounts[idx].User.Id)
 				if authConfig, err := google_services.GetConfig(); err == nil {
-					google_services.Sync(authConfig, google_services.TokenRepository[accounts[namespace].User.Id]);
+					google_services.Sync(authConfig, google_services.TokenRepository[accounts[idx].User.Id]);
 				}
 			}),
 			widget.NewButton("Sync Calendar", func() {
 				log.Info("Sync Calendar ", accounts[namespace].User.Id)
 			}),
-			widget.NewButton("Contact List", func() {
-				log.Info("Contact List ", accounts[namespace].User.Id)
-				renderContactsContent(accounts[namespace].User.Email + " Contacts", namespace)
+			custom_widget.NewButton(namespace, "Contact List", func(idx string) {
+				log.Info("Contact List ", accounts[idx].User.Id)
+				renderContactsContent(c, accounts[idx].User.Email + " Contacts", idx)
 			}),
 			widget.NewButton("Calendar Events", func() {
 				log.Info("Calendar Events ", accounts[namespace].User.Id)
@@ -224,11 +227,11 @@ func genGoogleAccountCards(accountList *fyne.Container, accounts map[string]misc
 	}
 }
 
-func renderGAContent() {
-	content.Objects = nil
+func renderGAContent(c *fyne.Container) {
+	c.Objects = nil
 	contentTitle.Set("Google Account")
 	accountList := container.NewAdaptiveGrid(3)
-	genGoogleAccountCards(accountList, google_services.TokenRepository)
+	genGoogleAccountCards(c, accountList, google_services.TokenRepository)
 	box := container.NewBorder(
 		container.NewHBox(
 			widget.NewButton("Add Google Account", func() {
@@ -241,7 +244,7 @@ func renderGAContent() {
 						d.SetOnClosed(func() {
 							if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
 								log.Info("TokenRepository: ",len(google_services.TokenRepository))
-								genGoogleAccountCards(accountList, google_services.TokenRepository)
+								genGoogleAccountCards(c, accountList, google_services.TokenRepository)
 							} else {
 								log.Warn(err)
 							}
@@ -258,7 +261,7 @@ func renderGAContent() {
 		nil, nil, nil,
 		container.NewVScroll(container.NewVBox(accountList)),
 	)
-	content.Add(box)
+	c.Add(box)
 }
 
 func main() {
@@ -289,7 +292,7 @@ func main() {
 			content.Refresh()
 		}),
 		widget.NewButton("Contacts", func() {
-			renderContactsContent("Local Contacts", "local")
+			renderContactsContent(content, "Local Contacts", "local")
 			content.Refresh()
 		}),
 		widget.NewButton("Calendars", func() {
@@ -297,7 +300,7 @@ func main() {
 			content.Refresh()
 		}),
 		widget.NewButton("Google Account", func() {
-			renderGAContent()
+			renderGAContent(content)
 			content.Refresh()
 		}),
 	)
