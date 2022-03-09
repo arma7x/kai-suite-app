@@ -124,15 +124,15 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 						return errors.New("outdated cloud data " + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].GivenName)
 					}
 				} else {
-					log.Info("OK:" + account.User.Id + ":" + key, " ", localCursor.Metadata.Sources[0].UpdateTime == cloudCursor.Metadata.Sources[0].UpdateTime, "\n")
-					if (account.User.Id + ":" + key) == "people:c9181097719823060915" {
-						log.Info(localCursor.Names[0].DisplayName)
+					// log.Info("OK:" + account.User.Id + ":" + key, " ", localCursor.Metadata.Sources[0].UpdateTime == cloudCursor.Metadata.Sources[0].UpdateTime, "\n")
+					//if (account.User.Id + ":" + key) == "people:c9181097719823060915" {
+						// log.Info(localCursor.Names[0].DisplayName)
 						//localCursor.Names[0].GivenName = "Ahmad " + time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 						//localCursor.Names[0].UnstructuredName = localCursor.Names[0].GivenName + " " + localCursor.Names[0].FamilyName
 						//localCursor.Metadata.Sources[0].UpdateTime = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 						//log.Info(key, " to update ", localCursor.Names[0].GivenName, "\n")
 						//updateList[key] = &localCursor
-					}
+					//}
 				}
 				return nil
 			}); err != nil {
