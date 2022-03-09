@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"net"
 	"strconv"
 	"math"
@@ -185,33 +186,38 @@ func renderCalendarsContent() {
 
 func genGoogleAccountCards(accountList *fyne.Container, accounts map[string]misc.UserInfoAndToken) {
 	accountList.Objects = nil
-	for namespace, acc := range accounts {
+	namespaceArr := make([]string, 0, len(accounts))
+	for name := range accounts {
+		namespaceArr = append(namespaceArr, name)
+	}
+	sort.Strings(namespaceArr)
+	for _, namespace := range namespaceArr {
 		card := &widget.Card{}
-		card.SetTitle(acc.User.Name)
-		card.SetSubTitle(acc.User.Email)
+		card.SetTitle(accounts[namespace].User.Name)
+		card.SetSubTitle(accounts[namespace].User.Email)
 		card.SetContent(container.NewAdaptiveGrid(
 			2,
 			widget.NewButton("Sync Contact", func() {
-				log.Info("Sync Contact ", acc.User.Id)
+				log.Info("Sync Contact ", accounts[namespace].User.Id)
 				if authConfig, err := google_services.GetConfig(); err == nil {
-					google_services.Sync(authConfig, google_services.TokenRepository[acc.User.Id]);
+					google_services.Sync(authConfig, google_services.TokenRepository[accounts[namespace].User.Id]);
 				}
 			}),
 			widget.NewButton("Sync Calendar", func() {
-				log.Info("Sync Calendar ", acc.User.Id)
+				log.Info("Sync Calendar ", accounts[namespace].User.Id)
 			}),
 			widget.NewButton("Contact List", func() {
-				log.Info("Contact List ", acc.User.Id)
-				renderContactsContent(acc.User.Email + " Contacts", namespace)
+				log.Info("Contact List ", accounts[namespace].User.Id)
+				renderContactsContent(accounts[namespace].User.Email + " Contacts", namespace)
 			}),
 			widget.NewButton("Calendar Events", func() {
-				log.Info("Calendar Events ", acc.User.Id)
+				log.Info("Calendar Events ", accounts[namespace].User.Id)
 			}),
 			widget.NewButton("Remove", func() {
-				log.Info("Remove ", acc.User.Id)
+				log.Info("Remove ", accounts[namespace].User.Id)
 			}),
 			widget.NewButton("Remove(all data)", func() {
-				log.Info("Remove(all data) ", acc.User.Id)
+				log.Info("Remove(all data) ", accounts[namespace].User.Id)
 			}),
 		))
 		accountList.Add(card)
