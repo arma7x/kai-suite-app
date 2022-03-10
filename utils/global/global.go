@@ -31,7 +31,7 @@ func init() {
 	if errdB != nil {
 		log.Fatal(errdB)
 	}
-	//CONTACTS_DB.CreateIndex("peoples_key", "*:people:*", buntdb.IndexString)
+	CONTACTS_DB.CreateIndex("people_local", "local:people:*", buntdb.IndexString)
 }
 
 func ResolvePath(dirs... string) string {
@@ -54,7 +54,6 @@ func CheckIPAddress(ip, port string) (string, error) {
 }
 
 func InitDatabaseIndex(accounts map[string]misc.UserInfoAndToken) {
-	CONTACTS_DB.CreateIndex("people_local", "local:people:*", buntdb.IndexString)
 	for key, _ := range accounts {
 		index := strings.Join([]string{key, "people", "*"}, ":")
 		indexName := strings.Join([]string{"people", key}, "_")
