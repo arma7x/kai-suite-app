@@ -131,7 +131,7 @@ func renderMessagesContent(c *fyne.Container) {
 }
 
 func renderContactsList(title, namespace string) {
-	if _, exist := google_services.TokenRepository[namespace]; exist == false {
+	if _, exist := google_services.TokenRepository[namespace]; exist == false  && namespace != "local" {
 		return
 	}
 	connectionContent.Hide()

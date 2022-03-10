@@ -31,7 +31,7 @@ var (
 	paginationString binding.String
 	paginationLabel *widget.Label
 	contactPage = 0
-	contactMaxPage = 1
+	contactMaxPage = 0
 	contactPageSegment = 0
 	contactPageOffset = 0
 )
@@ -91,7 +91,7 @@ func RenderContactsContent(c *fyne.Container) {
 	c.Objects = nil
 	paginationString.Set("")
 	contactPage = 0
-	contactMaxPage = 1
+	contactMaxPage = 0
 	contactPageSegment = 0
 	contactPageOffset = 0
 	if contactPageOffset >= len(contactCards) {
