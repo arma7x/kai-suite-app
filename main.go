@@ -14,7 +14,7 @@ import (
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
 	"kai-suite/utils/google_services"
-	"kai-suite/types/misc"
+	"kai-suite/types"
 	"kai-suite/theme"
 	"kai-suite/navigations"
 	log "github.com/sirupsen/logrus"
@@ -159,7 +159,7 @@ func renderCalendarsContent(c *fyne.Container) {
 	)
 }
 
-func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accounts map[string]misc.UserInfoAndToken) {
+func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accounts map[string]types.UserInfoAndToken) {
 	accountList.Objects = nil
 	namespaceArr := make([]string, 0, len(accounts))
 	for name := range accounts {

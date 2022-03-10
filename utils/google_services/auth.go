@@ -9,7 +9,7 @@ import (
 	"net/url"
 
 	"fyne.io/fyne/v2"
-	"kai-suite/types/misc"
+	"kai-suite/types"
 	"kai-suite/utils/global"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -22,7 +22,7 @@ import (
 
 var(
 	AuthInstance *http.Client
-	TokenRepository = make(map[string]misc.UserInfoAndToken)
+	TokenRepository = make(map[string]types.UserInfoAndToken)
 )
 
 func init() {
@@ -55,7 +55,7 @@ func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
 	if user, err = FetchUserInfo(GetAuthClient(config, token)); err != nil {
 		return nil, err
 	}
-	TokenRepository[user.Id] = misc.UserInfoAndToken{user, token}
+	TokenRepository[user.Id] = types.UserInfoAndToken{user, token}
 
 	var b []byte
 	b, err = json.Marshal(&TokenRepository)

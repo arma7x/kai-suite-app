@@ -1,4 +1,4 @@
-package misc
+package types
 
 import(
 	"golang.org/x/oauth2"

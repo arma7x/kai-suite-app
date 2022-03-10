@@ -7,8 +7,7 @@ import (
 	"net/http"
 	"github.com/gorilla/websocket"
 	"context"
-	"kai-suite/types/client"
-	"kai-suite/types/message"
+	"kai-suite/types"
 )
 
 var (
@@ -21,7 +20,7 @@ var (
 	}
 	Status bool = false
 	Server http.Server
-	Client *client.Client
+	Client *types.Client
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +34,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// id as time
-	Client = client.CreateClient("", "", false, conn);
+	Client = types.CreateClient("", "", false, conn);
 	log.Info("upgrade success")
 	defer Client.GetConn().Close()
 	for {
@@ -54,7 +53,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 		switch mt {
 			case websocket.TextMessage:
-				wsmsg := message.ReadMessage{}
+				wsmsg := types.ReadMessage{}
 				wsmsg.UnmarshalJSON(msg);
 				log.Info("recv: ", wsmsg)
 		}

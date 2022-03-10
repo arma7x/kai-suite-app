@@ -13,7 +13,7 @@ import (
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/contacts"
-	"kai-suite/types/misc"
+	"kai-suite/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/buntdb"
 	"google.golang.org/api/people/v1"
@@ -45,7 +45,7 @@ func RenderContactsList(namespace string, personsArr []*people.Person) {
 	global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		for _, person := range personsArr {
 			key := strings.Replace(person.ResourceName, "/", ":", 1)
-			metadata := &misc.Metadata{}
+			metadata := &types.Metadata{}
 			if metadata_s, err := tx.Get("metadata:" + namespace + ":" + key); err == nil {
 				if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil {
 					if _, ok := contactContactCardCache[namespace][person.ResourceName]; !ok {

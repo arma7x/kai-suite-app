@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 
 	"kai-suite/utils/global"
-	"kai-suite/types/misc"
+	"kai-suite/types"
 	"github.com/tidwall/buntdb"
 	_ "kai-suite/utils/logger"
 	log "github.com/sirupsen/logrus"
@@ -25,7 +25,7 @@ var (
 	updateFields = "names,phoneNumbers,emailAddresses"
 )
 
-func GetContacts(config *oauth2.Config, account misc.UserInfoAndToken) []*people.Person {
+func GetContacts(config *oauth2.Config, account types.UserInfoAndToken) []*people.Person {
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
 	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
@@ -60,7 +60,7 @@ func GetContacts(config *oauth2.Config, account misc.UserInfoAndToken) []*people
 
 func CreateContacts() {}
 
-func UpdateContacts(config *oauth2.Config, account misc.UserInfoAndToken, contacts map[string]people.Person) ([]*people.Person, []*people.Person) {
+func UpdateContacts(config *oauth2.Config, account types.UserInfoAndToken, contacts map[string]people.Person) ([]*people.Person, []*people.Person) {
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
 	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
@@ -86,7 +86,7 @@ func DeleteContacts() {}
 
 func SearchContacts() {}
 
-func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
+func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 	connections := GetContacts(config, account)
 	if len(connections) > 0 {
 		updateList := make(map[string]*people.Person)
@@ -101,7 +101,7 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 					updateList[key] = cloudCursor
 					return err
 				}
-				metadata := &misc.Metadata{}
+				metadata := &types.Metadata{}
 				if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
 					if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
 						updateList[key] = cloudCursor
@@ -157,7 +157,7 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 					value.Metadata.Sources[0].UpdateTime = ""
 					b2, _ := value.MarshalJSON()
 					hash := sha256.Sum256(b2)
-					metadata := &misc.Metadata{}
+					metadata := &types.Metadata{}
 					metadata.Hash = hex.EncodeToString(hash[:])
 					metadata.Deleted = false
 					if metadata_b, err := json.Marshal(metadata); err == nil {
@@ -181,7 +181,7 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 					person.Metadata.Sources[0].UpdateTime = ""
 					b2, _ := person.MarshalJSON()
 					hash := sha256.Sum256(b2)
-					metadata := &misc.Metadata{}
+					metadata := &types.Metadata{}
 					if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
 						if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
 							metadata.Deleted = false

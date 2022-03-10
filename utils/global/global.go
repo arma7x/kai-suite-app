@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"fyne.io/fyne/v2"
 	"github.com/tidwall/buntdb"
-	"kai-suite/types/misc"
+	"kai-suite/types"
 )
 
 var (
@@ -53,7 +53,7 @@ func CheckIPAddress(ip, port string) (string, error) {
 	return ipAddr, nil 
 }
 
-func InitDatabaseIndex(accounts map[string]misc.UserInfoAndToken) {
+func InitDatabaseIndex(accounts map[string]types.UserInfoAndToken) {
 	for key, _ := range accounts {
 		index := strings.Join([]string{key, "people", "*"}, ":")
 		indexName := strings.Join([]string{"people", key}, "_")
