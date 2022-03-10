@@ -20,7 +20,7 @@ type Metadata struct {
 
 type KaiContact struct {}
 
-// QUEUE []*people.Person
+// QUEUE []TxSyncContact
 
 type TxSyncContact struct {
 	Namespace string				`json:"namespace"`	//account:people:id
@@ -28,7 +28,7 @@ type TxSyncContact struct {
 	Person *people.Person		`json:"person"`
 }
 
-// On Rx, pop QUEUE
+// On Rx, pop QUEUE, next QUEUE
 // successfully add or update contact data on kaios
 type RxSyncContactFlag2 struct {
 	Namespace			string	`json:"namespace"`	//account:people:id
@@ -36,14 +36,14 @@ type RxSyncContactFlag2 struct {
 	SyncUpdated		string	`json:"sync_updated"`
 }
 
-// On Rx, add KaiContact to desktop local contacts, push QUEUE, TxSyncContact
+// On Rx, add KaiContact to desktop local contacts, push QUEUE, next QUEUE
 // received kaicontact from kaios then TxSync for comformation
 type RxSyncContactFlag4 struct {
 	Namespace			string	`json:"namespace"`	//local:people:KaiContact.id
 	KaiContact						`json:"kai_contact"`
 }
 
-// On Rx, pop QUEUE
+// On Rx, pop QUEUE, next QUEUE
 // both desktop & kaios remove this contact
 type RxSyncContactFlag6 struct {
 	Namespace			string	`json:"namespace"`	//account:people:id
