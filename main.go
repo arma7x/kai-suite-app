@@ -1,16 +1,12 @@
 package main
 
 import (
-	"strings"
 	"sort"
 	"net"
 	"strconv"
-	"math"
-	"encoding/json"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/data/binding"
@@ -18,19 +14,17 @@ import (
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websocketserver"
 	"kai-suite/utils/google_services"
-	"kai-suite/utils/contacts"
 	"kai-suite/types/misc"
 	"kai-suite/theme"
+	"kai-suite/navigations"
 	log "github.com/sirupsen/logrus"
 	custom_widget "kai-suite/widgets"
-	"github.com/tidwall/buntdb"
 )
 
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
 var _ fyne.Theme = (*custom_theme.DarkMode)(nil)
 var port string = "4444"
 
-// var content *fyne.Container
 var connectionContent *fyne.Container
 var messagesContent *fyne.Container
 var contactsContent *fyne.Container
@@ -41,18 +35,6 @@ type ContactCardCache struct {
 	Hash string
 	Card fyne.CanvasObject
 }
-
-var (
-	contactContactCardCache map[string]map[string]*ContactCardCache // namespace:resourceName
-	contactCardsContainer *fyne.Container
-	contactCards []fyne.CanvasObject
-	paginationString binding.String
-	paginationLabel *widget.Label
-	contactPage = 0
-	contactMaxPage = 1
-	contactPageSegment = 0
-	contactPageOffset = 0
-)
 
 var contentTitle binding.String
 var buttonText = make(chan string)
@@ -147,122 +129,17 @@ func renderMessagesContent(c *fyne.Container) {
 	)
 }
 
-func renderContactsList(c *fyne.Container, title, namespace string) {
+func renderContactsList(title, namespace string) {
 	if _, exist := google_services.TokenRepository[namespace]; exist == false {
 		return
 	}
-	contactCards = nil
-	if contactContactCardCache[namespace] == nil {
-		contactContactCardCache[namespace] = make(map[string]*ContactCardCache)
-	} else {
-		for _, c := range contactContactCardCache[namespace] {
-			contactCards = append(contactCards, c.Card)
-		}
-	}
-	personsArr := contacts.GetPeopleContacts(namespace)
-	contacts.SortContacts(personsArr)
-	global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
-		for _, person := range personsArr {
-			key := strings.Replace(person.ResourceName, "/", ":", 1)
-			metadata := &misc.Metadata{}
-			if metadata_s, err := tx.Get("metadata:" + namespace + ":" + key); err == nil {
-				if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil {
-					if _, ok := contactContactCardCache[namespace][person.ResourceName]; !ok {
-						contactContactCardCache[namespace][person.ResourceName] = &ContactCardCache{
-							Hash: metadata.Hash,
-							Card: contacts.MakeContactCardWidget(namespace, person),
-						}
-						// log.Info("NOT CACHE: ", metadata.Hash)
-					} else {
-						// log.Info("CACHE: ", metadata.Hash)
-						if contactContactCardCache[namespace][person.ResourceName].Hash != metadata.Hash {
-							contactContactCardCache[namespace][person.ResourceName].Hash = metadata.Hash
-						}
-					}
-					contactCards = append(contactCards, contactContactCardCache[namespace][person.ResourceName].Card)
-				}
-			}
-		}
-		return nil
-	})
-
 	connectionContent.Hide()
 	messagesContent.Hide()
 	contactsContent.Show()
 	eventsContent.Hide()
 	googleServicesContent.Hide()
 	contentTitle.Set(title)
-	paginationString.Set("")
-	contactPage = 1
-	contactMaxPage = int(math.Ceil(float64(len(contactCards)) / float64(40)))
-	contactPageSegment = contactPage - 1
-	contactPageOffset = (contactPageSegment * 40) + 40
-	if contactPageOffset >= len(contactCards) {
-		contactPageOffset = len(contactCards)
-	}
-	contactCardsContainer.Objects = contactCards[contactPageSegment * 40:contactPageOffset]
-	contactCardsContainer.Refresh()
-	paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
-}
-
-func renderContactsContent(c *fyne.Container) {
-	connectionContent.Hide()
-	messagesContent.Hide()
-	contactsContent.Hide()
-	eventsContent.Hide()
-	googleServicesContent.Hide()
-	c.Objects = nil
-	contentTitle.Set("")
-	paginationString.Set("")
-	log.Info("Contacts Rendered")
-	contactPage = 0
-	contactMaxPage = 1
-	contactPageSegment = 0
-	contactPageOffset = 0
-	if contactPageOffset >= len(contactCards) {
-		contactPageOffset = len(contactCards)
-	}
-	paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
-	box := container.NewBorder(
-		container.NewHBox(
-			widget.NewButton("Prev Page", func() {
-				if contactPage - 1 <= 0 {
-					return
-				}
-				contactPage = contactPage - 1
-				contactPageSegment = contactPage - 1
-				contactPageOffset = (contactPageSegment * 40) + 40
-				if contactPageOffset >= len(contactCards) {
-					contactPageOffset = len(contactCards)
-				}
-				contactCardsContainer.Objects = nil
-				contactCardsContainer.Objects = contactCards[contactPageSegment * 40:contactPageOffset]
-				contactCardsContainer.Refresh()
-				paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
-			}),
-			layout.NewSpacer(),
-			paginationLabel,
-			layout.NewSpacer(),
-			widget.NewButton("Next Page", func() {
-				if contactPage + 1 > contactMaxPage {
-					return
-				}
-				contactPage = contactPage + 1
-				contactPageSegment = contactPage - 1
-				contactPageOffset = (contactPageSegment * 40) + 40
-				if contactPageOffset >= len(contactCards) {
-					contactPageOffset = len(contactCards)
-				}
-				contactCardsContainer.Objects = nil
-				contactCardsContainer.Objects = contactCards[contactPageSegment * 40:contactPageOffset]
-				contactCardsContainer.Refresh()
-				paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
-			}),
-		),
-		nil, nil, nil,
-		container.NewVScroll(container.NewVBox(contactCardsContainer)),
-	)
-	c.Add(box)
+	navigations.RenderContactsList(namespace, google_services.TokenRepository)
 }
 
 func renderCalendarsContent(c *fyne.Container) {
@@ -304,7 +181,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 			}),
 			custom_widget.NewButton(namespace, "Contact List", func(idx string) {
 				log.Info("Contact List ", accounts[idx].User.Id)
-				renderContactsList(contactsContent, accounts[idx].User.Email + " Contacts", idx)
+				renderContactsList(accounts[idx].User.Email + " Contacts", idx)
 			}),
 			widget.NewButton("Calendar Events", func() {
 				log.Info("Calendar Events ", accounts[namespace].User.Id)
@@ -363,13 +240,9 @@ func renderGAContent(c *fyne.Container) {
 }
 
 func main() {
-	contactContactCardCache = make(map[string]map[string]*ContactCardCache)
 	contentTitle = binding.NewString()
 	contentTitle.Set("")
 	contentLabel := widget.NewLabelWithData(contentTitle)
-	paginationString = binding.NewString()
-	paginationString.Set("")
-	paginationLabel = widget.NewLabelWithData(paginationString)
 	go func() {
 		for {
 			select {
@@ -392,7 +265,7 @@ func main() {
 			renderMessagesContent(messagesContent)
 		}),
 		widget.NewButton("Contacts", func() {
-			renderContactsList(contactsContent, "Local Contacts", "local")
+			renderContactsList("Local Contacts", "local")
 		}),
 		widget.NewButton("Calendars", func() {
 			renderCalendarsContent(eventsContent)
@@ -410,9 +283,8 @@ func main() {
 	contactsContent = container.NewMax()
 	eventsContent = container.NewMax()
 	googleServicesContent = container.NewMax()
-	contactCardsContainer = container.NewAdaptiveGrid(4)
 
-	renderContactsContent(contactsContent)
+	navigations.RenderContactsContent(contactsContent)
 	renderConnectContent(connectionContent)
 
 	global.WINDOW.SetContent(container.NewBorder(
