@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
-	_ "time"
+	"time"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -20,6 +20,7 @@ import (
 )
 
 var (
+	clock = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 	fields = "names,phoneNumbers,emailAddresses,metadata"
 	updateFields = "names,phoneNumbers,emailAddresses"
 )
@@ -96,19 +97,21 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 			key := strings.Replace(cloudCursor.ResourceName, "/", ":", 1)
 			if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 				val, err := tx.Get(account.User.Id + ":" + key)
-				// log.Info("FIND HASH: ", "hash:" + account.User.Id + ":" + key)
-				metadata := &misc.Metadata{}
-				if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
-					if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr == nil {
-						log.Info("HASH: ", metadata.Hash, " Deleted: ", metadata.Deleted)
-					}
-				}
-
-				localHash, errH := tx.Get("hash:" + account.User.Id + ":" + key)
-				if err != nil || errH != nil {
+				if err != nil {
 					updateList[key] = cloudCursor
 					return err
 				}
+				metadata := &misc.Metadata{}
+				if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
+					if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
+						updateList[key] = cloudCursor
+						return err
+					}
+				} else {
+					updateList[key] = cloudCursor
+					return err
+				}
+
 				var localCursor people.Person
 				if err := json.Unmarshal([]byte(val), &localCursor); err != nil {
 					return err
@@ -121,25 +124,26 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 				hashCloud := hex.EncodeToString(tempHash[:])
 				cloudCursor.Metadata.Sources[0].UpdateTime = tempTime
 
-				if hashCloud != localHash {
+				if hashCloud != metadata.Hash {
 					if cloudCursor.Metadata.Sources[0].UpdateTime > localCursor.Metadata.Sources[0].UpdateTime {
 						updateList[key] = cloudCursor
-						return errors.New("outdated local data" + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].GivenName)
+						return errors.New("outdated local data" + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].UnstructuredName)
 					} else if cloudCursor.Metadata.Sources[0].UpdateTime < localCursor.Metadata.Sources[0].UpdateTime {
 						log.Info(cloudCursor.Metadata.Sources[0].UpdateTime, " ", localCursor.Metadata.Sources[0].UpdateTime, "\n")
 						syncList[cloudCursor.ResourceName] = localCursor
-						return errors.New("outdated cloud data " + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].GivenName)
+						return errors.New("outdated cloud data " + cloudCursor.Metadata.Sources[0].UpdateTime + " " + localCursor.Names[0].UnstructuredName)
 					}
 				} else {
-					// log.Info("OK:" + account.User.Id + ":" + key, " ", localCursor.Metadata.Sources[0].UpdateTime == cloudCursor.Metadata.Sources[0].UpdateTime, "\n")
-					//if (account.User.Id + ":" + key) == "people:c9181097719823060915" {
-						// log.Info(localCursor.Names[0].DisplayName)
+					// localCursor.Metadata.Sources[0].UpdateTime == cloudCursor.Metadata.Sources[0].UpdateTime
+					// log.Info("OK:" + account.User.Id + ":" + key, " ", localCursor.Names[0].DisplayName, "\n")
+					if key == "people:c9181097719823060915" {
+						log.Info(localCursor.Names[0].DisplayName)
 						//localCursor.Names[0].GivenName = "Ahmad " + time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 						//localCursor.Names[0].UnstructuredName = localCursor.Names[0].GivenName + " " + localCursor.Names[0].FamilyName
 						//localCursor.Metadata.Sources[0].UpdateTime = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-						//log.Info(key, " to update ", localCursor.Names[0].GivenName, "\n")
+						//log.Info(key, " to update ", localCursor.Names[0].UnstructuredName, "\n")
 						//updateList[key] = &localCursor
-					//}
+					}
 				}
 				return nil
 			}); err != nil {
@@ -153,10 +157,8 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 					value.Metadata.Sources[0].UpdateTime = ""
 					b2, _ := value.MarshalJSON()
 					hash := sha256.Sum256(b2)
-					hash_s := hex.EncodeToString(hash[:])
-					tx.Set("hash:" + account.User.Id + ":" + key, hash_s, nil)
 					metadata := &misc.Metadata{}
-					metadata.Hash = hash_s
+					metadata.Hash = hex.EncodeToString(hash[:])
 					metadata.Deleted = false
 					if metadata_b, err := json.Marshal(metadata); err == nil {
 						tx.Set("metadata:" + account.User.Id + ":" + key, string(metadata_b[:]), nil)
@@ -164,7 +166,6 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 					value.Metadata.Sources[0].UpdateTime = tempTime
 					b, _ := value.MarshalJSON()
 					tx.Set(account.User.Id + ":" + key, string(b), nil)
-					// log.Info("SET hash:" + account.User.Id + ":" + key)
 					// log.Info(account.User.Id + ":" + key)
 				}
 				return nil
@@ -180,7 +181,19 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 					person.Metadata.Sources[0].UpdateTime = ""
 					b2, _ := person.MarshalJSON()
 					hash := sha256.Sum256(b2)
-					tx.Set("hash:" + account.User.Id + ":" + key, hex.EncodeToString(hash[:]), nil)
+					metadata := &misc.Metadata{}
+					if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
+						if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
+							metadata.Deleted = false
+						}
+					} else {
+						metadata.Deleted = false
+					}
+					metadata.Hash = hex.EncodeToString(hash[:])
+					if metadata_b, err := json.Marshal(metadata); err == nil {
+						tx.Set("metadata:" + account.User.Id + ":" + key, string(metadata_b[:]), nil)
+					}
+
 					person.Metadata.Sources[0].UpdateTime = tempTime
 					b, _ := person.MarshalJSON()
 					tx.Set(account.User.Id + ":" + key, string(b), nil)
