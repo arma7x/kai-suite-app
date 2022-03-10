@@ -19,6 +19,7 @@ import (
 	"kai-suite/navigations"
 	log "github.com/sirupsen/logrus"
 	custom_widget "kai-suite/widgets"
+	"kai-suite/utils/contacts"
 )
 
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
