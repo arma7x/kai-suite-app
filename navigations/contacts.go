@@ -58,6 +58,7 @@ func RenderContactsList(namespace string, personsArr []*people.Person) {
 						// log.Info("CACHE: ", metadata.Hash)
 						if contactContactCardCache[namespace][person.ResourceName].Hash != metadata.Hash {
 							contactContactCardCache[namespace][person.ResourceName].Hash = metadata.Hash
+							contactContactCardCache[namespace][person.ResourceName].Card = contacts.MakeContactCardWidget(namespace, person)
 						}
 					}
 					contactCards = append(contactCards, contactContactCardCache[namespace][person.ResourceName].Card)
