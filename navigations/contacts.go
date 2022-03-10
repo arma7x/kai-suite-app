@@ -77,6 +77,9 @@ func RenderContactsList(namespace string, personsArr []*people.Person) {
 	}
 	contactCardsContainer.Objects = contactCards[contactPageSegment * 40:contactPageOffset]
 	contactCardsContainer.Refresh()
+	if len(personsArr) == 0 {
+		contactPage = 0
+	}
 	paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 }
 
