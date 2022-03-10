@@ -72,7 +72,7 @@ func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
 		return nil, err
 	}
 	defer f.Close()
-	global.RefreshDBIndex(TokenRepository)
+	global.InitDatabaseIndex(TokenRepository)
 	return token, nil
 }
 
@@ -92,7 +92,7 @@ func tokenFromFile() error {
 		}
 	}
 	json.Unmarshal(b, &TokenRepository)
-	global.RefreshDBIndex(TokenRepository)
+	global.InitDatabaseIndex(TokenRepository)
 	return nil
 }
 

@@ -52,7 +52,7 @@ func SortContacts(persons []*people.Person) {
 }
 
 func GetPeopleContacts(namespace string) []*people.Person {
-	indexName := strings.Join([]string{namespace, "people"}, "_")
+	indexName := strings.Join([]string{"people", namespace}, "_")
 	var persons []*people.Person
 	if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend(indexName, func(key, val string) bool {

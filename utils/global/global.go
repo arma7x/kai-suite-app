@@ -53,10 +53,10 @@ func CheckIPAddress(ip, port string) (string, error) {
 	return ipAddr, nil 
 }
 
-func RefreshDBIndex(accounts map[string]misc.UserInfoAndToken) {
+func InitDatabaseIndex(accounts map[string]misc.UserInfoAndToken) {
 	for key, _ := range accounts {
 		index := strings.Join([]string{key, "people", "*"}, ":")
-		indexName := strings.Join([]string{key, "people"}, "_")
+		indexName := strings.Join([]string{"people", key}, "_")
 		log.Info("indexName: ", indexName)
 		log.Info("index: ", index)
 		CONTACTS_DB.CreateIndex(indexName, index, buntdb.IndexString)
