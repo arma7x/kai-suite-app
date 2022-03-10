@@ -97,6 +97,13 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 			if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 				val, err := tx.Get(account.User.Id + ":" + key)
 				// log.Info("FIND HASH: ", "hash:" + account.User.Id + ":" + key)
+				metadata := &misc.Metadata{}
+				if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
+					if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr == nil {
+						log.Info("HASH: ", metadata.Hash, " Deleted: ", metadata.Deleted)
+					}
+				}
+
 				localHash, errH := tx.Get("hash:" + account.User.Id + ":" + key)
 				if err != nil || errH != nil {
 					updateList[key] = cloudCursor
@@ -146,7 +153,14 @@ func Sync(config *oauth2.Config, account misc.UserInfoAndToken) {
 					value.Metadata.Sources[0].UpdateTime = ""
 					b2, _ := value.MarshalJSON()
 					hash := sha256.Sum256(b2)
-					tx.Set("hash:" + account.User.Id + ":" + key, hex.EncodeToString(hash[:]), nil)
+					hash_s := hex.EncodeToString(hash[:])
+					tx.Set("hash:" + account.User.Id + ":" + key, hash_s, nil)
+					metadata := &misc.Metadata{}
+					metadata.Hash = hash_s
+					metadata.Deleted = false
+					if metadata_b, err := json.Marshal(metadata); err == nil {
+						tx.Set("metadata:" + account.User.Id + ":" + key, string(metadata_b[:]), nil)
+					}
 					value.Metadata.Sources[0].UpdateTime = tempTime
 					b, _ := value.MarshalJSON()
 					tx.Set(account.User.Id + ":" + key, string(b), nil)

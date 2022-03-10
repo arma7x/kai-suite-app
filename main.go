@@ -26,7 +26,26 @@ import (
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
 var _ fyne.Theme = (*custom_theme.DarkMode)(nil)
 var port string = "4444"
-var content *fyne.Container
+
+// var content *fyne.Container
+var connectionContent *fyne.Container
+var messagesContent *fyne.Container
+var contactsContent *fyne.Container
+var eventsContent *fyne.Container
+var googleServicesContent *fyne.Container
+
+var (
+	contactCardsCache map[string]map[string]fyne.CanvasObject // namespace:resourceName
+	contactCardsContainer *fyne.Container
+	contactCards []fyne.CanvasObject
+	paginationString binding.String
+	paginationLabel *widget.Label
+	contactPage = 0
+	contactMaxPage = 1
+	contactPageSegment = 0
+	contactPageOffset = 0
+)
+
 var contentTitle binding.String
 var buttonText = make(chan string)
 var ipPortLabel = widget.NewLabel("Ip Address: " + getLocalIP() + ":" + port)
@@ -85,14 +104,19 @@ func genDummyCards(list *fyne.Container) {
 	}
 }
 
-func renderConnectContent() {
-	content.Objects = nil
+func renderConnectContent(c *fyne.Container) {
+	connectionContent.Show()
+	messagesContent.Hide()
+	contactsContent.Hide()
+	eventsContent.Hide()
+	googleServicesContent.Hide()
+	c.Objects = nil
 	if websocketserver.Status == false {
 		contentTitle.Set("Disconnected")
 	} else {
 		contentTitle.Set("Connected")
 	}
-	content.Add(
+	c.Add(
 		container.NewVBox(
 			ipPortLabel,
 			buttonConnect,
@@ -100,87 +124,138 @@ func renderConnectContent() {
 	)
 }
 
-func renderMessagesContent() {
-	content.Objects = nil
+func renderMessagesContent(c *fyne.Container) {
+	connectionContent.Hide()
+	messagesContent.Show()
+	contactsContent.Hide()
+	eventsContent.Hide()
+	googleServicesContent.Hide()
+	c.Objects = nil
 	contentTitle.Set("Messages")
-	content.Add(
+	c.Add(
 		container.NewVBox(
 			widget.NewLabel("Messages Content"),
 		),
 	)
 }
 
-func renderContactsContent(c *fyne.Container, title, namespace string) {
+func renderContactsList(c *fyne.Container, title, namespace string) {
 	if _, exist := google_services.TokenRepository[namespace]; exist == false {
 		return
 	}
-	c.Objects = nil
+	contactCards = nil
+	log.Info("B contactCardsCache: ", len(contactCardsCache))
+	if contactCardsCache[namespace] == nil {
+		contactCardsCache[namespace] = make(map[string]fyne.CanvasObject)
+		personsArr := contacts.GetPeopleContacts(namespace)
+		contacts.SortContacts(personsArr)
+		log.Info("Contacts ", len(personsArr))
+		log.Info("A contactCardsCache: ", namespace, " ", len(contactCardsCache[namespace]))
+		for _, person := range personsArr {
+			// contactCards = append(contactCards, contacts.MakeContactCardWidget(namespace, person))
+			if contactCardsCache[namespace][person.ResourceName] == nil {
+				contactCardsCache[namespace][person.ResourceName] = contacts.MakeContactCardWidget(namespace, person)
+			}
+			contactCards = append(contactCards, contactCardsCache[namespace][person.ResourceName])
+		}
+	} else {
+		for _, c := range contactCardsCache[namespace] {
+			contactCards = append(contactCards, c)
+		}
+	}
+	log.Info("A contactCardsCache: ", len(contactCardsCache))
+	connectionContent.Hide()
+	messagesContent.Hide()
+	contactsContent.Show()
+	eventsContent.Hide()
+	googleServicesContent.Hide()
 	contentTitle.Set(title)
-	var cards []fyne.CanvasObject
-	list := container.NewAdaptiveGrid(4)
-	personsArr := contacts.GetPeopleContacts(namespace)
-	contacts.SortContacts(personsArr)
-	for _, person := range personsArr {
-		cards = append(cards, contacts.MakeContactCardWidget(namespace, person))
+	paginationString.Set("")
+	log.Info("B contactCardsCache: ", namespace, " ", len(contactCardsCache[namespace]))
+	contactPage = 1
+	contactMaxPage = int(math.Ceil(float64(len(contactCards)) / float64(40)))
+	contactPageSegment = contactPage - 1
+	contactPageOffset = (contactPageSegment * 40) + 40
+	if contactPageOffset >= len(contactCards) {
+		contactPageOffset = len(contactCards)
 	}
-	str := binding.NewString()
-	paginationLabel := widget.NewLabelWithData(str)
-	page := 1
-	max := int(math.Ceil(float64(len(cards)) / float64(40)))
-	seg := page - 1
-	high := (seg * 40) + 40
-	if high >= len(cards) {
-		high = len(cards)
+	contactCardsContainer.Objects = contactCards[contactPageSegment * 40:contactPageOffset]
+	contactCardsContainer.Refresh()
+	log.Info(contactPageSegment * 40, contactPageOffset)
+	paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
+}
+
+func renderContactsContent(c *fyne.Container) {
+	connectionContent.Hide()
+	messagesContent.Hide()
+	contactsContent.Hide()
+	eventsContent.Hide()
+	googleServicesContent.Hide()
+	c.Objects = nil
+	contentTitle.Set("")
+	paginationString.Set("")
+	log.Info("Contacts Rendered")
+	contactPage = 0
+	contactMaxPage = 1
+	contactPageSegment = 0
+	contactPageOffset = 0
+	if contactPageOffset >= len(contactCards) {
+		contactPageOffset = len(contactCards)
 	}
-	list.Objects = cards[seg * 40:high]
-	str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
+	paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 	box := container.NewBorder(
 		container.NewHBox(
 			widget.NewButton("Prev Page", func() {
-				if page - 1 <= 0 {
+				if contactPage - 1 <= 0 {
 					return
 				}
-				page = page - 1
-				seg = page - 1
-				high = (seg * 40) + 40
-				if high >= len(cards) {
-					high = len(cards)
+				contactPage = contactPage - 1
+				contactPageSegment = contactPage - 1
+				contactPageOffset = (contactPageSegment * 40) + 40
+				if contactPageOffset >= len(contactCards) {
+					contactPageOffset = len(contactCards)
 				}
-				list.Objects = nil
-				list.Objects = cards[seg * 40:high]
-				list.Refresh()
-				str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
+				contactCardsContainer.Objects = nil
+				contactCardsContainer.Objects = contactCards[contactPageSegment * 40:contactPageOffset]
+				log.Info(contactPageSegment * 40, contactPageOffset)
+				contactCardsContainer.Refresh()
+				paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 			}),
 			layout.NewSpacer(),
 			paginationLabel,
 			layout.NewSpacer(),
 			widget.NewButton("Next Page", func() {
-				if page + 1 > max {
+				if contactPage + 1 > contactMaxPage {
 					return
 				}
-				page = page + 1
-				seg = page - 1
-				high = (seg * 40) + 40
-				if high >= len(cards) {
-					high = len(cards)
+				contactPage = contactPage + 1
+				contactPageSegment = contactPage - 1
+				contactPageOffset = (contactPageSegment * 40) + 40
+				if contactPageOffset >= len(contactCards) {
+					contactPageOffset = len(contactCards)
 				}
-				list.Objects = nil
-				list.Objects = cards[seg * 40:high]
-				list.Refresh()
-				str.Set(strconv.Itoa(page) + "/" + strconv.Itoa(max))
+				contactCardsContainer.Objects = nil
+				contactCardsContainer.Objects = contactCards[contactPageSegment * 40:contactPageOffset]
+				log.Info(contactPageSegment * 40, contactPageOffset)
+				contactCardsContainer.Refresh()
+				paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 			}),
 		),
 		nil, nil, nil,
-		container.NewVScroll(container.NewVBox(list)),
+		container.NewVScroll(container.NewVBox(contactCardsContainer)),
 	)
 	c.Add(box)
-	list.Refresh()
 }
 
-func renderCalendarsContent() {
-	content.Objects = nil
+func renderCalendarsContent(c *fyne.Container) {
+	connectionContent.Hide()
+	messagesContent.Hide()
+	contactsContent.Hide()
+	eventsContent.Show()
+	googleServicesContent.Hide()
+	c.Objects = nil
 	contentTitle.Set("Calendars")
-	content.Add(
+	c.Add(
 		container.NewVBox(
 			widget.NewLabel("Calendars Content"),
 		),
@@ -211,7 +286,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 			}),
 			custom_widget.NewButton(namespace, "Contact List", func(idx string) {
 				log.Info("Contact List ", accounts[idx].User.Id)
-				renderContactsContent(c, accounts[idx].User.Email + " Contacts", idx)
+				renderContactsList(contactsContent, accounts[idx].User.Email + " Contacts", idx)
 			}),
 			widget.NewButton("Calendar Events", func() {
 				log.Info("Calendar Events ", accounts[namespace].User.Id)
@@ -228,6 +303,11 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 }
 
 func renderGAContent(c *fyne.Container) {
+	connectionContent.Hide()
+	messagesContent.Hide()
+	contactsContent.Hide()
+	eventsContent.Hide()
+	googleServicesContent.Show()
 	c.Objects = nil
 	contentTitle.Set("Google Account")
 	accountList := container.NewAdaptiveGrid(3)
@@ -265,9 +345,13 @@ func renderGAContent(c *fyne.Container) {
 }
 
 func main() {
+	contactCardsCache = make(map[string]map[string]fyne.CanvasObject)
 	contentTitle = binding.NewString()
 	contentTitle.Set("")
 	contentLabel := widget.NewLabelWithData(contentTitle)
+	paginationString = binding.NewString()
+	paginationString.Set("")
+	paginationLabel = widget.NewLabelWithData(paginationString)
 	go func() {
 		for {
 			select {
@@ -284,37 +368,41 @@ func main() {
 	fyne.CurrentApp().Settings().SetTheme(&custom_theme.LightMode{})
 	var menuButton *fyne.Container = container.NewVBox(
 		widget.NewButton("Connection", func() {
-			renderConnectContent()
-			content.Refresh()
+			renderConnectContent(connectionContent)
 		}),
 		widget.NewButton("Messages", func() {
-			renderMessagesContent()
-			content.Refresh()
+			renderMessagesContent(messagesContent)
 		}),
 		widget.NewButton("Contacts", func() {
-			renderContactsContent(content, "Local Contacts", "local")
-			content.Refresh()
+			renderContactsList(contactsContent, "Local Contacts", "local")
 		}),
 		widget.NewButton("Calendars", func() {
-			renderCalendarsContent()
-			content.Refresh()
+			renderCalendarsContent(eventsContent)
 		}),
 		widget.NewButton("Google Account", func() {
-			renderGAContent(content)
-			content.Refresh()
+			renderGAContent(googleServicesContent)
 		}),
 	)
 	menuBox := container.NewVScroll(menuButton)
 	menu := container.NewMax()
 	menu.Add(menuBox)
-	content = container.NewMax()
-	renderConnectContent()
+
+	connectionContent = container.NewMax()
+	messagesContent = container.NewMax()
+	contactsContent = container.NewMax()
+	eventsContent = container.NewMax()
+	googleServicesContent = container.NewMax()
+	contactCardsContainer = container.NewAdaptiveGrid(4)
+
+	renderContactsContent(contactsContent)
+	renderConnectContent(connectionContent)
+
 	global.WINDOW.SetContent(container.NewBorder(
 		nil,
 		nil,
 		container.NewBorder(widget.NewLabel("KaiOS PC Suite"), nil, nil, nil, menu),
 		nil,
-		container.NewBorder(contentLabel, nil, nil, nil, content)),
+		container.NewBorder(contentLabel, nil, nil, nil, connectionContent, messagesContent, contactsContent, eventsContent, googleServicesContent)),
 	)
 	global.WINDOW.ShowAndRun()
 }
