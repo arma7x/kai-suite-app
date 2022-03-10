@@ -16,6 +16,7 @@ import (
 	"kai-suite/types/misc"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/buntdb"
+	"google.golang.org/api/people/v1"
 )
 
 type ContactCardCache struct {
@@ -35,15 +36,11 @@ var (
 	contactPageOffset = 0
 )
 
-func RenderContactsList(namespace string, repositories map[string]misc.UserInfoAndToken) {
-	if _, exist := repositories[namespace]; exist == false {
-		return
-	}
+func RenderContactsList(namespace string, personsArr []*people.Person) {
 	contactCards = nil
 	if contactContactCardCache[namespace] == nil {
 		contactContactCardCache[namespace] = make(map[string]*ContactCardCache)
 	}
-	personsArr := contacts.GetPeopleContacts(namespace)
 	contacts.SortContacts(personsArr)
 	global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		for _, person := range personsArr {

@@ -54,6 +54,7 @@ func CheckIPAddress(ip, port string) (string, error) {
 }
 
 func InitDatabaseIndex(accounts map[string]misc.UserInfoAndToken) {
+	CONTACTS_DB.CreateIndex("people_local", "local:people:*", buntdb.IndexString)
 	for key, _ := range accounts {
 		index := strings.Join([]string{key, "people", "*"}, ":")
 		indexName := strings.Join([]string{"people", key}, "_")

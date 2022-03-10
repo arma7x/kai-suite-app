@@ -139,7 +139,8 @@ func renderContactsList(title, namespace string) {
 	eventsContent.Hide()
 	googleServicesContent.Hide()
 	contentTitle.Set(title)
-	navigations.RenderContactsList(namespace, google_services.TokenRepository)
+	personsArr := contacts.GetPeopleContacts(namespace)
+	navigations.RenderContactsList(namespace, personsArr)
 }
 
 func renderCalendarsContent(c *fyne.Container) {
