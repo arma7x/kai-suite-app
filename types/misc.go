@@ -20,12 +20,12 @@ type Metadata struct {
 
 type KaiContact struct {}
 
-// QUEUE
+// QUEUE []*people.Person
 
 type TxSyncContact struct {
 	Namespace string				`json:"namespace"`	//account:people:id
 	Metadata								`json:"metadata"`
-	Person people.Person		`json:"person"`
+	Person *people.Person		`json:"person"`
 }
 
 // On Rx, pop QUEUE
@@ -36,7 +36,7 @@ type RxSyncContactFlag2 struct {
 	SyncUpdated		string	`json:"sync_updated"`
 }
 
-// On Rx, add into local contacts, push QUEUE, TxSyncContact
+// On Rx, add KaiContact to desktop local contacts, push QUEUE, TxSyncContact
 // received kaicontact from kaios then TxSync for comformation
 type RxSyncContactFlag4 struct {
 	Namespace			string	`json:"namespace"`	//local:people:KaiContact.id
