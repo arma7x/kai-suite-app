@@ -187,6 +187,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 				if websockethub.Status == false {
 					return
 				}
+				websockethub.ContactsSyncQueue = nil
 				peoples := contacts.GetPeopleContacts(name_space)
 				global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 					for _, p := range peoples {

@@ -126,6 +126,7 @@ func Stop(fn func(bool, error)) {
 	} else {
 		if Client != nil {
 			Client = nil
+			ContactsSyncQueue = nil
 			Client.GetConn().WriteMessage(websocket.CloseMessage, []byte{})
 			Client.GetConn().Close()
 		}
