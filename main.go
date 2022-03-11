@@ -184,6 +184,9 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 			}),
 			custom_widget.NewButton(namespace, "Sync KaiOS Contacts", func(name_space string) {
 				log.Info("Sync KaiOS Contacts ", name_space)
+				if websockethub.Status == false {
+					return
+				}
 				peoples := contacts.GetPeopleContacts(name_space)
 				global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 					for _, p := range peoples {
