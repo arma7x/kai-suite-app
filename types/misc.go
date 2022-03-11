@@ -25,10 +25,26 @@ type Metadata struct {
 	Deleted 			bool		`json:"deleted,omitempty"`
 }
 
+type KaiEmail struct {
+	Type 	[]string	`json:"type"`
+	Value string		`json:"value"`
+}
 
-// QUEUE []TxSyncContact
+type KaiTel struct {
+	Type 	[]string	`json:"type"`
+	Value string		`json:"value"`
+}
 
-type KaiContact struct {}
+type KaiContact struct {
+	Id 					string		`json:"id"`
+	Published		string		`json:"published"`
+	Updated			string		`json:"updated"`
+	Email				[]KaiEmail			`json:"email,omitempty"`
+	Tel					[]KaiTel				`json:"tel,omitempty"`
+	Name 				[]string	`json:"name"`
+	GivenName		[]string	`json:"givenName"`
+	familyName	[]string	`json:"familyName"`
+}
 
 type TxSyncContact struct {
 	Namespace string				`json:"namespace"`	//account:people:id

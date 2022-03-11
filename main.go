@@ -184,6 +184,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 				}
 				websockethub.ContactsSyncQueue = nil
 				peoples := contacts.GetPeopleContacts(name_space)
+				contacts.SortContacts(peoples)
 				global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 					for _, p := range peoples {
 						key := strings.Join([]string{name_space, strings.Replace(p.ResourceName, "/", ":", 1)}, ":")
