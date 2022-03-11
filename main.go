@@ -37,19 +37,15 @@ type ContactCardCache struct {
 	Card fyne.CanvasObject
 }
 
+var websocketBtnTxtChan = make(chan string)
+var websocketClientChan = make(chan bool)
+
 var contentTitle binding.String
-var buttonText = make(chan string)
+var deviceLabel = widget.NewLabel("Device: -")
 var ipPortLabel = widget.NewLabel("Ip Address: " + getLocalIP() + ":" + port)
 var buttonConnect = widget.NewButton("Connect", func() {
 	if websocketserver.Status == false {
-		addr, err := global.CheckIPAddress(getLocalIP(), port);
-		if err != nil {
-			log.Warn(err.Error())
-			return
-		}
-		log.Info(addr)
-		ipPortLabel.SetText("Ip Address: " + addr)
-		go websocketserver.Start(addr, onStatusChange)
+		go websocketserver.Start(onStatusChange)
 	} else {
 		websocketserver.Stop(onStatusChange)
 	}
@@ -74,11 +70,11 @@ func onStatusChange(status bool, err error) {
 	if (status) {
 		log.Info("Connected")
 		contentTitle.Set("Connected")
-		buttonText <- "Disconnect"
+		websocketBtnTxtChan <- "Disconnect"
 	} else {
 		contentTitle.Set("Disconnected")
 		log.Info("Disconnected")
-		buttonText <- "Connect"
+		websocketBtnTxtChan <- "Connect"
 	}
 	if err != nil {
 		log.Warn(strconv.FormatBool(status), err.Error())
@@ -109,6 +105,7 @@ func renderConnectContent(c *fyne.Container) {
 	}
 	c.Add(
 		container.NewVBox(
+			deviceLabel,
 			ipPortLabel,
 			buttonConnect,
 		),
@@ -242,14 +239,28 @@ func renderGAContent(c *fyne.Container) {
 }
 
 func main() {
+	addr, err := global.CheckIPAddress(getLocalIP(), port);
+	if err != nil {
+		log.Warn(err.Error())
+	} else {
+		log.Info(addr)
+		ipPortLabel.SetText("Ip Address: " + addr)
+		websocketserver.Init(addr, websocketClientChan)
+	}
 	contentTitle = binding.NewString()
 	contentTitle.Set("")
 	contentLabel := widget.NewLabelWithData(contentTitle)
 	go func() {
 		for {
 			select {
-				case txt := <- buttonText:
+				case txt := <- websocketBtnTxtChan:
 					buttonConnect.SetText(txt)
+				case present := <- websocketClientChan:
+					if present {
+						deviceLabel.SetText("Device: " + websocketserver.Client.GetDevice())
+					} else {
+						deviceLabel.SetText("Device: -")
+					}
 			}
 		}
 	}()

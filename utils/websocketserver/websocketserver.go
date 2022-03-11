@@ -8,9 +8,13 @@ import (
 	"github.com/gorilla/websocket"
 	"context"
 	"kai-suite/types"
+	"encoding/json"
 )
 
 var (
+	initialized = false
+	address string
+	websocketClientChan chan bool
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -34,7 +38,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// id as time
-	Client = types.CreateClient("", "", false, conn);
+	Client = types.CreateClient("Unknown", conn)
+	websocketClientChan <- true
 	log.Info("upgrade success")
 	defer Client.GetConn().Close()
 	for {
@@ -42,20 +47,29 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) || err == io.EOF {
 				log.Error(err)
+				websocketClientChan <- false
 				break
 			}
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Error(err)
+				websocketClientChan <- false
 				break
 			}
 			log.Error(err)
+			websocketClientChan <- false
 			break
 		}
 		switch mt {
 			case websocket.TextMessage:
-				wsmsg := types.ReadMessage{}
-				wsmsg.UnmarshalJSON(msg);
-				log.Info("recv: ", wsmsg)
+				rx := types.WebsocketRxMessageFlag{}
+				if err := json.Unmarshal(msg, &rx); err == nil {
+					switch rx.Flag {
+						case 0:
+							// log.Info(rx.Flag, ": ", rx.Message)
+							Client.SetDevice(rx.Message)
+							websocketClientChan <- true
+					}
+				}
 		}
 		//err = conn.WriteMessage(mt, msg)
 		//if err != nil {
@@ -65,11 +79,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Start(addr string, fn func(bool, error)) {
+func Init(addr string, clientChan chan bool) {
+	initialized = true
+	address = addr
+	websocketClientChan = clientChan
+}
+
+func Start(fn func(bool, error)) {
+	if initialized == false {
+		return
+	}
 	Status = true
 	fn(Status, nil)
 	m := http.NewServeMux()
-	Server = http.Server{Addr: addr, Handler: m}
+	Server = http.Server{Addr: address, Handler: m}
 	m.HandleFunc("/", handler)
 	if err := Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		Status = false
@@ -78,13 +101,16 @@ func Start(addr string, fn func(bool, error)) {
 }
 
 func Stop(fn func(bool, error)) {
+	if initialized == false {
+		return
+	}
 	if err := Server.Shutdown(context.Background()); err != nil {
 		fn(Status, err)
 	} else {
 		if Client != nil {
+			Client = nil
 			Client.GetConn().WriteMessage(websocket.CloseMessage, []byte{})
 			Client.GetConn().Close()
-			Client = nil
 		}
 		Status = false
 		fn(Status, nil)

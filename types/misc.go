@@ -11,6 +11,13 @@ type UserInfoAndToken struct {
 	Token	*oauth2.Token 					`json:"token"`
 }
 
+type WebsocketRxMessageFlag struct {
+	Flag int				`json:"flag"`
+	Message string	`json:"message"`
+}
+
+type RxClientFlag0 string
+
 type Metadata struct {
 	SyncID 				string	`json:"sync_id,omitempty"`			//KaiContact.id
 	SyncUpdated		string	`json:"sync_updated,omitempty"`	//KaiContact.updated
@@ -18,11 +25,12 @@ type Metadata struct {
 	Deleted 			bool		`json:"deleted,omitempty"`
 }
 
-type KaiContact struct {}
 
 // QUEUE []TxSyncContact
 
-type TxSyncContact struct {
+type KaiContact struct {}
+
+type TxSyncContact1 struct {
 	Namespace string				`json:"namespace"`	//account:people:id
 	Metadata								`json:"metadata"`
 	Person *people.Person		`json:"person"`
