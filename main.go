@@ -13,7 +13,7 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
-	"kai-suite/utils/websocketserver"
+	"kai-suite/utils/websockethub"
 	"kai-suite/utils/google_services"
 	"kai-suite/types"
 	"kai-suite/theme"
@@ -48,10 +48,10 @@ var contentTitle binding.String
 var deviceLabel = widget.NewLabel("Device: -")
 var ipPortLabel = widget.NewLabel("Ip Address: " + getLocalIP() + ":" + port)
 var buttonConnect = widget.NewButton("Connect", func() {
-	if websocketserver.Status == false {
-		go websocketserver.Start(onStatusChange)
+	if websockethub.Status == false {
+		go websockethub.Start(onStatusChange)
 	} else {
-		websocketserver.Stop(onStatusChange)
+		websockethub.Stop(onStatusChange)
 	}
 })
 
@@ -102,7 +102,7 @@ func renderConnectContent(c *fyne.Container) {
 	eventsContent.Hide()
 	googleServicesContent.Hide()
 	c.Objects = nil
-	if websocketserver.Status == false {
+	if websockethub.Status == false {
 		contentTitle.Set("Disconnected")
 	} else {
 		contentTitle.Set("Connected")
@@ -199,16 +199,16 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 							return nil
 						}
 						// log.Info(idx, " success")
-						websocketserver.EnqueueContactSync(types.TxSyncContact{Namespace: key, Metadata: metadata, Person: p})
+						websockethub.EnqueueContactSync(types.TxSyncContact{Namespace: key, Metadata: metadata, Person: p})
 					}
 					return nil
 				})
-				log.Info("Total queue: ", len(websocketserver.ContactsSyncQueue))
-				if len(websocketserver.ContactsSyncQueue) > 0 && websocketserver.Client != nil {
-					item, _ := websocketserver.GetLastContactSync()
+				log.Info("Total queue: ", len(websockethub.ContactsSyncQueue))
+				if len(websockethub.ContactsSyncQueue) > 0 && websockethub.Client != nil {
+					item, _ := websockethub.GetLastContactSync()
 					bd, _ := json.Marshal(item)
 					btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
-					if err := websocketserver.Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+					if err := websockethub.Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
 						log.Error("write:", err)
 					}
 				}
@@ -283,7 +283,7 @@ func main() {
 	} else {
 		log.Info(addr)
 		ipPortLabel.SetText("Ip Address: " + addr)
-		websocketserver.Init(addr, websocketClientChan)
+		websockethub.Init(addr, websocketClientChan)
 	}
 	contentTitle = binding.NewString()
 	contentTitle.Set("")
@@ -295,7 +295,7 @@ func main() {
 					buttonConnect.SetText(txt)
 				case present := <- websocketClientChan:
 					if present {
-						deviceLabel.SetText("Device: " + websocketserver.Client.GetDevice())
+						deviceLabel.SetText("Device: " + websockethub.Client.GetDevice())
 					} else {
 						deviceLabel.SetText("Device: -")
 					}

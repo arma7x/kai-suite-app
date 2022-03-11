@@ -1,4 +1,4 @@
-package websocketserver
+package websockethub
 
 import(
 	"errors"
