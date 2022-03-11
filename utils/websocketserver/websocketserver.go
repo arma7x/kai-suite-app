@@ -27,10 +27,6 @@ var (
 	Client *types.Client
 )
 
-var(
-	ContactsSyncQueue []types.TxSyncContact
-)
-
 func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Upgrade") != "websocket" && r.Header.Get("Connection") != "Upgrade" {
 		fmt.Fprintf(w, "PC Suite for KaiOS device")
@@ -65,18 +61,30 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 		switch mt {
 			case websocket.TextMessage:
-				rx := types.WebsocketRxMessageFlag{}
+				rx := types.WebsocketMessageFlag{}
 				if err := json.Unmarshal(msg, &rx); err == nil {
 					switch rx.Flag {
 						case 0:
-							Client.SetDevice(rx.Message)
+							Client.SetDevice(rx.Data)
 							websocketClientChan <- true
 						case 2:
-							log.Info(rx.Flag, ": ", rx.Message)
+							data := types.RxSyncContactFlag2{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+								DequeueContactSync()
+								log.Info(rx.Flag, ": ", data.Namespace, ": ", data.SyncID, ": ", data.SyncUpdated)
+								if len(ContactsSyncQueue) > 0 && Client != nil {
+									item, _ := GetLastContactSync()
+									bd, _ := json.Marshal(item)
+									btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
+									if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+										log.Error("write:", err)
+									}
+								}
+							}
 						case 4:
-							log.Info(rx.Flag, ": ", rx.Message)
+							log.Info(rx.Flag, ": ", rx.Data)
 						case 6:
-							log.Info(rx.Flag, ": ", rx.Message)
+							log.Info(rx.Flag, ": ", rx.Data)
 					}
 				}
 		}

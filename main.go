@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"sort"
 	"net"
 	"strconv"
@@ -20,6 +21,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	custom_widget "kai-suite/widgets"
 	"kai-suite/utils/contacts"
+	"github.com/tidwall/buntdb"
+	"encoding/json"
+	"github.com/gorilla/websocket"
 )
 
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
@@ -169,18 +173,52 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 		card.SetSubTitle(accounts[namespace].User.Email)
 		card.SetContent(container.NewAdaptiveGrid(
 			2,
-			custom_widget.NewButton(namespace, "Sync Contact", func(idx string) {
-				log.Info("Sync Contact ", accounts[idx].User.Id)
+			custom_widget.NewButton(namespace, "Sync Contact", func(name_space string) {
+				log.Info("Sync Contact ", accounts[name_space].User.Id)
 				if authConfig, err := google_services.GetConfig(); err == nil {
-					google_services.Sync(authConfig, google_services.TokenRepository[accounts[idx].User.Id]);
+					google_services.Sync(authConfig, google_services.TokenRepository[accounts[name_space].User.Id]);
 				}
 			}),
-			widget.NewButton("Sync Calendar", func() {
-				log.Info("Sync Calendar ", accounts[namespace].User.Id)
+			custom_widget.NewButton(namespace, "Sync Calendar", func(name_space string) {
+				log.Info("Sync Calendar ", accounts[name_space].User.Id)
 			}),
-			custom_widget.NewButton(namespace, "Contact List", func(idx string) {
-				log.Info("Contact List ", accounts[idx].User.Id)
-				renderContactsList(accounts[idx].User.Email + " Contacts", idx)
+			custom_widget.NewButton(namespace, "Sync KaiOS Contacts", func(name_space string) {
+				log.Info("Sync KaiOS Contacts ", name_space)
+				peoples := contacts.GetPeopleContacts(name_space)
+				global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
+					for _, p := range peoples {
+						key := strings.Join([]string{name_space, strings.Replace(p.ResourceName, "/", ":", 1)}, ":")
+						metadata := types.Metadata{}
+						if metadata_s, err := tx.Get("metadata:" + key); err == nil {
+							if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
+								// log.Warn(idx, "-", err.Error())
+								return nil
+							}
+						} else {
+							// log.Warn(idx, "~", err.Error())
+							return nil
+						}
+						// log.Info(idx, " success")
+						websocketserver.EnqueueContactSync(types.TxSyncContact{Namespace: key, Metadata: metadata, Person: p})
+					}
+					return nil
+				})
+				log.Info("Total queue: ", len(websocketserver.ContactsSyncQueue))
+				if len(websocketserver.ContactsSyncQueue) > 0 && websocketserver.Client != nil {
+					item, _ := websocketserver.GetLastContactSync()
+					bd, _ := json.Marshal(item)
+					btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
+					if err := websocketserver.Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+						log.Error("write:", err)
+					}
+				}
+			}),
+			custom_widget.NewButton(namespace, "Sync KaiOS Calendar", func(name_space string) {
+				log.Info("Sync KaiOS Calendar ", accounts[name_space].User.Id)
+			}),
+			custom_widget.NewButton(namespace, "Contact List", func(name_space string) {
+				log.Info("Contact List ", accounts[name_space].User.Id)
+				renderContactsList(accounts[name_space].User.Email + " Contacts", name_space)
 			}),
 			widget.NewButton("Calendar Events", func() {
 				log.Info("Calendar Events ", accounts[namespace].User.Id)

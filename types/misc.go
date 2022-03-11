@@ -11,9 +11,9 @@ type UserInfoAndToken struct {
 	Token	*oauth2.Token 					`json:"token"`
 }
 
-type WebsocketRxMessageFlag struct {
-	Flag int				`json:"flag"`
-	Message string	`json:"message"`
+type WebsocketMessageFlag struct {
+	Flag int		`json:"flag"`
+	Data string	`json:"data"`
 }
 
 type RxClientFlag0 string
