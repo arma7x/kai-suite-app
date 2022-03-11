@@ -30,7 +30,7 @@ type Metadata struct {
 
 type KaiContact struct {}
 
-type TxSyncContact1 struct {
+type TxSyncContact struct {
 	Namespace string				`json:"namespace"`	//account:people:id
 	Metadata								`json:"metadata"`
 	Person *people.Person		`json:"person"`

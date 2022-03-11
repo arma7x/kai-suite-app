@@ -27,6 +27,10 @@ var (
 	Client *types.Client
 )
 
+var(
+	ContactsSyncQueue []types.TxSyncContact
+)
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Upgrade") != "websocket" && r.Header.Get("Connection") != "Upgrade" {
 		fmt.Fprintf(w, "PC Suite for KaiOS device")
@@ -65,9 +69,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				if err := json.Unmarshal(msg, &rx); err == nil {
 					switch rx.Flag {
 						case 0:
-							// log.Info(rx.Flag, ": ", rx.Message)
 							Client.SetDevice(rx.Message)
 							websocketClientChan <- true
+						case 2:
+							log.Info(rx.Flag, ": ", rx.Message)
+						case 4:
+							log.Info(rx.Flag, ": ", rx.Message)
+						case 6:
+							log.Info(rx.Flag, ": ", rx.Message)
 					}
 				}
 		}
