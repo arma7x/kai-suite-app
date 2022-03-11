@@ -14,7 +14,7 @@ import (
 var (
 	initialized = false
 	address string
-	websocketClientChan chan bool
+	clientVisibilityChan chan bool
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -39,24 +39,22 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	// id as time
 	Client = types.CreateClient("Unknown", conn)
-	websocketClientChan <- true
+	clientVisibilityChan <- true
 	log.Info("upgrade success")
 	defer Client.GetConn().Close()
 	for {
 		mt, msg, err := conn.ReadMessage()
 		if err != nil {
+			Client = nil
+			ContactsSyncQueue = nil
+			clientVisibilityChan <- false
+			log.Error(err)
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) || err == io.EOF {
-				log.Error(err)
-				websocketClientChan <- false
 				break
 			}
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Error(err)
-				websocketClientChan <- false
 				break
 			}
-			log.Error(err)
-			websocketClientChan <- false
 			break
 		}
 		switch mt {
@@ -66,14 +64,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 					switch rx.Flag {
 						case 0:
 							Client.SetDevice(rx.Data)
-							websocketClientChan <- true
+							clientVisibilityChan <- true
 						case 2:
 							data := types.RxSyncContactFlag2{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
-								DequeueContactSync()
 								log.Info(rx.Flag, ": ", data.Namespace, ": ", data.SyncID, ": ", data.SyncUpdated)
-								if len(ContactsSyncQueue) > 0 && Client != nil {
-									item, _ := GetLastContactSync()
+								if item, err := DequeueContactSync(); err == nil && Client != nil {
 									bd, _ := json.Marshal(item)
 									btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
 									if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
@@ -88,18 +84,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 		}
-		//err = conn.WriteMessage(mt, msg)
-		//if err != nil {
-			//log.Error("write:", err)
-			//break
-		//}
 	}
 }
 
 func Init(addr string, clientChan chan bool) {
 	initialized = true
 	address = addr
-	websocketClientChan = clientChan
+	clientVisibilityChan = clientChan
 }
 
 func Start(fn func(bool, error)) {

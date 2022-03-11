@@ -10,7 +10,7 @@ var(
 )
 
 func EnqueueContactSync(item types.TxSyncContact) {
-	ContactsSyncQueue = append(ContactsSyncQueue, item)
+	ContactsSyncQueue = append([]types.TxSyncContact{item}, ContactsSyncQueue...)
 }
 
 func DequeueContactSync() (item types.TxSyncContact, err error) {

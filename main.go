@@ -36,13 +36,8 @@ var contactsContent *fyne.Container
 var eventsContent *fyne.Container
 var googleServicesContent *fyne.Container
 
-type ContactCardCache struct {
-	Hash string
-	Card fyne.CanvasObject
-}
-
 var websocketBtnTxtChan = make(chan string)
-var websocketClientChan = make(chan bool)
+var websocketClientVisibilityChan = make(chan bool)
 
 var contentTitle binding.String
 var deviceLabel = widget.NewLabel("Device: -")
@@ -184,7 +179,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 			}),
 			custom_widget.NewButton(namespace, "Sync KaiOS Contacts", func(name_space string) {
 				log.Info("Sync KaiOS Contacts ", name_space)
-				if websockethub.Status == false {
+				if websockethub.Status == false  || websockethub.Client == nil {
 					return
 				}
 				websockethub.ContactsSyncQueue = nil
@@ -208,8 +203,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 					return nil
 				})
 				log.Info("Total queue: ", len(websockethub.ContactsSyncQueue))
-				if len(websockethub.ContactsSyncQueue) > 0 && websockethub.Client != nil {
-					item, _ := websockethub.GetLastContactSync()
+				if item, err := websockethub.DequeueContactSync(); err == nil && websockethub.Client != nil {
 					bd, _ := json.Marshal(item)
 					btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
 					if err := websockethub.Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
@@ -287,7 +281,7 @@ func main() {
 	} else {
 		log.Info(addr)
 		ipPortLabel.SetText("Ip Address: " + addr)
-		websockethub.Init(addr, websocketClientChan)
+		websockethub.Init(addr, websocketClientVisibilityChan)
 	}
 	contentTitle = binding.NewString()
 	contentTitle.Set("")
@@ -297,7 +291,7 @@ func main() {
 			select {
 				case txt := <- websocketBtnTxtChan:
 					buttonConnect.SetText(txt)
-				case present := <- websocketClientChan:
+				case present := <- websocketClientVisibilityChan:
 					if present {
 						deviceLabel.SetText("Device: " + websockethub.Client.GetDevice())
 					} else {
