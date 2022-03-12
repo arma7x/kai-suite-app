@@ -78,7 +78,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 								}
 							}
 						case 4:
-							log.Info(rx.Flag, ": ", rx.Data)
+							data := types.RxSyncContactFlag4{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+								b, _:= json.Marshal(data)
+								log.Info(rx.Flag, ": ", data.Namespace, ": ", string(b))
+								
+							}
 						case 6:
 							log.Info(rx.Flag, ": ", rx.Data)
 					}
