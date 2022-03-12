@@ -103,6 +103,7 @@ func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 				}
 				metadata := types.Metadata{}
 				if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
+					// log.Info(metadata_s)
 					if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
 						updateList[key] = cloudCursor
 						return err
@@ -158,8 +159,15 @@ func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 					b2, _ := value.MarshalJSON()
 					hash := sha256.Sum256(b2)
 					metadata := types.Metadata{}
+					if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
+						log.Info(metadata_s)
+						if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
+							metadata.Deleted = false
+						}
+					} else {
+						metadata.Deleted = false
+					}
 					metadata.Hash = hex.EncodeToString(hash[:])
-					metadata.Deleted = false
 					if metadata_b, err := json.Marshal(metadata); err == nil {
 						tx.Set("metadata:" + account.User.Id + ":" + key, string(metadata_b[:]), nil)
 					}
@@ -183,6 +191,7 @@ func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 					hash := sha256.Sum256(b2)
 					metadata := types.Metadata{}
 					if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
+						log.Info(metadata_s)
 						if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
 							metadata.Deleted = false
 						}

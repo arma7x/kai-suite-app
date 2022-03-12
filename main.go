@@ -56,7 +56,7 @@ func getLocalIP() string {
 		return ""
 	}
 	for _, address := range addrs {
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && strings.HasPrefix(ipnet.String(), "192.") {
 			if ipnet.IP.To4() != nil {
 				return ipnet.IP.String()
 			}

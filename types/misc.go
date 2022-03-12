@@ -22,28 +22,28 @@ type Metadata struct {
 	SyncID 				string	`json:"sync_id,omitempty"`			//KaiContact.id
 	SyncUpdated		string	`json:"sync_updated,omitempty"`	//KaiContact.updated
 	Hash					string	`json:"hash,omitempty"`
-	Deleted 			bool		`json:"deleted,omitempty"`
+	Deleted 			bool		`json:"deleted"`
 }
 
 type KaiEmail struct {
-	Type 	[]string	`json:"type"`
-	Value string		`json:"value"`
+	Type 	[]string	`json:"type,omitempty"`
+	Value string		`json:"value,omitempty"`
 }
 
 type KaiTel struct {
-	Type 	[]string	`json:"type"`
-	Value string		`json:"value"`
+	Type 	[]string	`json:"type,omitempty"`
+	Value string		`json:"value,omitempty"`
 }
 
 type KaiContact struct {
-	Id 					string		`json:"id"`
-	Published		string		`json:"published"`
-	Updated			string		`json:"updated"`
-	Email				[]KaiEmail			`json:"email,omitempty"`
-	Tel					[]KaiTel				`json:"tel,omitempty"`
-	Name 				[]string	`json:"name"`
-	GivenName		[]string	`json:"givenName"`
-	familyName	[]string	`json:"familyName"`
+	Id 					string			`json:"id"`
+	Published		string			`json:"published"`
+	Updated			string			`json:"updated"`
+	Email				[]KaiEmail	`json:"email,omitempty"`
+	Tel					[]KaiTel		`json:"tel,omitempty"`
+	Name 				[]string		`json:"name"`
+	GivenName		[]string		`json:"givenName"`
+	FamilyName	[]string		`json:"familyName"`
 }
 
 type TxSyncContact struct {
@@ -56,8 +56,8 @@ type TxSyncContact struct {
 // successfully add or update contact data on kaios
 type RxSyncContactFlag2 struct {
 	Namespace			string	`json:"namespace"`	//account:people:id
-	SyncID				string	`json:"sync_id"`
-	SyncUpdated		string	`json:"sync_updated"`
+	SyncID				string	`json:"sync_id,omitempty"`
+	SyncUpdated		string	`json:"sync_updated,omitempty"`
 }
 
 // On Rx, add KaiContact to desktop local contacts, push QUEUE, next QUEUE
