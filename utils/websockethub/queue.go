@@ -3,6 +3,9 @@ package websockethub
 import(
 	"errors"
 	"kai-suite/types"
+	log "github.com/sirupsen/logrus"
+	"encoding/json"
+	"github.com/gorilla/websocket"
 )
 
 var(
@@ -36,4 +39,16 @@ func GetLastContactSync() (item types.TxSyncContact, err error) {
 	}
 	item = ContactsSyncQueue[size - 1]
 	return 
+}
+
+func FlushContactSync() error {
+	if item, err := DequeueContactSync(); err == nil && Client != nil {
+		bd, _ := json.Marshal(item)
+		btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
+		if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+			log.Warn(err.Error())
+			return err
+		}
+	}
+	return nil
 }

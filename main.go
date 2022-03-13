@@ -23,7 +23,6 @@ import (
 	"kai-suite/utils/contacts"
 	"github.com/tidwall/buntdb"
 	"encoding/json"
-	"github.com/gorilla/websocket"
 )
 
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
@@ -226,13 +225,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 					return nil
 				})
 				log.Info("Total queue: ", len(websockethub.ContactsSyncQueue))
-				if item, err := websockethub.DequeueContactSync(); err == nil && websockethub.Client != nil {
-					bd, _ := json.Marshal(item)
-					btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
-					if err := websockethub.Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
-						log.Error("write:", err)
-					}
-				}
+				websockethub.FlushContactSync()
 			}),
 			custom_widget.NewButton(namespace, "Sync KaiOS Calendar", func(name_space string) {
 				log.Info("Sync KaiOS Calendar ", accounts[name_space].User.Id)
