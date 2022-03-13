@@ -28,7 +28,7 @@ import (
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
 var _ fyne.Theme = (*custom_theme.DarkMode)(nil)
 
-var ip 		string = "-"
+var ip 		string = "(Select one)"
 var port 	string = "4444"
 
 var connectionContent *fyne.Container
@@ -104,6 +104,11 @@ func renderConnectContent(c *fyne.Container) {
 	contactsContent.Hide()
 	eventsContent.Hide()
 	googleServicesContent.Hide()
+	inputIp := widget.NewSelect(getLocalIPAddresses(), func(selected string) {
+		ip = selected
+		ipPortLabel.SetText("Ip Address: " + ip + ":" + port)
+	})
+	inputIp.PlaceHolder = ip
 	inputPort := widget.NewEntry()
 	inputPort.Text = port
 	inputPort.OnChanged = func(val string) {
@@ -121,10 +126,7 @@ func renderConnectContent(c *fyne.Container) {
 			deviceLabel,
 			ipPortLabel,
 			container.NewHBox(
-				widget.NewSelect(getLocalIPAddresses(), func(selected string) {
-					ip = selected
-					ipPortLabel.SetText("Ip Address: " + ip + ":" + port)
-				}),
+				inputIp,
 				inputPort,
 			),
 			buttonConnect,
