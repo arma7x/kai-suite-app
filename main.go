@@ -191,13 +191,13 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 		card.SetSubTitle(accounts[namespace].User.Email)
 		card.SetContent(container.NewAdaptiveGrid(
 			2,
-			custom_widget.NewButton(namespace, "Sync Contact", func(name_space string) {
+			custom_widget.NewButton(namespace, "Sync Cloud Contact", func(name_space string) {
 				log.Info("Sync Contact ", accounts[name_space].User.Id)
 				if authConfig, err := google_services.GetConfig(); err == nil {
 					google_services.Sync(authConfig, google_services.TokenRepository[accounts[name_space].User.Id])
 				}
 			}),
-			custom_widget.NewButton(namespace, "Sync Calendar", func(name_space string) {
+			custom_widget.NewButton(namespace, "Sync Cloud Calendar", func(name_space string) {
 				log.Info("Sync Calendar ", accounts[name_space].User.Id)
 			}),
 			custom_widget.NewButton(namespace, "Sync KaiOS Contacts", func(name_space string) {

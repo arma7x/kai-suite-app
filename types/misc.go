@@ -52,6 +52,10 @@ type TxSyncContact struct {
 	Person *people.Person		`json:"person"`
 }
 
+type TxDeleteContact struct {
+	Namespace string				`json:"namespace"`	//account:people:id
+}
+
 // On Rx, pop QUEUE, next QUEUE
 // successfully add or update contact data on kaios
 type RxSyncContactFlag2 struct {

@@ -17,6 +17,7 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/people/v1"
+	"kai-suite/navigations"
 )
 
 var (
@@ -45,7 +46,7 @@ func GetContacts(config *oauth2.Config, account types.UserInfoAndToken) []*peopl
 			run = false
 		} else {
 			if r.NextPageToken != "" {
-				log.Info(r.NextPageToken, "\n")
+				log.Info(r.NextPageToken)
 			}
 			connections = append(connections, r.Connections...)
 			if r.NextPageToken == "" {
@@ -60,7 +61,7 @@ func GetContacts(config *oauth2.Config, account types.UserInfoAndToken) []*peopl
 
 func CreateContacts() {}
 
-func UpdateContacts(config *oauth2.Config, account types.UserInfoAndToken, contacts map[string]people.Person) ([]*people.Person, []*people.Person) {
+func UpdateContacts(config *oauth2.Config, account types.UserInfoAndToken, contacts map[string]*people.Person) ([]*people.Person, []*people.Person) {
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
 	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
@@ -70,7 +71,7 @@ func UpdateContacts(config *oauth2.Config, account types.UserInfoAndToken, conta
 	var success []*people.Person
 	var fail		[]*people.Person
 	for key, pr := range contacts {
-		if p, err := srv.People.UpdateContact(key, &pr).PersonFields(fields).UpdatePersonFields(updateFields).Do(); err == nil {
+		if p, err := srv.People.UpdateContact(key, pr).PersonFields(fields).UpdatePersonFields(updateFields).Do(); err == nil {
 			b, _ := p.MarshalJSON()
 			log.Info("SUCCESS Person: ", string(b))
 			success = append(success, p)
@@ -82,35 +83,66 @@ func UpdateContacts(config *oauth2.Config, account types.UserInfoAndToken, conta
 	return success, fail
 }
 
-func DeleteContacts() {}
+func DeleteContacts(config *oauth2.Config, account types.UserInfoAndToken, contacts map[string]*people.Person) ([]*people.Person, []*people.Person) {
+	ctx := context.Background()
+	client := GetAuthClient(config, account.Token)
+	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		log.Warn("Unable to create people Client: ", err)
+	}
+	var success []*people.Person
+	var fail		[]*people.Person
+	for _, pr := range contacts {
+		if _, err := srv.People.DeleteContact(pr.ResourceName).Do(); err == nil {
+			log.Info("SUCCESS Person: ", pr.ResourceName)
+			success = append(success, pr)
+		} else {
+			log.Info("FAIL Person: ", err)
+			fail = append(fail, pr)
+		}
+	}
+	return success, fail
+}
 
 func SearchContacts() {}
 
 func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 	connections := GetContacts(config, account)
 	if len(connections) > 0 {
+		personList := make(map[string]*people.Person)
+		deleteList := make(map[string]*people.Person)
 		updateList := make(map[string]*people.Person)
-		syncList := make(map[string]people.Person)
+		syncList := make(map[string]*people.Person)
 		for _, cloudCursor := range connections {
-			// log.Info(i, " ", cloudCursor.Metadata.Sources[0].UpdateTime, " ", cloudCursor.Names[0].DisplayName, "\n\n")
-			// log.Info(i, string(b), "\n\n")
+			// log.Info(i, " ", cloudCursor.Metadata.Sources[0].UpdateTime, " ", cloudCursor.Names[0].DisplayName)
+			// log.Info(i, string(b))
 			key := strings.Replace(cloudCursor.ResourceName, "/", ":", 1)
+			personList[key] = cloudCursor
 			if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
-				val, err := tx.Get(account.User.Id + ":" + key)
-				if err != nil {
-					updateList[key] = cloudCursor
-					return err
-				}
+
+				val, hasErr := tx.Get(account.User.Id + ":" + key)
+
 				metadata := types.Metadata{}
 				if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
-					// log.Info(metadata_s)
-					if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
+					if err := json.Unmarshal([]byte(metadata_s), &metadata); err != nil {
 						updateList[key] = cloudCursor
 						return err
 					}
 				} else {
 					updateList[key] = cloudCursor
 					return err
+				}
+				if metadata.Deleted == true && hasErr != nil {
+					deleteList[key] = cloudCursor
+					return errors.New("deleted local data" + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].UnstructuredName)
+				} else if metadata.Deleted == true && hasErr == nil {
+					updateList[key] = cloudCursor
+					return errors.New("restore local data" + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].UnstructuredName)
+				}
+
+				if hasErr != nil {
+					updateList[key] = cloudCursor
+					return hasErr
 				}
 
 				var localCursor people.Person
@@ -130,19 +162,19 @@ func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 						updateList[key] = cloudCursor
 						return errors.New("outdated local data" + cloudCursor.Metadata.Sources[0].UpdateTime + " " + cloudCursor.Names[0].UnstructuredName)
 					} else if cloudCursor.Metadata.Sources[0].UpdateTime < localCursor.Metadata.Sources[0].UpdateTime {
-						log.Info(cloudCursor.Metadata.Sources[0].UpdateTime, " ", localCursor.Metadata.Sources[0].UpdateTime, "\n")
-						syncList[cloudCursor.ResourceName] = localCursor
+						log.Info(cloudCursor.Metadata.Sources[0].UpdateTime, " ", localCursor.Metadata.Sources[0].UpdateTime)
+						syncList[cloudCursor.ResourceName] = &localCursor
 						return errors.New("outdated cloud data " + cloudCursor.Metadata.Sources[0].UpdateTime + " " + localCursor.Names[0].UnstructuredName)
 					}
 				} else {
 					// localCursor.Metadata.Sources[0].UpdateTime == cloudCursor.Metadata.Sources[0].UpdateTime
-					// log.Info("OK:" + account.User.Id + ":" + key, " ", localCursor.Names[0].DisplayName, "\n")
+					// log.Info("OK:" + account.User.Id + ":" + key, " ", localCursor.Names[0].DisplayName)
 					if key == "people:c9181097719823060915" {
 						log.Info(localCursor.Names[0].DisplayName)
 						//localCursor.Names[0].GivenName = "Ahmad " + time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 						//localCursor.Names[0].UnstructuredName = localCursor.Names[0].GivenName + " " + localCursor.Names[0].FamilyName
 						//localCursor.Metadata.Sources[0].UpdateTime = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-						//log.Info(key, " to update ", localCursor.Names[0].UnstructuredName, "\n")
+						//log.Info(key, " to update ", localCursor.Names[0].UnstructuredName)
 						//updateList[key] = &localCursor
 					}
 				}
@@ -151,7 +183,9 @@ func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 				log.Warn(key, " ", err)
 			}
 		}
+		log.Info("updateList: ", len(updateList))
 		if len(updateList) > 0 {
+			log.Info("updateList start")
 			global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
 				for key, value := range updateList {
 					tempTime := value.Metadata.Sources[0].UpdateTime
@@ -160,8 +194,13 @@ func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 					hash := sha256.Sum256(b2)
 					metadata := types.Metadata{}
 					if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
-						log.Info(metadata_s)
-						if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
+						if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil {
+							//if metadata.Deleted == true {
+							//	deleteList[key] = value
+							//	continue
+							//}
+							metadata.Deleted = false
+						} else {
 							metadata.Deleted = false
 						}
 					} else {
@@ -178,9 +217,11 @@ func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 				}
 				return nil
 			})
+			log.Info("updateList end")
 		}
+		log.Info("syncList: ", len(syncList))
 		if len(syncList) > 0 {
-			log.Info("syncList start\n")
+			log.Info("syncList start")
 			success, _ := UpdateContacts(config, account, syncList)
 			global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
 				for _, person := range success {
@@ -192,7 +233,7 @@ func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 					metadata := types.Metadata{}
 					if metadata_s, err := tx.Get("metadata:" + account.User.Id + ":" + key); err == nil {
 						log.Info(metadata_s)
-						if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
+						if err := json.Unmarshal([]byte(metadata_s), &metadata); err != nil {
 							metadata.Deleted = false
 						}
 					} else {
@@ -209,8 +250,54 @@ func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
 				}
 				return nil
 			})
-			log.Info("syncList end\n")
+			log.Info("syncList end")
 		}
+		log.Info("deleteList: ", len(deleteList))
+		if len(deleteList) > 0 {
+			log.Info("deleteList start")
+			success, _ := DeleteContacts(config, account, deleteList)
+			global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
+				for _, person := range success {
+					key := strings.Replace(person.ResourceName, "/", ":", 1)
+					tx.Delete("metadata:" + account.User.Id + ":" + key)
+					tx.Delete(account.User.Id + ":" + key)
+					navigations.RemoveContact(account.User.Id, person)
+				}
+				return nil
+			})
+			log.Info("deleteList end")
+		}
+		//log.Info(len(personList))
+		metadataIndexName := strings.Join([]string{"metadata", account.User.Id}, "_")
+		global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
+			keys := make(map[string]string)
+			tx.Ascend(metadataIndexName, func(key, value string) bool {
+				find := strings.Replace(key, "metadata:" + account.User.Id + ":", "", 1)
+				if _, exist := personList[find]; exist == false {
+					keys[key] = value
+				}
+				return true
+			})
+			log.Info("softDelete: ", len(keys))
+			if len(keys) > 0 {
+				for key, value := range keys {
+					metadata := types.Metadata{}
+					if err := json.Unmarshal([]byte(value), &metadata); err == nil {
+						metadata.Deleted = true
+					}
+					if metadata_b, err := json.Marshal(metadata); err == nil {
+						if _, _, err := tx.Set(key, string(metadata_b[:]), nil); err != nil {
+							log.Warn(err.Error())
+						}
+					}
+				}
+			}
+			return nil
+		})
+		// TODO check ORPHAN metadata by connections
+		// -- index metadata
+		// QUEUE DELETE
+		//
 	}
 	global.CONTACTS_DB.Shrink()
 }

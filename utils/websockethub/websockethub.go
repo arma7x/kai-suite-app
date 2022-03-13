@@ -1,6 +1,7 @@
 package websockethub
 
 import (
+	"strings"
 	"time"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"google.golang.org/api/people/v1"
 	"crypto/sha256"
 	"encoding/hex"
+	"kai-suite/navigations"
 )
 
 var (
@@ -177,7 +179,49 @@ func handler(w http.ResponseWriter, r *http.Request) {
 								}
 							}
 						case 6:
-							log.Info(rx.Flag, ": ", rx.Data)
+							data := types.RxSyncContactFlag6{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+								split := strings.Split(data.Namespace, ":")
+								if len(split) == 3 {
+									log.Info(rx.Flag, ": Delete ", split[0], ":", split[1], ":", split[2])
+									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
+										val, err := tx.Get(data.Namespace)
+										if err != nil {
+											return err
+										}
+										var person people.Person
+										if err := json.Unmarshal([]byte(val), &person); err != nil {
+											return err
+										}
+										if _, err = tx.Delete(data.Namespace); err != nil {
+											return err
+										}
+										metadata := types.Metadata{}
+										if metadata_s, err := tx.Get("metadata:" + data.Namespace); err == nil {
+											if err := json.Unmarshal([]byte(metadata_s), &metadata); err != nil {
+												return err
+											}
+											metadata.Deleted = true
+											if metadata_b, err := json.Marshal(metadata); err == nil {
+												tx.Set("metadata:" + data.Namespace, string(metadata_b[:]), nil)
+												navigations.RemoveContact(split[0], &person)
+												log.Info(rx.Flag, ": Exec Deleted ", data.Namespace)
+											} else {
+												return err
+											}
+										} else {
+											return err
+										}
+										return nil
+									})
+								}
+								// remove data.Namespace[acc:people:id]
+								// update metadata:data.Namespace:Deleted = true
+								// CLOUD
+								// ON people.Sync key !exist, move to updateList
+								// updateList[key], metadata.Deleted == true, move updateList[key] deleteList[key]
+							}
+							FlushContactSync()
 					}
 				}
 		}

@@ -57,8 +57,9 @@ func InitDatabaseIndex(accounts map[string]types.UserInfoAndToken) {
 	for key, _ := range accounts {
 		index := strings.Join([]string{key, "people", "*"}, ":")
 		indexName := strings.Join([]string{"people", key}, "_")
-		log.Info("indexName: ", indexName)
-		log.Info("index: ", index)
 		CONTACTS_DB.CreateIndex(indexName, index, buntdb.IndexString)
+		metadataIndex := strings.Join([]string{"metadata", key, "people", "*"}, ":")
+		metadataIndexName := strings.Join([]string{"metadata", key}, "_")
+		CONTACTS_DB.CreateIndex(metadataIndexName, metadataIndex, buntdb.IndexString)
 	}
 }

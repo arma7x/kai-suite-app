@@ -36,6 +36,12 @@ var (
 	contactPageOffset = 0
 )
 
+func RemoveContact(namespace string, person *people.Person) {
+	if _, ok := contactContactCardCache[namespace][person.ResourceName]; ok {
+		delete(contactContactCardCache[namespace], person.ResourceName)
+	}
+}
+
 func RenderContactsList(namespace string, personsArr []*people.Person) {
 	contactCards = nil
 	if contactContactCardCache[namespace] == nil {
@@ -47,7 +53,7 @@ func RenderContactsList(namespace string, personsArr []*people.Person) {
 			key := strings.Replace(person.ResourceName, "/", ":", 1)
 			metadata := &types.Metadata{}
 			if metadata_s, err := tx.Get("metadata:" + namespace + ":" + key); err == nil {
-				if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil {
+				if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil && metadata.Deleted == false {
 					if _, ok := contactContactCardCache[namespace][person.ResourceName]; !ok {
 						contactContactCardCache[namespace][person.ResourceName] = &ContactCardCache{
 							Hash: metadata.Hash,
