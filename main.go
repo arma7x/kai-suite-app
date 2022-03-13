@@ -48,6 +48,7 @@ var buttonConnect = widget.NewButton("Connect", func() {
 		addr, err := global.CheckIPAddress(ip, port)
 		if err != nil {
 			log.Warn(err.Error())
+			ipPortLabel.SetText(err.Error())
 		} else {
 			ipPortLabel.SetText("Ip Address: " + addr)
 			websockethub.Init(addr, websocketClientVisibilityChan)
