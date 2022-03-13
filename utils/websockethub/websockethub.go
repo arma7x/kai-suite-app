@@ -215,6 +215,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 								}
 							}
 							FlushContactSync()
+						case 8:
+							data := types.RxSyncLocalContactFlag8{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+								log.Info(len(data.KaiContacts))
+							}
 					}
 				}
 		}

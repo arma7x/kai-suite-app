@@ -78,6 +78,5 @@ type RxSyncContactFlag6 struct {
 }
 
 type RxSyncLocalContactFlag8 struct {
-	Namespace			string	`json:"namespace"`	//local:people:KaiContact.id
-	KaiContact						`json:"kai_contact"`
+	KaiContacts		[]KaiContact	`json:"kai_contacts"`
 }
