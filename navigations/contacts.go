@@ -42,7 +42,7 @@ func RemoveContact(namespace string, person *people.Person) {
 	}
 }
 
-func RenderContactsList(namespace string, personsArr []*people.Person) {
+func ViewContactsList(namespace string, personsArr []*people.Person) {
 	contactCards = nil
 	if contactContactCardCache[namespace] == nil {
 		contactContactCardCache[namespace] = make(map[string]*ContactCardCache)

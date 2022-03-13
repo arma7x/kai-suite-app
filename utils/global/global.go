@@ -26,12 +26,12 @@ func init() {
 		log.Fatal(err)
 	}
 	ROOT_PATH = filepath.Dir(ex)
-	var errdB error
-	CONTACTS_DB, errdB = buntdb.Open(ResolvePath("db/contacts.db"))
-	if errdB != nil {
-		log.Fatal(errdB)
+	CONTACTS_DB, err = buntdb.Open(ResolvePath("db/contacts.db"))
+	if err != nil {
+		log.Fatal(err)
 	}
 	CONTACTS_DB.CreateIndex("people_local", "local:people:*", buntdb.IndexString)
+  CONTACTS_DB.CreateIndex("metadata_local", "metadata:local:people:*", buntdb.IndexString)
 }
 
 func ResolvePath(dirs... string) string {

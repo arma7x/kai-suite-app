@@ -10,18 +10,20 @@ import (
 	"google.golang.org/api/calendar/v3"
 )
 
-func Calendar(client *http.Client) {
+func Calendar(client *http.Client) error {
 	ctx := context.Background()
 
 	srv, err := calendar.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
-		log.Warn("Unable to retrieve Calendar client: ", err)
+		log.Error("Unable to retrieve Calendar client: ", err)
+		return err
 	}
 
 	t := time.Now().Format(time.RFC3339)
 	events, err := srv.Events.List("primary").ShowDeleted(false).SingleEvents(true).TimeMin(t).MaxResults(10).OrderBy("startTime").Do()
 	if err != nil {
-		log.Warn("Unable to retrieve next ten of the user's events: ", err)
+		log.Error("Unable to retrieve next ten of the user's events: ", err)
+		return err
 	}
 	log.Info("Upcoming events:")
 	if len(events.Items) == 0 { // type Event struct
@@ -35,4 +37,5 @@ func Calendar(client *http.Client) {
 			log.Info("%v (%v)\n", item.Summary, date)
 		}
 	}
+	return nil
 }

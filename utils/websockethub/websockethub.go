@@ -42,10 +42,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error("upgrade:", err)
+		log.Warn("upgrade:", err)
 		return
 	}
-	// id as time
 	Client = types.CreateClient("Unknown", conn)
 	clientVisibilityChan <- true
 	log.Info("upgrade success")
@@ -56,7 +55,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			Client = nil
 			ContactsSyncQueue = nil
 			clientVisibilityChan <- false
-			log.Error(err)
+			log.Warn(err.Error())
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) || err == io.EOF {
 				break
 			}
@@ -76,7 +75,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 						case 2:
 							data := types.RxSyncContactFlag2{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
-								log.Info(rx.Flag, ": ", data.Namespace, ": ", data.SyncID, ": ", data.SyncUpdated)
+								// log.Info(rx.Flag, ": ", data.Namespace, ": ", data.SyncID, ": ", data.SyncUpdated)
 								if data.SyncID != "error" {
 									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
 										metadata := types.Metadata{}
@@ -87,15 +86,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 												if metadata_b, err := json.Marshal(metadata); err == nil {
 													tx.Set("metadata:" + data.Namespace, string(metadata_b[:]), nil)
 												} else {
-													log.Warn(err.Error())
+													log.Error(err.Error())
 													return err
 												}
 												return nil
 											}
-											log.Warn(err.Error())
+											log.Error(err.Error())
 											return err
 										} else {
-											log.Warn(err.Error())
+											log.Error(err.Error())
 											return err
 										}
 										return nil
@@ -106,8 +105,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 						case 4:
 							data := types.RxSyncContactFlag4{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
-								b, _:= json.Marshal(data)
-								log.Info(rx.Flag, ": ", data.Namespace, ": ", string(b), ": ", data.KaiContact.Updated)
+								// b, _:= json.Marshal(data)
+								// log.Info(rx.Flag, ": ", data.Namespace, ": ", string(b), ": ", data.KaiContact.Updated)
 								if err := global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
 									val, err := tx.Get(data.Namespace)
 									if err != nil {
@@ -156,21 +155,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 												person.Metadata.Sources[0].UpdateTime = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 												b2, _ := person.MarshalJSON()
 												if _, _, err := tx.Set(data.Namespace, string(b2), nil); err != nil {
-													log.Warn(err.Error())
+													log.Error(err.Error())
 													return err
 												}
 												EnqueueContactSync(types.TxSyncContact{Namespace: data.Namespace, Metadata: metadata, Person: &person}, true)
 												return FlushContactSync()
 											} else {
-												log.Warn(err.Error())
+												log.Error(err.Error())
 												return err
 											}
 											return nil
 										}
-										log.Warn(err.Error())
+										log.Error(err.Error())
 										return err
 									} else {
-										log.Warn(err.Error())
+										log.Error(err.Error())
 										return err
 									}
 									return nil
@@ -183,7 +182,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
 								split := strings.Split(data.Namespace, ":")
 								if len(split) == 3 {
-									log.Info(rx.Flag, ": Delete ", split[0], ":", split[1], ":", split[2])
+									// log.Info(rx.Flag, ": Delete ", split[0], ":", split[1], ":", split[2])
 									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
 										val, err := tx.Get(data.Namespace)
 										if err != nil {
@@ -205,7 +204,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 											if metadata_b, err := json.Marshal(metadata); err == nil {
 												tx.Set("metadata:" + data.Namespace, string(metadata_b[:]), nil)
 												navigations.RemoveContact(split[0], &person)
-												log.Info(rx.Flag, ": Exec Deleted ", data.Namespace)
 											} else {
 												return err
 											}
@@ -215,11 +213,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 										return nil
 									})
 								}
-								// remove data.Namespace[acc:people:id]
-								// update metadata:data.Namespace:Deleted = true
-								// CLOUD
-								// ON people.Sync key !exist, move to updateList
-								// updateList[key], metadata.Deleted == true, move updateList[key] deleteList[key]
 							}
 							FlushContactSync()
 					}

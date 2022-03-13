@@ -32,14 +32,14 @@ func MakeContactCardWidget(namespace string, person *people.Person) fyne.CanvasO
 	}
 	id := namespace + ":" + strings.Replace(person.ResourceName, "/", ":", 1)
 	card.SetContent(container.NewHBox(
-		custom_widget.NewButton(id, "Detail", func(nmsp string) {
-			log.Info("Clicked detail ", nmsp)
+		custom_widget.NewButton(id, "Detail", func(scope string) {
+			log.Info("Clicked detail ", scope)
 		}),
-		custom_widget.NewButton(id, "Edit", func(nmsp string) {
-			log.Info("Clicked edit ", nmsp)
+		custom_widget.NewButton(id, "Edit", func(scope string) {
+			log.Info("Clicked edit ", scope)
 		}),
-		custom_widget.NewButton(id, "Delete", func(nmsp string) {
-			log.Info("Clicked delete ", nmsp)
+		custom_widget.NewButton(id, "Delete", func(scope string) {
+			log.Info("Clicked delete ", scope)
 		}),
 	))
 	return card
@@ -56,7 +56,6 @@ func GetPeopleContacts(namespace string) []*people.Person {
 	var persons []*people.Person
 	if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend(indexName, func(key, val string) bool {
-			// log.Info(key, "\n")
 			var person people.Person
 			if err := json.Unmarshal([]byte(val), &person); err != nil {
 				return false
@@ -66,7 +65,7 @@ func GetPeopleContacts(namespace string) []*people.Person {
 		})
 		return nil
 	}); err != nil {
-		log.Warn(err)
+		log.Warn(err.Error())
 	}
 	return persons
 }

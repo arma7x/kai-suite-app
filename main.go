@@ -149,7 +149,7 @@ func renderMessagesContent(c *fyne.Container) {
 	)
 }
 
-func renderContactsList(title, namespace string) {
+func viewContactsList(title, namespace string) {
 	if _, exist := google_services.TokenRepository[namespace]; exist == false  && namespace != "local" {
 		return
 	}
@@ -160,7 +160,7 @@ func renderContactsList(title, namespace string) {
 	googleServicesContent.Hide()
 	contentTitle.Set(title)
 	personsArr := contacts.GetPeopleContacts(namespace)
-	navigations.RenderContactsList(namespace, personsArr)
+	navigations.ViewContactsList(namespace, personsArr)
 }
 
 func renderCalendarsContent(c *fyne.Container) {
@@ -214,14 +214,11 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 						metadata := types.Metadata{}
 						if metadata_s, err := tx.Get("metadata:" + key); err == nil {
 							if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
-								// log.Warn(idx, "-", err.Error())
 								return nil
 							}
 						} else {
-							// log.Warn(idx, "~", err.Error())
 							return nil
 						}
-						// log.Info(idx, " success")
 						websockethub.EnqueueContactSync(types.TxSyncContact{Namespace: key, Metadata: metadata, Person: p}, false)
 					}
 					return nil
@@ -234,7 +231,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 			}),
 			custom_widget.NewButton(namespace, "Contact List", func(name_space string) {
 				log.Info("Contact List ", accounts[name_space].User.Id)
-				renderContactsList(accounts[name_space].User.Email + " Contacts", name_space)
+				viewContactsList(accounts[name_space].User.Email + " Contacts", name_space)
 			}),
 			widget.NewButton("Calendar Events", func() {
 				log.Info("Calendar Events ", accounts[namespace].User.Id)
@@ -311,7 +308,6 @@ func main() {
 		}
 	}()
 	defer global.CONTACTS_DB.Close()
-	log.Info("main", global.ROOT_PATH)
 	app := app.New()
 	global.WINDOW = app.NewWindow("Kai Suite")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
@@ -324,7 +320,7 @@ func main() {
 			renderMessagesContent(messagesContent)
 		}),
 		widget.NewButton("Contacts", func() {
-			renderContactsList("Local Contacts", "local")
+			viewContactsList("Local Contacts", "local")
 		}),
 		widget.NewButton("Calendars", func() {
 			renderCalendarsContent(eventsContent)
