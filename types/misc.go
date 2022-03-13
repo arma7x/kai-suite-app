@@ -52,6 +52,12 @@ type TxSyncContact struct {
 	Person *people.Person		`json:"person"`
 }
 
+type TxSyncContact3 struct {
+	Namespace string				`json:"namespace"`	//local:people:id
+	Metadata								`json:"metadata"`
+	Person *people.Person		`json:"person"`
+}
+
 type TxDeleteContact struct {
 	Namespace string				`json:"namespace"`	//account:people:id
 }
@@ -78,5 +84,5 @@ type RxSyncContactFlag6 struct {
 }
 
 type RxSyncLocalContactFlag8 struct {
-	KaiContacts		[]KaiContact	`json:"kai_contacts"`
+	KaiContact	`json:"kai_contact"`
 }
