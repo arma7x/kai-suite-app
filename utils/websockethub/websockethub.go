@@ -99,13 +99,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 										return nil
 									})
 								}
-								if item, err := DequeueContactSync(); err == nil && Client != nil {
-									bd, _ := json.Marshal(item)
-									btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
-									if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
-										log.Error("write:", err)
-									}
-								}
+								FlushContactSync()
 							}
 						case 4:
 							data := types.RxSyncContactFlag4{}
@@ -164,14 +158,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 													return err
 												}
 												EnqueueContactSync(types.TxSyncContact{Namespace: data.Namespace, Metadata: metadata, Person: &person}, true)
-												if item, err := DequeueContactSync(); err == nil && Client != nil {
-													bd, _ := json.Marshal(item)
-													btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
-													if err := websockethub.Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
-														log.Warn(err.Error())
-														return err
-													}
-												}
+												return FlushContactSync()
 											} else {
 												log.Warn(err.Error())
 												return err
@@ -186,13 +173,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 									}
 									return nil
 								}); err != nil {
-									if item, err := DequeueContactSync(); err == nil && Client != nil {
-										bd, _ := json.Marshal(item)
-										btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
-										if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
-											log.Error("write:", err)
-										}
-									}
+									FlushContactSync()
 								}
 							}
 						case 6:
