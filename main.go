@@ -28,7 +28,9 @@ import (
 
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
 var _ fyne.Theme = (*custom_theme.DarkMode)(nil)
-var port string = "4444"
+
+var ip 		string = "-"
+var port 	string = "4444"
 
 var connectionContent *fyne.Container
 var messagesContent *fyne.Container
@@ -41,28 +43,35 @@ var websocketClientVisibilityChan = make(chan bool)
 
 var contentTitle binding.String
 var deviceLabel = widget.NewLabel("Device: -")
-var ipPortLabel = widget.NewLabel("Ip Address: " + getLocalIP() + ":" + port)
+var ipPortLabel = widget.NewLabel("Ip Address: " + ip + ":" + port)
 var buttonConnect = widget.NewButton("Connect", func() {
 	if websockethub.Status == false {
+		addr, err := global.CheckIPAddress(ip, port)
+		if err != nil {
+			log.Warn(err.Error())
+		} else {
+			ipPortLabel.SetText("Ip Address: " + addr)
+			websockethub.Init(addr, websocketClientVisibilityChan)
+		}
 		go websockethub.Start(onStatusChange)
 	} else {
 		websockethub.Stop(onStatusChange)
 	}
 })
 
-func getLocalIP() string {
+func getLocalIPAddresses() (ipList []string) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		return ""
+		return
 	}
 	for _, address := range addrs {
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && strings.HasPrefix(ipnet.String(), "192.") {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String()
+				ipList = append(ipList, ipnet.IP.String())
 			}
 		}
 	}
-	return ""
+	return
 }
 
 func onStatusChange(status bool, err error) {
@@ -96,6 +105,12 @@ func renderConnectContent(c *fyne.Container) {
 	contactsContent.Hide()
 	eventsContent.Hide()
 	googleServicesContent.Hide()
+	inputPort := widget.NewEntry()
+	inputPort.Text = port
+	inputPort.OnChanged = func(val string) {
+		port = val
+		ipPortLabel.SetText("Ip Address: " + ip + ":" + port)
+	}
 	c.Objects = nil
 	if websockethub.Status == false {
 		contentTitle.Set("Disconnected")
@@ -106,6 +121,13 @@ func renderConnectContent(c *fyne.Container) {
 		container.NewVBox(
 			deviceLabel,
 			ipPortLabel,
+			container.NewHBox(
+				widget.NewSelect(getLocalIPAddresses(), func(selected string) {
+					ip = selected
+					ipPortLabel.SetText("Ip Address: " + ip + ":" + port)
+				}),
+				inputPort,
+			),
 			buttonConnect,
 		),
 	)
@@ -171,7 +193,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 			custom_widget.NewButton(namespace, "Sync Contact", func(name_space string) {
 				log.Info("Sync Contact ", accounts[name_space].User.Id)
 				if authConfig, err := google_services.GetConfig(); err == nil {
-					google_services.Sync(authConfig, google_services.TokenRepository[accounts[name_space].User.Id]);
+					google_services.Sync(authConfig, google_services.TokenRepository[accounts[name_space].User.Id])
 				}
 			}),
 			custom_widget.NewButton(namespace, "Sync Calendar", func(name_space string) {
@@ -276,14 +298,6 @@ func renderGAContent(c *fyne.Container) {
 }
 
 func main() {
-	addr, err := global.CheckIPAddress(getLocalIP(), port);
-	if err != nil {
-		log.Warn(err.Error())
-	} else {
-		log.Info(addr)
-		ipPortLabel.SetText("Ip Address: " + addr)
-		websockethub.Init(addr, websocketClientVisibilityChan)
-	}
 	contentTitle = binding.NewString()
 	contentTitle.Set("")
 	contentLabel := widget.NewLabelWithData(contentTitle)
