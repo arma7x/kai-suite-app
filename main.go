@@ -221,7 +221,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 							return nil
 						}
 						// log.Info(idx, " success")
-						websockethub.EnqueueContactSync(types.TxSyncContact{Namespace: key, Metadata: metadata, Person: p})
+						websockethub.EnqueueContactSync(types.TxSyncContact{Namespace: key, Metadata: metadata, Person: p}, false)
 					}
 					return nil
 				})

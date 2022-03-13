@@ -163,16 +163,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 													log.Warn(err.Error())
 													return err
 												}
-												item := types.TxSyncContact {
-													Namespace: data.Namespace,
-													Metadata: metadata,
-													Person: &person,
-												}
-												bd, _ := json.Marshal(item)
-												btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
-												if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
-													log.Warn(err.Error())
-													return err
+												EnqueueContactSync(types.TxSyncContact{Namespace: data.Namespace, Metadata: metadata, Person: &person}, true)
+												if item, err := DequeueContactSync(); err == nil && Client != nil {
+													bd, _ := json.Marshal(item)
+													btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
+													if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+														log.Warn(err.Error())
+														return err
+													}
 												}
 											} else {
 												log.Warn(err.Error())
