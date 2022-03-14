@@ -53,9 +53,8 @@ type TxSyncContact struct {
 }
 
 type TxSyncContact3 struct {
-	Namespace string				`json:"namespace"`	//local:people:id
-	Metadata								`json:"metadata"`
-	Person *people.Person		`json:"person"`
+	Metadata		map[string]Metadata					`json:"metadata"`
+	Persons			map[string]people.Person		`json:"persons"`
 }
 
 type TxDeleteContact struct {

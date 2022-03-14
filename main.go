@@ -48,7 +48,7 @@ var buttonConnect = widget.NewButton("Connect", func() {
 		addr, err := global.CheckIPAddress(ip, port)
 		if err != nil {
 			log.Warn(err.Error())
-			ipPortLabel.SetText(err.Error())
+			ipPortLabel.SetText(err.Error());
 		} else {
 			ipPortLabel.SetText("Ip Address: " + addr)
 			websockethub.Init(addr, websocketClientVisibilityChan)
@@ -340,7 +340,7 @@ func main() {
 	eventsContent = container.NewMax()
 	googleServicesContent = container.NewMax()
 
-	navigations.RenderContactsContent(contactsContent)
+	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts)
 	renderConnectContent(connectionContent)
 
 	global.WINDOW.SetContent(container.NewBorder(

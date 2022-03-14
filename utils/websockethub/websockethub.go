@@ -216,25 +216,35 @@ func handler(w http.ResponseWriter, r *http.Request) {
 							}
 							FlushContactSync()
 						case 8:
-							data := types.RxSyncLocalContactFlag8{}
-							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
-								log.Info(data.KaiContact)
-								person := &people.Person{}
-								metadata := types.Metadata{}
-								item := types.TxSyncContact3{
-									Namespace:	"local:people:" + data.KaiContact.Id,
-									Metadata:		metadata,
-									Person:			person,
-								}
-								if bd, err := json.Marshal(item); err == nil {
-									btx, _ := json.Marshal(types.WebsocketMessageFlag{Flag: 3, Data: string(bd)})
-									if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
-										log.Warn(err.Error())
-									}
-								} else {
-									log.Warn(err.Error())
-								}
-							}
+							//data := types.RxSyncLocalContactFlag8{}
+							//if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+
+								//log.Info(data.KaiContact)
+								//person := &people.Person{} // local:people:[data.KaiContact.Id]
+								//metadata := types.Metadata{} // metadata:local:people:[data.KaiContact.Id]
+
+								////IF metadata !EXIST OR person !EXIST
+									////THEN ADD to metadata && person
+								////ELS IF metadata EXIST && person EXIST
+									////IF metadata.Deleted
+										////THEN DELETE metadata && person
+									////ELSE IF data.KaiContact.Updated > metadata.SyncUpdated
+										////THEN UPDATE metadata && person
+
+								//item := types.TxSyncContact3{
+									//Namespace:	"local:people:" + data.KaiContact.Id,
+									//Metadata:		metadata,
+									//Person:			person,
+								//}
+								//if bd, err := json.Marshal(item); err == nil {
+									//btx, _ := json.Marshal(types.WebsocketMessageFlag{Flag: 3, Data: string(bd)})
+									//if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+										//log.Warn(err.Error())
+									//}
+								//} else {
+									//log.Warn(err.Error())
+								//}
+							//}
 					}
 				}
 		}

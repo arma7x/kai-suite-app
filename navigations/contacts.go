@@ -30,6 +30,7 @@ var (
 	contactCards []fyne.CanvasObject
 	paginationString binding.String
 	paginationLabel *widget.Label
+	buttonSync *widget.Button
 	contactPage = 0
 	contactMaxPage = 0
 	contactPageSegment = 0
@@ -43,6 +44,11 @@ func RemoveContact(namespace string, person *people.Person) {
 }
 
 func ViewContactsList(namespace string, personsArr []*people.Person) {
+	if strings.Contains(namespace, "local") {
+		buttonSync.Show()
+	} else {
+		buttonSync.Hide()
+	}
 	contactCards = nil
 	if contactContactCardCache[namespace] == nil {
 		contactContactCardCache[namespace] = make(map[string]*ContactCardCache)
@@ -51,7 +57,7 @@ func ViewContactsList(namespace string, personsArr []*people.Person) {
 	global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		for _, person := range personsArr {
 			key := strings.Replace(person.ResourceName, "/", ":", 1)
-			metadata := &types.Metadata{}
+			metadata := types.Metadata{}
 			if metadata_s, err := tx.Get("metadata:" + namespace + ":" + key); err == nil {
 				if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil && metadata.Deleted == false {
 					if _, ok := contactContactCardCache[namespace][person.ResourceName]; !ok {
@@ -90,13 +96,40 @@ func ViewContactsList(namespace string, personsArr []*people.Person) {
 	paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 }
 
-func RenderContactsContent(c *fyne.Container) {
+func RenderContactsContent(c *fyne.Container, cb func(persons map[string]people.Person, metadata map[string]types.Metadata)) {
 	log.Info("Contacts Rendered")
 	c.Hide()
 	contactContactCardCache = make(map[string]map[string]*ContactCardCache)
 	contactCardsContainer = container.NewAdaptiveGrid(4)
 	paginationString = binding.NewString()
 	paginationString.Set("")
+	buttonSync = widget.NewButton("Sync", func() {
+		global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
+			persons := make(map[string]people.Person)
+			metadata := make(map[string]types.Metadata)
+			tx.Ascend("people_local", func(key, val string) bool {
+				log.Info("person: ", key, ", ", val)
+				var person people.Person
+				if err := json.Unmarshal([]byte(val), &person); err != nil {
+					return true
+				}
+				persons[key] = person
+				return true
+			})
+			tx.Ascend("metadata_local", func(key, val string) bool {
+				log.Info("metadata_local: ", key, ", ", val)
+				var mt types.Metadata
+				if err := json.Unmarshal([]byte(val), &mt); err != nil {
+					return true
+				}
+				metadata[mt.SyncID] = mt
+				return true
+			})
+			// log.Info(len(persons), " ", len(metadata))
+			cb(persons, metadata)
+			return nil
+		})
+	})
 	paginationLabel = widget.NewLabelWithData(paginationString)
 	c.Objects = nil
 	paginationString.Set("")
@@ -125,6 +158,7 @@ func RenderContactsContent(c *fyne.Container) {
 				contactCardsContainer.Refresh()
 				paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 			}),
+			buttonSync,
 			layout.NewSpacer(),
 			paginationLabel,
 			layout.NewSpacer(),
