@@ -46,6 +46,11 @@ type KaiContact struct {
 	FamilyName	[]string		`json:"familyName"`
 }
 
+type LocalSync struct {
+	KaiContact			`json:"kai_contact"`
+	Metadata				`json:"metadata"`
+}
+
 type TxSyncContact struct {
 	Namespace string				`json:"namespace"`	//account:people:id
 	Metadata								`json:"metadata"`
@@ -83,5 +88,6 @@ type RxSyncContactFlag6 struct {
 }
 
 type RxSyncLocalContactFlag8 struct {
-	KaiContact	`json:"kai_contact"`
+	SyncList		[]LocalSync	`json:"sync_list"`
+	DeleteList	[]Metadata	`json:"delete_list"`
 }

@@ -216,10 +216,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 							}
 							FlushContactSync()
 						case 8:
-							//data := types.RxSyncLocalContactFlag8{}
-							//if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+							data := types.RxSyncLocalContactFlag8{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
 
-								//log.Info(data.KaiContact)
+								log.Info(data.SyncList)
+								log.Info(data.DeleteList)
 								//person := &people.Person{} // local:people:[data.KaiContact.Id]
 								//metadata := types.Metadata{} // metadata:local:people:[data.KaiContact.Id]
 
@@ -244,7 +245,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 								//} else {
 									//log.Warn(err.Error())
 								//}
-							//}
+							}
 					}
 				}
 		}
