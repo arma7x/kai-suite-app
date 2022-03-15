@@ -108,7 +108,7 @@ func RenderContactsContent(c *fyne.Container, cb func(persons map[string]people.
 			persons := make(map[string]people.Person)
 			metadata := make(map[string]types.Metadata)
 			tx.Ascend("people_local", func(key, val string) bool {
-				log.Info("person: ", key, ", ", val)
+				//log.Info("person: ", key, ", ", val)
 				var person people.Person
 				if err := json.Unmarshal([]byte(val), &person); err != nil {
 					return true
@@ -117,7 +117,7 @@ func RenderContactsContent(c *fyne.Container, cb func(persons map[string]people.
 				return true
 			})
 			tx.Ascend("metadata_local", func(key, val string) bool {
-				log.Info("metadata_local: ", key, ", ", val)
+				//log.Info("metadata_local: ", key, ", ", val)
 				var mt types.Metadata
 				if err := json.Unmarshal([]byte(val), &mt); err != nil {
 					return true

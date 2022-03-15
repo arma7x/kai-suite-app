@@ -219,32 +219,73 @@ func handler(w http.ResponseWriter, r *http.Request) {
 							data := types.RxSyncLocalContactFlag8{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
 
-								log.Info(data.SyncList)
-								log.Info(data.DeleteList)
-								//person := &people.Person{} // local:people:[data.KaiContact.Id]
-								//metadata := types.Metadata{} // metadata:local:people:[data.KaiContact.Id]
+								log.Info("PushList: ", len(data.PushList))
+								for _, item := range data.PushList {
+									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
+										key := "local:people:" + item.KaiContact.Id
+										metadataKey := "metadata:local:people:" + item.KaiContact.Id
+										person := people.Person{}
+										name := &people.Name{}
+										person.Names = make([]*people.Name, 1)
+										phoneNumber := &people.PhoneNumber{}
+										person.PhoneNumbers = make([]*people.PhoneNumber, 1)
+										emailAddress := &people.EmailAddress{}
+										person.EmailAddresses = make([]*people.EmailAddress, 1)
+										if len(item.KaiContact.Name) > 0 {
+											name.UnstructuredName = item.KaiContact.Name[0]
+										}
+										if len(item.KaiContact.GivenName) > 0 {
+											name.GivenName = item.KaiContact.GivenName[0]
+										}
+										if len(item.KaiContact.FamilyName) > 0 {
+											name.GivenName = item.KaiContact.FamilyName[0]
+										}
+										if len(item.KaiContact.Tel) > 0 {
+											if len(item.KaiContact.Tel[0].Type) > 0 { 
+												phoneNumber.Type = item.KaiContact.Tel[0].Type[0]
+											}
+											if len(item.KaiContact.Tel[0].Value) > 0 { 
+												phoneNumber.Value = item.KaiContact.Tel[0].Value
+											}
+										}
+										if len(item.KaiContact.Email) > 0 {
+											if len(item.KaiContact.Email[0].Type) > 0 { 
+												emailAddress.Type = item.KaiContact.Email[0].Type[0]
+											}
+											if len(item.KaiContact.Email[0].Value) > 0 { 
+												emailAddress.Value = item.KaiContact.Email[0].Value
+											}
+										}
+										person.Names[0] = name
+										person.PhoneNumbers[0] = phoneNumber
+										person.EmailAddresses[0] = emailAddress
+										person.ResourceName = "people/" + item.KaiContact.Id
+										b, _ := person.MarshalJSON()
+										hash := sha256.Sum256(b)
+										item.Metadata.Hash = hex.EncodeToString(hash[:])
+										item.Metadata.Deleted = false
+										//log.Info(string(b))
+										mb, _ := json.Marshal(item.Metadata)
+										//log.Info(string(mb))
+										tx.Set(key, string(b), nil)
+										tx.Set(metadataKey, string(mb), nil)
+										return nil
+									})
+								}
 
-								////IF metadata !EXIST OR person !EXIST
-									////THEN ADD to metadata && person
-								////ELS IF metadata EXIST && person EXIST
-									////IF metadata.Deleted
-										////THEN DELETE metadata && person
-									////ELSE IF data.KaiContact.Updated > metadata.SyncUpdated
-										////THEN UPDATE metadata && person
+								log.Info("DeleteList: ", len(data.DeleteList))
+								for _, item := range data.DeleteList {
+									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
+										key := "local:people:" + item.SyncID
+										metadataKey := "metadata:local:people:" + item.SyncID
+										tx.Delete(key)
+										tx.Delete(metadataKey)
+										return nil
+									})
+								}
 
-								//item := types.TxSyncContact3{
-									//Namespace:	"local:people:" + data.KaiContact.Id,
-									//Metadata:		metadata,
-									//Person:			person,
-								//}
-								//if bd, err := json.Marshal(item); err == nil {
-									//btx, _ := json.Marshal(types.WebsocketMessageFlag{Flag: 3, Data: string(bd)})
-									//if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
-										//log.Warn(err.Error())
-									//}
-								//} else {
-									//log.Warn(err.Error())
-								//}
+								log.Info("SyncList: ", len(data.SyncList))
+								log.Info("MergedList: ", len(data.MergedList))
 							}
 					}
 				}

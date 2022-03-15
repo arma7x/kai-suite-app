@@ -94,6 +94,7 @@ type RxSyncContactFlag6 struct {
 }
 
 type RxSyncLocalContactFlag8 struct {
+	PushList		[]LocalContactSync				`json:"push_list"`
 	SyncList		[]LocalContactSync				`json:"sync_list"`
 	MergedList	[]LocalContactMergedSync	`json:"merged_list"`
 	DeleteList	[]Metadata								`json:"delete_list"`
