@@ -51,6 +51,12 @@ type LocalContactSync struct {
 	Metadata				`json:"metadata"`
 }
 
+type LocalContactMergedSync struct {
+	Person 				people.Person		`json:"person"`
+	KaiContact										`json:"kai_contact"`
+	Metadata											`json:"metadata"`
+}
+
 type TxSyncContact struct {
 	Namespace string				`json:"namespace"`	//account:people:id
 	Metadata								`json:"metadata"`
@@ -88,6 +94,7 @@ type RxSyncContactFlag6 struct {
 }
 
 type RxSyncLocalContactFlag8 struct {
-	SyncList		[]LocalContactSync	`json:"sync_list"`
-	DeleteList	[]Metadata					`json:"delete_list"`
+	SyncList		[]LocalContactSync				`json:"sync_list"`
+	MergedList	[]LocalContactMergedSync	`json:"merged_list"`
+	DeleteList	[]Metadata								`json:"delete_list"`
 }
