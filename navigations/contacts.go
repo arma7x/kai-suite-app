@@ -113,7 +113,9 @@ func RenderContactsContent(c *fyne.Container, cb func(persons map[string]people.
 				if err := json.Unmarshal([]byte(val), &person); err != nil {
 					return true
 				}
-				persons[key] = person
+				split := strings.Split(key, ":")
+				//log.Info("Person Key:", split[len(split) - 1])
+				persons[split[len(split) - 1]] = person //TODO
 				return true
 			})
 			tx.Ascend("metadata_local", func(key, val string) bool {
@@ -122,6 +124,7 @@ func RenderContactsContent(c *fyne.Container, cb func(persons map[string]people.
 				if err := json.Unmarshal([]byte(val), &mt); err != nil {
 					return true
 				}
+				//log.Info("Metadata Key:", mt.SyncID)
 				metadata[mt.SyncID] = mt
 				return true
 			})
