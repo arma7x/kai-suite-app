@@ -285,7 +285,79 @@ func handler(w http.ResponseWriter, r *http.Request) {
 								}
 
 								log.Info("SyncList: ", len(data.SyncList))
-								log.Info("MergedList: ", len(data.MergedList))
+								for _, item := range data.SyncList {
+									key := "local:people:" + item.KaiContact.Id
+									metadataKey := "metadata:local:people:" + item.Metadata.SyncID
+									// log.Info(key, " : ", metadataKey)
+									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
+										val, err := tx.Get(key)
+										if err != nil {
+											return err
+										}
+										var person people.Person
+										if err := json.Unmarshal([]byte(val), &person); err != nil {
+											return err
+										}
+										if len(item.KaiContact.Name) > 0 {
+											person.Names[0].UnstructuredName = item.KaiContact.Name[0]
+										}
+										if len(item.KaiContact.GivenName) > 0 {
+											person.Names[0].GivenName = item.KaiContact.GivenName[0]
+										}
+										if len(item.KaiContact.FamilyName) > 0 {
+											person.Names[0].FamilyName = item.KaiContact.FamilyName[0]
+										}
+										if len(item.KaiContact.Tel) > 0 {
+											if len(item.KaiContact.Tel[0].Type) > 0 { 
+												person.PhoneNumbers[0].Type = item.KaiContact.Tel[0].Type[0]
+											}
+											if len(item.KaiContact.Tel[0].Value) > 0 { 
+												person.PhoneNumbers[0].Value = item.KaiContact.Tel[0].Value
+											}
+										}
+										if len(item.KaiContact.Email) > 0 {
+											if len(item.KaiContact.Email[0].Type) > 0 { 
+												person.EmailAddresses[0].Type = item.KaiContact.Email[0].Type[0]
+											}
+											if len(item.KaiContact.Email[0].Value) > 0 { 
+												person.EmailAddresses[0].Value = item.KaiContact.Email[0].Value
+											}
+										}
+										b, _ := person.MarshalJSON()
+										hash := sha256.Sum256(b)
+										metadata := types.Metadata{}
+										if metadata_s, err := tx.Get(metadataKey); err == nil {
+											if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil {
+												metadata.SyncID = item.KaiContact.Id
+												metadata.SyncUpdated = item.KaiContact.Updated
+												metadata.Hash = hex.EncodeToString(hash[:])
+												if metadata_b, err := json.Marshal(metadata); err == nil {
+													// log.Info(string(metadata_b[:]))
+													tx.Set(metadataKey, string(metadata_b[:]), nil)
+													b2, _ := person.MarshalJSON()
+													// log.Info(string(b2))
+													if _, _, err := tx.Set(key, string(b2), nil); err != nil {
+														log.Error(err.Error())
+														return err
+													}
+													return nil
+												} else {
+													log.Error(err.Error())
+													return err
+												}
+												return nil
+											}
+											log.Error(err.Error())
+											return err
+										} else {
+											log.Error(err.Error())
+											return err
+										}
+										return nil
+									})
+								}
+
+								log.Info("MergedList: ", len(data.MergedList)) // TODO
 							}
 					}
 				}
