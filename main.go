@@ -34,7 +34,6 @@ var port 	string = "4444"
 var connectionContent *fyne.Container
 var messagesContent *fyne.Container
 var contactsContent *fyne.Container
-var eventsContent *fyne.Container
 var googleServicesContent *fyne.Container
 
 var websocketBtnTxtChan = make(chan string)
@@ -103,7 +102,6 @@ func renderConnectContent(c *fyne.Container) {
 	connectionContent.Show()
 	messagesContent.Hide()
 	contactsContent.Hide()
-	eventsContent.Hide()
 	googleServicesContent.Hide()
 	inputIp := widget.NewSelect(getLocalIPAddresses(), func(selected string) {
 		ip = selected
@@ -139,7 +137,6 @@ func renderMessagesContent(c *fyne.Container) {
 	connectionContent.Hide()
 	messagesContent.Show()
 	contactsContent.Hide()
-	eventsContent.Hide()
 	googleServicesContent.Hide()
 	c.Objects = nil
 	contentTitle.Set("Messages")
@@ -157,26 +154,10 @@ func viewContactsList(title, namespace string) {
 	connectionContent.Hide()
 	messagesContent.Hide()
 	contactsContent.Show()
-	eventsContent.Hide()
 	googleServicesContent.Hide()
 	contentTitle.Set(title)
 	personsArr := contacts.GetPeopleContacts(namespace)
 	navigations.ViewContactsList(namespace, personsArr)
-}
-
-func renderCalendarsContent(c *fyne.Container) {
-	connectionContent.Hide()
-	messagesContent.Hide()
-	contactsContent.Hide()
-	eventsContent.Show()
-	googleServicesContent.Hide()
-	c.Objects = nil
-	contentTitle.Set("Calendars")
-	c.Add(
-		container.NewVBox(
-			widget.NewLabel("Calendars Content"),
-		),
-	)
 }
 
 func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accounts map[string]types.UserInfoAndToken) {
@@ -197,9 +178,6 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 				if authConfig, err := google_services.GetConfig(); err == nil {
 					google_services.Sync(authConfig, google_services.TokenRepository[accounts[name_space].User.Id])
 				}
-			}),
-			custom_widget.NewButton(namespace, "Sync Cloud Calendar", func(name_space string) {
-				log.Info("Sync Calendar ", accounts[name_space].User.Id)
 			}),
 			custom_widget.NewButton(namespace, "Sync KaiOS Contacts", func(name_space string) {
 				log.Info("Sync KaiOS Contacts ", name_space)
@@ -227,21 +205,12 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 				log.Info("Total queue: ", len(websockethub.ContactsSyncQueue))
 				websockethub.FlushContactSync()
 			}),
-			custom_widget.NewButton(namespace, "Sync KaiOS Calendar", func(name_space string) {
-				log.Info("Sync KaiOS Calendar ", accounts[name_space].User.Id)
-			}),
 			custom_widget.NewButton(namespace, "Contact List", func(name_space string) {
 				log.Info("Contact List ", accounts[name_space].User.Id)
 				viewContactsList(accounts[name_space].User.Email + " Contacts", name_space)
 			}),
-			widget.NewButton("Calendar Events", func() {
-				log.Info("Calendar Events ", accounts[namespace].User.Id)
-			}),
 			widget.NewButton("Remove", func() {
 				log.Info("Remove ", accounts[namespace].User.Id)
-			}),
-			widget.NewButton("Remove(all data)", func() {
-				log.Info("Remove(all data) ", accounts[namespace].User.Id)
 			}),
 		))
 		accountList.Add(card)
@@ -252,7 +221,6 @@ func renderGAContent(c *fyne.Container) {
 	connectionContent.Hide()
 	messagesContent.Hide()
 	contactsContent.Hide()
-	eventsContent.Hide()
 	googleServicesContent.Show()
 	c.Objects = nil
 	contentTitle.Set("Google Account")
@@ -281,8 +249,6 @@ func renderGAContent(c *fyne.Container) {
 					}
 				}
 			}),
-			widget.NewButton("Local Contacts", func() {}),
-			widget.NewButton("Local Events", func() {}),
 		),
 		nil, nil, nil,
 		container.NewVScroll(container.NewVBox(accountList)),
@@ -323,9 +289,6 @@ func main() {
 		widget.NewButton("Contacts", func() {
 			viewContactsList("Local Contacts", "local")
 		}),
-		widget.NewButton("Calendars", func() {
-			renderCalendarsContent(eventsContent)
-		}),
 		widget.NewButton("Google Account", func() {
 			renderGAContent(googleServicesContent)
 		}),
@@ -337,7 +300,6 @@ func main() {
 	connectionContent = container.NewMax()
 	messagesContent = container.NewMax()
 	contactsContent = container.NewMax()
-	eventsContent = container.NewMax()
 	googleServicesContent = container.NewMax()
 
 	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts)
@@ -348,7 +310,7 @@ func main() {
 		nil,
 		container.NewBorder(widget.NewLabel("KaiOS PC Suite"), nil, nil, nil, menu),
 		nil,
-		container.NewBorder(contentLabel, nil, nil, nil, connectionContent, messagesContent, contactsContent, eventsContent, googleServicesContent)),
+		container.NewBorder(contentLabel, nil, nil, nil, connectionContent, messagesContent, contactsContent, googleServicesContent)),
 	)
 	global.WINDOW.ShowAndRun()
 }
