@@ -134,17 +134,11 @@ func renderConnectContent(c *fyne.Container) {
 }
 
 func renderMessagesContent(c *fyne.Container) {
+	contentTitle.Set("Messages")
 	connectionContent.Hide()
 	messagesContent.Show()
 	contactsContent.Hide()
 	googleServicesContent.Hide()
-	c.Objects = nil
-	contentTitle.Set("Messages")
-	c.Add(
-		container.NewVBox(
-			widget.NewLabel("Messages Content"),
-		),
-	)
 }
 
 func viewContactsList(title, namespace string) {
@@ -303,6 +297,7 @@ func main() {
 	googleServicesContent = container.NewMax()
 
 	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts)
+	navigations.RenderMessagesContent(messagesContent)
 	renderConnectContent(connectionContent)
 
 	global.WINDOW.SetContent(container.NewBorder(

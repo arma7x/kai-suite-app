@@ -11,7 +11,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/data/binding"
 	"kai-suite/utils/global"
-	_ "kai-suite/utils/logger"
 	"kai-suite/utils/contacts"
 	"kai-suite/types"
 	log "github.com/sirupsen/logrus"
