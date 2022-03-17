@@ -139,6 +139,8 @@ func renderMessagesContent(c *fyne.Container) {
 	messagesContent.Show()
 	contactsContent.Hide()
 	googleServicesContent.Hide()
+	websockethub.SyncSMS()
+	navigations.RefreshThreads()
 }
 
 func viewContactsList(title, namespace string) {

@@ -99,3 +99,8 @@ type RxSyncLocalContactFlag8 struct {
 	MergedList	[]LocalContactMergedSync	`json:"merged_list"`
 	DeleteList	[]Metadata								`json:"delete_list"`
 }
+
+type RxSyncSMSFlag10 struct {
+	Threads			map[int]MozMobileMessageThread	`json:"threads"`
+	Messages		map[int]map[int]MozSmsMessage		`json:"messages"`
+}

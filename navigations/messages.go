@@ -22,6 +22,8 @@ type MessageCardCached struct {
 }
 
 var (
+	Threads	map[int]types.MozMobileMessageThread
+	Messages	map[int]map[int]types.MozSmsMessage
 	threadsCardCache map[int]*ThreadCardCached
 	messagesCardCache map[int]map[int]*MessageCardCached
 	threadsBox *fyne.Container
@@ -72,37 +74,35 @@ func ViewMessagesThread(threadId int) {
 	if _, exist := messagesCardCache[threadId]; exist == false {
 		messagesCardCache[threadId] = make(map[int]*MessageCardCached)
 	}
-	for _, m := range messagesRepository(threadId) {
-		if item, exist := messagesCardCache[threadId][m.Id]; exist == false {
-			messagesCardCache[threadId][m.Id] = &MessageCardCached{}
-			messagesCardCache[threadId][m.Id].Timestamp = m.Timestamp
-			card := &widget.Card{}
-			card.SetSubTitle(m.Body)
-			if m.Receiver != "" {
-				messagesCardCache[threadId][m.Id].Card = container.NewHBox(
-					layout.NewSpacer(),
-					card,
-				)
+	if _, exist := Messages[threadId]; exist == true {
+		for _, m := range Messages[threadId] {
+			if item, exist := messagesCardCache[threadId][m.Id]; exist == false {
+				messagesCardCache[threadId][m.Id] = &MessageCardCached{}
+				messagesCardCache[threadId][m.Id].Timestamp = m.Timestamp
+				card := &widget.Card{}
+				card.SetSubTitle(m.Body)
+				if m.Receiver != "" {
+					messagesCardCache[threadId][m.Id].Card = container.NewHBox(
+						layout.NewSpacer(),
+						card,
+					)
+				} else {
+					messagesCardCache[threadId][m.Id].Card = container.NewHBox(
+						card,
+						layout.NewSpacer(),
+					)
+				}
+				messagesContainer.Add(messagesCardCache[threadId][m.Id].Card)
 			} else {
-				messagesCardCache[threadId][m.Id].Card = container.NewHBox(
-					card,
-					layout.NewSpacer(),
-				)
+				messagesContainer.Add(item.Card)
 			}
-			messagesContainer.Add(messagesCardCache[threadId][m.Id].Card)
-		} else {
-			messagesContainer.Add(item.Card)
 		}
 	}
 }
 
-func RenderMessagesContent(c *fyne.Container) {
-	log.Info("Messages Rendered")
-	c.Hide()
-	threadsCardCache = make(map[int]*ThreadCardCached)
-	messagesCardCache = make(map[int]map[int]*MessageCardCached)
-	threadsContainer = container.NewVBox()
-	for _, t := range threadsRepository() {
+func RefreshThreads() {
+	threadsContainer.Objects = nil
+	for _, t := range Threads {
 		if _, exist := threadsCardCache[t.Id]; exist == true {
 			if threadsCardCache[t.Id].Timestamp != t.Timestamp {
 				threadsCardCache[t.Id].Timestamp = t.Timestamp
@@ -121,7 +121,9 @@ func RenderMessagesContent(c *fyne.Container) {
 				))
 				threadsCardCache[t.Id].Card = card
 			}
+			log.Info("Cached ", t.Id);
 		} else {
+			log.Info("Load ", t.Id);
 			threadsCardCache[t.Id] = &ThreadCardCached{}
 			threadsCardCache[t.Id].Timestamp = t.Timestamp
 			card := &widget.Card{}
@@ -139,6 +141,15 @@ func RenderMessagesContent(c *fyne.Container) {
 		}
 		threadsContainer.Add(threadsCardCache[t.Id].Card)
 	}
+}
+
+func RenderMessagesContent(c *fyne.Container) {
+	log.Info("Messages Rendered")
+	c.Hide()
+	threadsCardCache = make(map[int]*ThreadCardCached)
+	messagesCardCache = make(map[int]map[int]*MessageCardCached)
+	threadsContainer = container.NewVBox()
+	RefreshThreads()
 	messagesContainer = container.NewVBox()
 	threadsBox = container.NewBorder(
 		nil, nil, nil, nil,

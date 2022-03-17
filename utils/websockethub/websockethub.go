@@ -359,8 +359,29 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 								log.Info("MergedList: ", len(data.MergedList)) // TODO
 							}
+						case 10:
+							data := types.RxSyncSMSFlag10{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+								// log.Info(data.Threads)
+								// log.Info(navigations.Threads)
+								navigations.Threads = data.Threads
+								// log.Info(data.Messages)
+								// log.Info(navigations.Messages)
+								navigations.Messages = data.Messages
+							}
 					}
 				}
+		}
+	}
+}
+
+func SyncSMS() {
+	if Client != nil {
+		btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 5, Data: "sync_sms"})
+		if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+			log.Warn(err.Error())
+		} else {
+			log.Info(string(btx))
 		}
 	}
 }
