@@ -102,5 +102,5 @@ type RxSyncLocalContactFlag8 struct {
 
 type RxSyncSMSFlag10 struct {
 	Threads			map[int]MozMobileMessageThread	`json:"threads"`
-	Messages		map[int]map[int]MozSmsMessage		`json:"messages"`
+	Messages		map[int][]MozSmsMessage		`json:"messages"`
 }

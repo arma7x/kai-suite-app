@@ -1,12 +1,12 @@
 package navigations
 
 import (
+	"strings"
 	"strconv"
 	"kai-suite/types"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"fyne.io/fyne/v2/layout"
 	log "github.com/sirupsen/logrus"
 	custom_widget "kai-suite/widgets"
 )
@@ -23,7 +23,7 @@ type MessageCardCached struct {
 
 var (
 	Threads	map[int]types.MozMobileMessageThread
-	Messages	map[int]map[int]types.MozSmsMessage
+	Messages	map[int][]types.MozSmsMessage
 	threadsCardCache map[int]*ThreadCardCached
 	messagesCardCache map[int]map[int]*MessageCardCached
 	threadsBox *fyne.Container
@@ -31,41 +31,6 @@ var (
 	messagesBox *fyne.Container
 	messagesContainer *fyne.Container
 )
-
-func threadsRepository() []types.MozMobileMessageThread {
-	t1 := types.MozMobileMessageThread{
-		Id: 1,
-		Body: "Help",
-		UnreadCount: 0,
-		Participants: []string{"Hotlink@"}, 
-		Timestamp: 1647463907980,
-		LastMessageSubject: "",
-		LastMessageType: "sms",
-	}
-	t2 := types.MozMobileMessageThread{
-		Id: 2,
-		Body: "To check balance, reply CHECK. To e…",
-		UnreadCount: 0,
-		Participants: []string{"20505"}, 
-		Timestamp: 1647463907980,
-		LastMessageSubject: "",
-		LastMessageType: "1647463583560",
-	}
-	return []types.MozMobileMessageThread{t1, t2}
-}
-
-func messagesRepository(threadId int) []types.MozSmsMessage {
-	messages := make(map[int][]types.MozSmsMessage)
-	t1m1 := types.MozSmsMessage{Type: "sms", Id: 1, ThreadId: 1, Body: "This is received body of thread 1 msg 1", Delivery: "received", DeliveryStatus: "success", Read: true, Receiver: "", Sender: "20505", Timestamp: 1, MessageClass: "normal", }
-	t1m2 := types.MozSmsMessage{Type: "sms", Id: 2, ThreadId: 1, Body: "This is sent body of thread 1 msg 2", Delivery: "sent", DeliveryStatus: "success", Read: true, Receiver: "20505", Sender: "", Timestamp: 1, MessageClass: "normal", }
-	messages[1] = append(messages[1], t1m1)
-	messages[1] = append(messages[1], t1m2)
-	t2m1 := types.MozSmsMessage{Type: "sms", Id: 1, ThreadId: 2, Body: "This is received body of thread 2 msg 1", Delivery: "received", DeliveryStatus: "success", Read: true, Receiver: "", Sender: "15505", Timestamp: 1, MessageClass: "normal", }
-	t2m2 := types.MozSmsMessage{Type: "sms", Id: 2, ThreadId: 2, Body: "This is sent body of thread 2 msg 2", Delivery: "sent", DeliveryStatus: "success", Read: true, Receiver: "15505", Sender: "", Timestamp: 1, MessageClass: "normal", }
-	messages[2] = append(messages[2], t2m1)
-	messages[2] = append(messages[2], t2m2)
-	return messages[threadId]
-}
 
 func ViewMessagesThread(threadId int) {
 	threadsBox.Hide()
@@ -80,20 +45,25 @@ func ViewMessagesThread(threadId int) {
 				messagesCardCache[threadId][m.Id] = &MessageCardCached{}
 				messagesCardCache[threadId][m.Id].Timestamp = m.Timestamp
 				card := &widget.Card{}
-				card.SetSubTitle(m.Body)
-				if m.Receiver != "" {
-					messagesCardCache[threadId][m.Id].Card = container.NewHBox(
-						layout.NewSpacer(),
-						card,
-					)
-				} else {
-					messagesCardCache[threadId][m.Id].Card = container.NewHBox(
-						card,
-						layout.NewSpacer(),
-					)
+				var richText string
+				words := strings.Split(m.Body, " ")
+				for i, word := range words {
+					if i != 0 && i %10 == 0 {
+						richText += "\n\n " + word + " "
+					} else {
+						richText += word + " "
+					}
 				}
+				card.SetContent(widget.NewRichTextFromMarkdown(richText))
+				if m.Receiver != "" {
+					messagesCardCache[threadId][m.Id].Card = container.NewBorder(nil,nil,nil,card)
+				} else {
+					messagesCardCache[threadId][m.Id].Card = container.NewBorder(nil,nil,card,nil)
+				}
+				log.Info("Load Message ", threadId, ": ", m.Id)
 				messagesContainer.Add(messagesCardCache[threadId][m.Id].Card)
 			} else {
+				log.Info("Cached Message ", threadId, ": ", m.Id)
 				messagesContainer.Add(item.Card)
 			}
 		}
@@ -113,7 +83,6 @@ func RefreshThreads() {
 				card.SetSubTitle(t.Participants[0])
 				card.SetContent(container.NewHBox(
 					custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
-					log.Info("Clicked view ", scope)
 					if i, err := strconv.Atoi(scope); err == nil {
 						ViewMessagesThread(i)
 					}
@@ -121,9 +90,9 @@ func RefreshThreads() {
 				))
 				threadsCardCache[t.Id].Card = card
 			}
-			log.Info("Cached ", t.Id);
+			log.Info("Load Thread ", t.Id)
 		} else {
-			log.Info("Load ", t.Id);
+			log.Info("Cached Thread ", t.Id)
 			threadsCardCache[t.Id] = &ThreadCardCached{}
 			threadsCardCache[t.Id].Timestamp = t.Timestamp
 			card := &widget.Card{}
@@ -131,7 +100,6 @@ func RefreshThreads() {
 			card.SetSubTitle(t.Participants[0])
 			card.SetContent(container.NewHBox(
 				custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
-					log.Info("Clicked view ", scope)
 					if i, err := strconv.Atoi(scope); err == nil {
 						ViewMessagesThread(i)
 					}
