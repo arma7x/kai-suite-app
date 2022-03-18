@@ -35,6 +35,37 @@ var (
 	Client *types.Client
 )
 
+func localContactListHandler(w http.ResponseWriter, r *http.Request) {
+		global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
+		persons := make(map[string]people.Person)
+		metadata := make(map[string]types.Metadata)
+		tx.Ascend("people_local", func(key, val string) bool {
+			var person people.Person
+			if err := json.Unmarshal([]byte(val), &person); err != nil {
+				return true
+			}
+			split := strings.Split(key, ":")
+			persons[split[len(split) - 1]] = person //TODO
+			return true
+		})
+		tx.Ascend("metadata_local", func(key, val string) bool {
+			var mt types.Metadata
+			if err := json.Unmarshal([]byte(val), &mt); err != nil {
+				return true
+			}
+			metadata[mt.SyncID] = mt
+			return true
+		})
+		data := types.TxSyncContact3{
+			Metadata:	metadata,
+			Persons:  persons,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(data)
+		return nil
+	})
+}
 func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Upgrade") != "websocket" && r.Header.Get("Connection") != "Upgrade" {
 		fmt.Fprintf(w, "PC Suite for KaiOS device")
@@ -401,6 +432,7 @@ func Start(fn func(bool, error)) {
 	m := http.NewServeMux()
 	Server = http.Server{Addr: address, Handler: m}
 	m.HandleFunc("/", handler)
+	m.HandleFunc("/local-contacts", localContactListHandler)
 	if err := Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		Status = false
 		fn(Status, err)
