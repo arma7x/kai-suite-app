@@ -399,6 +399,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 								// log.Info(data.Messages)
 								// log.Info(navigations.Messages)
 								navigations.Messages = data.Messages
+								navigations.RefreshThreads()
 							}
 					}
 				}

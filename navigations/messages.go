@@ -1,6 +1,7 @@
 package navigations
 
 import (
+	"time"
 	"strings"
 	"strconv"
 	"kai-suite/types"
@@ -22,6 +23,7 @@ type MessageCardCached struct {
 }
 
 var (
+	FocusedThread int
 	Threads	map[int]types.MozMobileMessageThread
 	Messages	map[int][]types.MozSmsMessage
 	threadsCardCache map[int]*ThreadCardCached
@@ -30,9 +32,12 @@ var (
 	threadsContainer *fyne.Container
 	messagesBox *fyne.Container
 	messagesContainer *fyne.Container
+	messagesScroller *container.Scroll
 )
 
 func ViewMessagesThread(threadId int) {
+	log.Info("View thread: ", threadId)
+	FocusedThread = threadId
 	threadsBox.Hide()
 	messagesBox.Show()
 	messagesContainer.Objects = nil
@@ -68,9 +73,11 @@ func ViewMessagesThread(threadId int) {
 			}
 		}
 	}
+	time.AfterFunc(1 * time.Second, messagesScroller.ScrollToBottom)
 }
 
 func RefreshThreads() {
+	log.Info("Refresh Threads")
 	threadsContainer.Objects = nil
 	for _, t := range Threads {
 		if _, exist := threadsCardCache[t.Id]; exist == true {
@@ -109,6 +116,9 @@ func RefreshThreads() {
 		}
 		threadsContainer.Add(threadsCardCache[t.Id].Card)
 	}
+	if FocusedThread != 0 {
+		ViewMessagesThread(FocusedThread)
+	}
 }
 
 func RenderMessagesContent(c *fyne.Container) {
@@ -123,12 +133,14 @@ func RenderMessagesContent(c *fyne.Container) {
 		nil, nil, nil, nil,
 		container.NewVScroll(container.NewVBox(threadsContainer)),
 	)
+	messagesScroller = container.NewVScroll(container.NewVBox(messagesContainer))
 	messagesBox = container.NewBorder(
 		nil,
 		container.NewBorder(
 			nil, nil, nil,
 			container.NewVBox(
 				widget.NewButton("RETURN", func() {
+					FocusedThread = 0
 					threadsBox.Show()
 					messagesBox.Hide()
 				}),
@@ -136,7 +148,7 @@ func RenderMessagesContent(c *fyne.Container) {
 			),
 			widget.NewMultiLineEntry(),
 		), nil, nil,
-		container.NewVScroll(container.NewVBox(messagesContainer)),
+		messagesScroller,
 	)
 	messagesBox.Hide()
 	c.Add(threadsBox)
