@@ -31,7 +31,8 @@ func init() {
 		log.Fatal(err)
 	}
 	CONTACTS_DB.CreateIndex("people_local", "local:people:*", buntdb.IndexString)
-  CONTACTS_DB.CreateIndex("metadata_local", "metadata:local:people:*", buntdb.IndexString)
+	CONTACTS_DB.CreateIndex("metadata_local", "metadata:local:people:*", buntdb.IndexString)
+	// metadata:local:imei:people:*
 }
 
 func ResolvePath(dirs... string) string {
@@ -61,5 +62,6 @@ func InitDatabaseIndex(accounts map[string]types.UserInfoAndToken) {
 		metadataIndex := strings.Join([]string{"metadata", key, "people", "*"}, ":")
 		metadataIndexName := strings.Join([]string{"metadata", key}, "_")
 		CONTACTS_DB.CreateIndex(metadataIndexName, metadataIndex, buntdb.IndexString)
+	// metadata:key:imei:people:*
 	}
 }
