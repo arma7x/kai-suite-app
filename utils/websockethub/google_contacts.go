@@ -9,18 +9,18 @@ import(
 )
 
 var(
-	ContactsSyncQueue []types.TxSyncContact
+	ContactsSyncQueue []types.TxSyncGoogleContact
 )
 
-func EnqueueContactSync(item types.TxSyncContact, urgent bool) {
+func EnqueueContactSync(item types.TxSyncGoogleContact, urgent bool) {
   if urgent {
 		ContactsSyncQueue = append(ContactsSyncQueue, item)
 	} else {
-		ContactsSyncQueue = append([]types.TxSyncContact{item}, ContactsSyncQueue...)
+		ContactsSyncQueue = append([]types.TxSyncGoogleContact{item}, ContactsSyncQueue...)
 	}
 }
 
-func DequeueContactSync() (item types.TxSyncContact, err error) {
+func DequeueContactSync() (item types.TxSyncGoogleContact, err error) {
 	size := len(ContactsSyncQueue)
 	if  size == 0 {
 		err = errors.New("Empty")
@@ -31,7 +31,7 @@ func DequeueContactSync() (item types.TxSyncContact, err error) {
 	return
 }
 
-func GetLastContactSync() (item types.TxSyncContact, err error) {
+func GetLastContactSync() (item types.TxSyncGoogleContact, err error) {
 	size := len(ContactsSyncQueue)
 	if size == 0 {
 		err = errors.New("Empty")
@@ -51,4 +51,8 @@ func FlushContactSync() error {
 		}
 	}
 	return nil
+}
+
+func RestoreContact() {
+  // Flag 3
 }

@@ -57,15 +57,35 @@ type LocalContactMergedSync struct {
 	Metadata											`json:"metadata"`
 }
 
-type TxSyncContact struct {
+//
+
+type TxSyncGoogleContact struct {
 	Namespace string				`json:"namespace"`	//account:people:id
 	Metadata								`json:"metadata"`
 	Person *people.Person		`json:"person"`
 }
 
-type TxSyncContact3 struct {
+type TxRestoreGoogleContact3 struct {
+	Namespace string				`json:"namespace"`	//account:people:id
+	Metadata								`json:"metadata"`
+	Person *people.Person		`json:"person"`
+}
+
+type TxSyncLocalContact5 struct {
 	Metadata		map[string]Metadata					`json:"metadata"`
 	Persons			map[string]people.Person		`json:"persons"`
+}
+
+type TxRestoreLocalContact7 struct {
+	Metadata		map[string]Metadata					`json:"metadata"`
+	Persons			map[string]people.Person		`json:"persons"`
+}
+
+type TxSyncSMS9 struct {}
+
+type TxSendSMS11 struct {
+	Receivers		[]string	`json:"receivers"`
+	Message			string		`json:"message"`
 }
 
 type TxDeleteContact struct {

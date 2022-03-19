@@ -194,12 +194,15 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 						} else {
 							return nil
 						}
-						websockethub.EnqueueContactSync(types.TxSyncContact{Namespace: key, Metadata: metadata, Person: p}, false)
+						websockethub.EnqueueContactSync(types.TxSyncGoogleContact{Namespace: key, Metadata: metadata, Person: p}, false)
 					}
 					return nil
 				})
 				log.Info("Total queue: ", len(websockethub.ContactsSyncQueue))
 				websockethub.FlushContactSync()
+			}),
+			custom_widget.NewButton(namespace, "Restore Contacts", func(name_space string) {
+				log.Info("Restore Contacts ", accounts[name_space].User.Id)
 			}),
 			custom_widget.NewButton(namespace, "Contact List", func(name_space string) {
 				log.Info("Contact List ", accounts[name_space].User.Id)
@@ -298,8 +301,8 @@ func main() {
 	contactsContent = container.NewMax()
 	googleServicesContent = container.NewMax()
 
-	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts)
-	navigations.RenderMessagesContent(messagesContent)
+	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts, websockethub.RestoreLocalContacts)
+	navigations.RenderMessagesContent(messagesContent, websockethub.SendSMS)
 	renderConnectContent(connectionContent)
 
 	global.WINDOW.SetContent(container.NewBorder(

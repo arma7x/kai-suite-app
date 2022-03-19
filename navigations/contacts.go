@@ -30,6 +30,7 @@ var (
 	paginationString binding.String
 	paginationLabel *widget.Label
 	buttonSync *widget.Button
+	buttonRestore *widget.Button
 	contactPage = 0
 	contactMaxPage = 0
 	contactPageSegment = 0
@@ -45,8 +46,10 @@ func RemoveContact(namespace string, person *people.Person) {
 func ViewContactsList(namespace string, personsArr []*people.Person) {
 	if strings.Contains(namespace, "local") {
 		buttonSync.Show()
+    buttonRestore.Show()
 	} else {
 		buttonSync.Hide()
+    buttonRestore.Hide()
 	}
 	contactCards = nil
 	if contactContactCardCache[namespace] == nil {
@@ -95,7 +98,7 @@ func ViewContactsList(namespace string, personsArr []*people.Person) {
 	paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 }
 
-func RenderContactsContent(c *fyne.Container, cb func(persons map[string]people.Person, metadata map[string]types.Metadata)) {
+func RenderContactsContent(c *fyne.Container, syncCb func(persons map[string]people.Person, metadata map[string]types.Metadata), restoreCb func(persons map[string]people.Person, metadata map[string]types.Metadata)) {
 	log.Info("Contacts Rendered")
 	c.Hide()
 	contactContactCardCache = make(map[string]map[string]*ContactCardCache)
@@ -128,7 +131,37 @@ func RenderContactsContent(c *fyne.Container, cb func(persons map[string]people.
 				return true
 			})
 			// log.Info(len(persons), " ", len(metadata))
-			cb(persons, metadata)
+			syncCb(persons, metadata)
+			return nil
+		})
+	})
+	buttonRestore = widget.NewButton("Restore", func() {
+		global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
+			persons := make(map[string]people.Person)
+			metadata := make(map[string]types.Metadata)
+			tx.Ascend("people_local", func(key, val string) bool {
+				//log.Info("person: ", key, ", ", val)
+				var person people.Person
+				if err := json.Unmarshal([]byte(val), &person); err != nil {
+					return true
+				}
+				split := strings.Split(key, ":")
+				//log.Info("Person Key:", split[len(split) - 1])
+				persons[split[len(split) - 1]] = person //TODO
+				return true
+			})
+			tx.Ascend("metadata_local", func(key, val string) bool {
+				//log.Info("metadata_local: ", key, ", ", val)
+				var mt types.Metadata
+				if err := json.Unmarshal([]byte(val), &mt); err != nil {
+					return true
+				}
+				//log.Info("Metadata Key:", mt.SyncID)
+				metadata[mt.SyncID] = mt
+				return true
+			})
+			// log.Info(len(persons), " ", len(metadata))
+			restoreCb(persons, metadata)
 			return nil
 		})
 	})
@@ -161,6 +194,7 @@ func RenderContactsContent(c *fyne.Container, cb func(persons map[string]people.
 				paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 			}),
 			buttonSync,
+      buttonRestore,
 			layout.NewSpacer(),
 			paginationLabel,
 			layout.NewSpacer(),

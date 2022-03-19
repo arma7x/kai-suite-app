@@ -65,15 +65,15 @@ func ViewMessagesThread(threadId int) {
 				} else {
 					messagesCardCache[threadId][m.Id].Card = container.NewBorder(nil,nil,card,nil)
 				}
-				log.Info("Load Message ", threadId, ": ", m.Id)
+				// log.Info("Load Message ", threadId, ": ", m.Id)
 				messagesContainer.Add(messagesCardCache[threadId][m.Id].Card)
 			} else {
-				log.Info("Cached Message ", threadId, ": ", m.Id)
+				// log.Info("Cached Message ", threadId, ": ", m.Id)
 				messagesContainer.Add(item.Card)
 			}
 		}
 	}
-	time.AfterFunc(1 * time.Second, messagesScroller.ScrollToBottom)
+	time.AfterFunc(time.Second / 2, messagesScroller.ScrollToBottom)
 }
 
 func RefreshThreads() {
@@ -97,9 +97,9 @@ func RefreshThreads() {
 				))
 				threadsCardCache[t.Id].Card = card
 			}
-			log.Info("Load Thread ", t.Id)
+			// log.Info("Load Thread ", t.Id)
 		} else {
-			log.Info("Cached Thread ", t.Id)
+			// log.Info("Cached Thread ", t.Id)
 			threadsCardCache[t.Id] = &ThreadCardCached{}
 			threadsCardCache[t.Id].Timestamp = t.Timestamp
 			card := &widget.Card{}
@@ -121,7 +121,7 @@ func RefreshThreads() {
 	}
 }
 
-func RenderMessagesContent(c *fyne.Container) {
+func RenderMessagesContent(c *fyne.Container, sendSMSCb func(receivers []string, message string)) {
 	log.Info("Messages Rendered")
 	c.Hide()
 	threadsCardCache = make(map[int]*ThreadCardCached)
@@ -144,7 +144,11 @@ func RenderMessagesContent(c *fyne.Container) {
 					threadsBox.Show()
 					messagesBox.Hide()
 				}),
-				widget.NewButton("SEND", func(){}),
+				widget.NewButton("SEND", func(){
+					if FocusedThread != 0 {
+						sendSMSCb(Threads[FocusedThread].Participants, "HELP")
+					}
+				}),
 			),
 			widget.NewMultiLineEntry(),
 		), nil, nil,
