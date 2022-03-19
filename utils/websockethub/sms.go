@@ -16,11 +16,12 @@ func SyncSMS() {
 	}
 }
 
-func SendSMS(receivers []string, message string) {
+func SendSMS(receivers []string, message string, iccId string) {
 	if Client != nil {
 		item := types.TxSendSMS11{
-			Receivers:	receivers,
-			Message:  message,
+			Receivers: receivers,
+			Message: message,
+			IccId: iccId,
 		}
 		bd, _ := json.Marshal(item)
 		btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 11, Data: string(bd)})

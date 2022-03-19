@@ -70,7 +70,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				if err := json.Unmarshal(msg, &rx); err == nil {
 					switch rx.Flag {
 						case 0:
-							Client.SetDevice(rx.Data)
+							data := types.RxSyncDevice0{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+								Client.SetDevice(data.Device)
+								Client.SetIMEI(data.IMEI)
+								log.Info("IMEI: ", Client.GetIMEI())
+							}
 							clientVisibilityChan <- true
 						case 2:
 							data := types.RxSyncContactFlag2{}

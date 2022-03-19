@@ -14,6 +14,7 @@ type MozSmsMessage struct {
 	Type						string		`json:"type"`
 	Id							int				`json:"id"`
 	ThreadId				int				`json:"threadId"`
+	IccId						string		`json:"iccId"`
 	Body						string		`json:"body"`
 	Delivery				string		`json:"delivery"`
 	DeliveryStatus	string		`json:"deliveryStatus"`

@@ -121,7 +121,7 @@ func RefreshThreads() {
 	}
 }
 
-func RenderMessagesContent(c *fyne.Container, sendSMSCb func(receivers []string, message string)) {
+func RenderMessagesContent(c *fyne.Container, sendSMSCb func(receivers []string, message string, iccId string)) {
 	log.Info("Messages Rendered")
 	c.Hide()
 	threadsCardCache = make(map[int]*ThreadCardCached)
@@ -146,7 +146,7 @@ func RenderMessagesContent(c *fyne.Container, sendSMSCb func(receivers []string,
 				}),
 				widget.NewButton("SEND", func(){
 					if FocusedThread != 0 {
-						sendSMSCb(Threads[FocusedThread].Participants, "HELP")
+						sendSMSCb(Threads[FocusedThread].Participants, "HELP", Messages[FocusedThread][0].IccId)
 					}
 				}),
 			),

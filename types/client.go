@@ -5,8 +5,9 @@ import (
 )
 
 type Client struct {
-	device string
-	conn *websocket.Conn
+	device	string
+	imei		string
+	conn		*websocket.Conn
 }
 
 func (c *Client) GetDevice() string {
@@ -14,8 +15,17 @@ func (c *Client) GetDevice() string {
 }
 
 func (c *Client) SetDevice(device string) string {
-  c.device = device
+	c.device = device
 	return c.device
+}
+
+func (c *Client) GetIMEI() string {
+	return c.imei
+}
+
+func (c *Client) SetIMEI(imei string) string {
+	c.imei = imei
+	return c.imei
 }
 
 func (c *Client) GetConn() *websocket.Conn {
@@ -23,5 +33,5 @@ func (c *Client) GetConn() *websocket.Conn {
 }
 
 func CreateClient(device string, conn *websocket.Conn) *Client {
-	return &Client{device, conn}
+	return &Client{device, "", conn}
 }

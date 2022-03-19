@@ -86,10 +86,18 @@ type TxSyncSMS9 struct {}
 type TxSendSMS11 struct {
 	Receivers		[]string	`json:"receivers"`
 	Message			string		`json:"message"`
+	IccId				string		`json:"iccId"`
 }
 
 type TxDeleteContact struct {
 	Namespace string				`json:"namespace"`	//account:people:id
+}
+
+// On Rx, pop QUEUE, next QUEUE
+// successfully add or update contact data on kaios
+type RxSyncDevice0 struct {
+	Device			string	`json:"device"`
+	IMEI				string	`json:"imei"`
 }
 
 // On Rx, pop QUEUE, next QUEUE
