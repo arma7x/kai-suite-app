@@ -58,6 +58,12 @@ type LocalContactMergedSync struct {
 	Metadata											`json:"metadata"`
 }
 
+type GoogleContactRestore struct {
+	Namespace string				`json:"namespace"`	//account:people:id
+	Metadata								`json:"metadata"`
+	Person *people.Person		`json:"person"`
+}
+
 //
 
 type TxSyncGoogleContact struct {
@@ -67,9 +73,7 @@ type TxSyncGoogleContact struct {
 }
 
 type TxRestoreGoogleContact3 struct {
-	Namespace string				`json:"namespace"`	//account:people:id
-	Metadata								`json:"metadata"`
-	Person *people.Person		`json:"person"`
+	List []GoogleContactRestore `json:"list"`
 }
 
 type TxSyncLocalContact5 struct {

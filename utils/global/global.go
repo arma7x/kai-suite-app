@@ -32,7 +32,6 @@ func init() {
 	}
 	CONTACTS_DB.CreateIndex("people_local", "local:people:*", buntdb.IndexString)
 	CONTACTS_DB.CreateIndex("metadata_local", "metadata:local:people:*", buntdb.IndexString)
-	// metadata:local:imei:people:*
 }
 
 func ResolvePath(dirs... string) string {
