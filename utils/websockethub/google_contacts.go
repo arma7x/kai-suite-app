@@ -1,11 +1,16 @@
 package websockethub
 
 import(
+	"strings"
 	"errors"
 	"kai-suite/types"
 	log "github.com/sirupsen/logrus"
 	"encoding/json"
 	"github.com/gorilla/websocket"
+	"github.com/tidwall/buntdb"
+	"kai-suite/utils/global"
+	// "google.golang.org/api/people/v1"
+	"kai-suite/utils/contacts"
 )
 
 var(
@@ -51,6 +56,33 @@ func FlushContactSync() error {
 		}
 	}
 	return nil
+}
+
+func SyncContacts(namespace string) {
+	log.Info("Sync KaiOS Contacts ", namespace)
+	if Status == false  || Client == nil {
+		return
+	}
+	ContactsSyncQueue = nil
+	peoples := contacts.GetContacts(namespace)
+	contacts.SortContacts(peoples)
+	global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
+		for _, p := range peoples {
+			key := strings.Join([]string{namespace, strings.Replace(p.ResourceName, "/", ":", 1)}, ":")
+			metadata := types.Metadata{}
+			if metadata_s, err := tx.Get("metadata:" + key); err == nil {
+				if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
+					return nil
+				}
+			} else {
+				return nil
+			}
+			EnqueueContactSync(types.TxSyncGoogleContact{Namespace: key, Metadata: metadata, Person: p}, false)
+		}
+		return nil
+	})
+	log.Info("Total queue: ", len(ContactsSyncQueue))
+	FlushContactSync()
 }
 
 func RestoreContact() {

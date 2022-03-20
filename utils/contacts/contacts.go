@@ -51,7 +51,7 @@ func SortContacts(persons []*people.Person) {
 	})
 }
 
-func GetPeopleContacts(namespace string) []*people.Person {
+func GetContacts(namespace string) []*people.Person {
 	indexName := strings.Join([]string{"people", namespace}, "_")
 	var persons []*people.Person
 	if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {

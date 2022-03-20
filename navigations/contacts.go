@@ -98,7 +98,7 @@ func ViewContactsList(namespace string, personsArr []*people.Person) {
 	paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 }
 
-func RenderContactsContent(c *fyne.Container, syncCb func(persons map[string]people.Person, metadata map[string]types.Metadata), restoreCb func(persons map[string]people.Person, metadata map[string]types.Metadata)) {
+func RenderContactsContent(c *fyne.Container, syncCb func(), restoreCb func()) {
 	log.Info("Contacts Rendered")
 	c.Hide()
 	contactContactCardCache = make(map[string]map[string]*ContactCardCache)
@@ -106,64 +106,10 @@ func RenderContactsContent(c *fyne.Container, syncCb func(persons map[string]peo
 	paginationString = binding.NewString()
 	paginationString.Set("")
 	buttonSync = widget.NewButton("Sync", func() {
-		global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
-			persons := make(map[string]people.Person)
-			metadata := make(map[string]types.Metadata)
-			tx.Ascend("people_local", func(key, val string) bool {
-				//log.Info("person: ", key, ", ", val)
-				var person people.Person
-				if err := json.Unmarshal([]byte(val), &person); err != nil {
-					return true
-				}
-				split := strings.Split(key, ":")
-				//log.Info("Person Key:", split[len(split) - 1])
-				persons[split[len(split) - 1]] = person //TODO
-				return true
-			})
-			tx.Ascend("metadata_local", func(key, val string) bool {
-				//log.Info("metadata_local: ", key, ", ", val)
-				var mt types.Metadata
-				if err := json.Unmarshal([]byte(val), &mt); err != nil {
-					return true
-				}
-				//log.Info("Metadata Key:", mt.SyncID)
-				metadata[mt.SyncID] = mt
-				return true
-			})
-			// log.Info(len(persons), " ", len(metadata))
-			syncCb(persons, metadata)
-			return nil
-		})
+		syncCb()
 	})
 	buttonRestore = widget.NewButton("Restore", func() {
-		global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
-			persons := make(map[string]people.Person)
-			metadata := make(map[string]types.Metadata)
-			tx.Ascend("people_local", func(key, val string) bool {
-				//log.Info("person: ", key, ", ", val)
-				var person people.Person
-				if err := json.Unmarshal([]byte(val), &person); err != nil {
-					return true
-				}
-				split := strings.Split(key, ":")
-				//log.Info("Person Key:", split[len(split) - 1])
-				persons[split[len(split) - 1]] = person //TODO
-				return true
-			})
-			tx.Ascend("metadata_local", func(key, val string) bool {
-				//log.Info("metadata_local: ", key, ", ", val)
-				var mt types.Metadata
-				if err := json.Unmarshal([]byte(val), &mt); err != nil {
-					return true
-				}
-				//log.Info("Metadata Key:", mt.SyncID)
-				metadata[mt.SyncID] = mt
-				return true
-			})
-			// log.Info(len(persons), " ", len(metadata))
-			restoreCb(persons, metadata)
-			return nil
-		})
+		restoreCb()
 	})
 	paginationLabel = widget.NewLabelWithData(paginationString)
 	c.Objects = nil

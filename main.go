@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"sort"
 	"net"
 	"strconv"
@@ -21,8 +20,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	custom_widget "kai-suite/widgets"
 	"kai-suite/utils/contacts"
-	"github.com/tidwall/buntdb"
-	"encoding/json"
 )
 
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
@@ -152,7 +149,7 @@ func viewContactsList(title, namespace string) {
 	contactsContent.Show()
 	googleServicesContent.Hide()
 	contentTitle.Set(title)
-	personsArr := contacts.GetPeopleContacts(namespace)
+	personsArr := contacts.GetContacts(namespace)
 	navigations.ViewContactsList(namespace, personsArr)
 }
 
@@ -177,29 +174,7 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 			}),
 			custom_widget.NewButton(namespace, "Sync KaiOS Contacts", func(name_space string) {
 				log.Info("Sync KaiOS Contacts ", name_space)
-				if websockethub.Status == false  || websockethub.Client == nil {
-					return
-				}
-				websockethub.ContactsSyncQueue = nil
-				peoples := contacts.GetPeopleContacts(name_space)
-				contacts.SortContacts(peoples)
-				global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
-					for _, p := range peoples {
-						key := strings.Join([]string{name_space, strings.Replace(p.ResourceName, "/", ":", 1)}, ":")
-						metadata := types.Metadata{}
-						if metadata_s, err := tx.Get("metadata:" + key); err == nil {
-							if parseErr := json.Unmarshal([]byte(metadata_s), &metadata); parseErr != nil {
-								return nil
-							}
-						} else {
-							return nil
-						}
-						websockethub.EnqueueContactSync(types.TxSyncGoogleContact{Namespace: key, Metadata: metadata, Person: p}, false)
-					}
-					return nil
-				})
-				log.Info("Total queue: ", len(websockethub.ContactsSyncQueue))
-				websockethub.FlushContactSync()
+				websockethub.SyncContacts(name_space)
 			}),
 			custom_widget.NewButton(namespace, "Restore Contacts", func(name_space string) {
 				log.Info("Restore Contacts ", accounts[name_space].User.Id)
