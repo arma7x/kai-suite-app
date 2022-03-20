@@ -44,6 +44,7 @@ type KaiContact struct {
 	Name 				[]string		`json:"name"`
 	GivenName		[]string		`json:"givenName"`
 	FamilyName	[]string		`json:"familyName"`
+	Key					[]string		`json:"key"`
 }
 
 type LocalContactSync struct {

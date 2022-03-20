@@ -227,8 +227,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 								log.Info("PushList: ", len(data.PushList))
 								for _, item := range data.PushList {
 									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
-										key := "local:people:" + item.KaiContact.Id
-										metadataKey := "metadata:local:people:" + item.KaiContact.Id
+										key := "local:people:" + item.KaiContact.Key[0]
+										metadataKey := "metadata:local:people:" + item.KaiContact.Key[0]
 										person := people.Person{}
 										name := &people.Name{}
 										person.Names = make([]*people.Name, 1)
@@ -243,7 +243,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 											name.GivenName = item.KaiContact.GivenName[0]
 										}
 										if len(item.KaiContact.FamilyName) > 0 {
-											name.GivenName = item.KaiContact.FamilyName[0]
+											name.FamilyName = item.KaiContact.FamilyName[0]
 										}
 										if len(item.KaiContact.Tel) > 0 {
 											if len(item.KaiContact.Tel[0].Type) > 0 { 
@@ -264,7 +264,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 										person.Names[0] = name
 										person.PhoneNumbers[0] = phoneNumber
 										person.EmailAddresses[0] = emailAddress
-										person.ResourceName = "people/" + item.KaiContact.Id
+										person.ResourceName = "people/" + item.KaiContact.Key[0]
 										b, _ := person.MarshalJSON()
 										hash := sha256.Sum256(b)
 										item.Metadata.Hash = hex.EncodeToString(hash[:])
@@ -291,7 +291,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 								log.Info("SyncList: ", len(data.SyncList))
 								for _, item := range data.SyncList {
-									key := "local:people:" + item.KaiContact.Id
+									key := "local:people:" + item.KaiContact.Key[0]
 									metadataKey := "metadata:local:people:" + item.Metadata.SyncID
 									// log.Info(key, " : ", metadataKey)
 									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
@@ -333,7 +333,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 										metadata := types.Metadata{}
 										if metadata_s, err := tx.Get(metadataKey); err == nil {
 											if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil {
-												metadata.SyncID = item.KaiContact.Id
+												metadata.SyncID = item.KaiContact.Key[0]
 												metadata.SyncUpdated = item.KaiContact.Updated
 												metadata.Hash = hex.EncodeToString(hash[:])
 												if metadata_b, err := json.Marshal(metadata); err == nil {
