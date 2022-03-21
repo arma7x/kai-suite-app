@@ -25,7 +25,7 @@ import (
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
 var _ fyne.Theme = (*custom_theme.DarkMode)(nil)
 
-var ip 		string = "(Select one)"
+var ip 		string = "(Select network card)"
 var port 	string = "4444"
 
 var connectionContent *fyne.Container
@@ -55,7 +55,7 @@ var buttonConnect = widget.NewButton("Connect", func() {
 	}
 })
 
-func getLocalIPAddresses() (ipList []string) {
+func getNetworkCardIPAddresses() (ipList []string) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return
@@ -100,7 +100,7 @@ func renderConnectContent(c *fyne.Container) {
 	messagesContent.Hide()
 	contactsContent.Hide()
 	googleServicesContent.Hide()
-	inputIp := widget.NewSelect(getLocalIPAddresses(), func(selected string) {
+	inputIp := widget.NewSelect(getNetworkCardIPAddresses(), func(selected string) {
 		ip = selected
 		ipPortLabel.SetText("Ip Address: " + ip + ":" + port)
 	})
@@ -121,10 +121,8 @@ func renderConnectContent(c *fyne.Container) {
 		container.NewVBox(
 			deviceLabel,
 			ipPortLabel,
-			container.NewHBox(
-				inputIp,
-				inputPort,
-			),
+			inputIp,
+			inputPort,
 			buttonConnect,
 		),
 	)

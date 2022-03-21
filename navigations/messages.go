@@ -130,7 +130,12 @@ func RenderMessagesContent(c *fyne.Container, sendSMSCb func(receivers []string,
 	RefreshThreads()
 	messagesContainer = container.NewVBox()
 	threadsBox = container.NewBorder(
-		nil, nil, nil, nil,
+		container.NewHBox(
+			widget.NewButton("New Message", func() {
+			
+			}),
+		),
+		nil, nil, nil,
 		container.NewVScroll(container.NewVBox(threadsContainer)),
 	)
 	messagesScroller = container.NewVScroll(container.NewVBox(messagesContainer))
