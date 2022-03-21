@@ -81,9 +81,9 @@ type TxRestoreLocalContact7 struct {
 type TxSyncSMS9 struct {}
 
 type TxSendSMS11 struct {
-	Receivers		[]string	`json:"receivers"`
-	Message			string		`json:"message"`
-	IccId				string		`json:"iccId"`
+	Receivers		[]string	`json:"receivers,omitempty"`
+	Message			string		`json:"message,omitempty"`
+	IccId				string		`json:"iccId,omitempty"`
 }
 
 type TxDeleteContact struct {
@@ -126,8 +126,8 @@ type RxSyncLocalContactFlag8 struct {
 }
 
 type RxSyncSMSFlag10 struct {
-	Threads			map[int]MozMobileMessageThread	`json:"threads"`
-	Messages		map[int][]MozSmsMessage		`json:"messages"`
+	Threads			map[int]*MozMobileMessageThread	`json:"threads"`
+	Messages		map[int][]*MozSmsMessage		`json:"messages"`
 }
 type RxRestoreContactFlag12 struct {
 	Namespace			string	`json:"namespace"`	//account:people:id
