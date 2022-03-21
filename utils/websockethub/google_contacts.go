@@ -14,39 +14,39 @@ import(
 )
 
 var(
-	ContactsSyncQueue []types.TxSyncGoogleContact
+	GoogleContactsQueue []types.TxSyncGoogleContact
 )
 
 func EnqueueContactSync(item types.TxSyncGoogleContact, urgent bool) {
   if urgent {
-		ContactsSyncQueue = append(ContactsSyncQueue, item)
+		GoogleContactsQueue = append(GoogleContactsQueue, item)
 	} else {
-		ContactsSyncQueue = append([]types.TxSyncGoogleContact{item}, ContactsSyncQueue...)
+		GoogleContactsQueue = append([]types.TxSyncGoogleContact{item}, GoogleContactsQueue...)
 	}
 }
 
 func DequeueContactSync() (item types.TxSyncGoogleContact, err error) {
-	size := len(ContactsSyncQueue)
+	size := len(GoogleContactsQueue)
 	if  size == 0 {
 		err = errors.New("Empty")
 		return
 	}
-	item = ContactsSyncQueue[size - 1]
-	ContactsSyncQueue = ContactsSyncQueue[:size-1]
+	item = GoogleContactsQueue[size - 1]
+	GoogleContactsQueue = GoogleContactsQueue[:size-1]
 	return
 }
 
 func GetLastContactSync() (item types.TxSyncGoogleContact, err error) {
-	size := len(ContactsSyncQueue)
+	size := len(GoogleContactsQueue)
 	if size == 0 {
 		err = errors.New("Empty")
 		return
 	}
-	item = ContactsSyncQueue[size - 1]
+	item = GoogleContactsQueue[size - 1]
 	return 
 }
 
-func FlushContactSync() error {
+func SyncGoogleContact() error {
 	if item, err := DequeueContactSync(); err == nil && Client != nil {
 		bd, _ := json.Marshal(item)
 		btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
@@ -59,7 +59,7 @@ func FlushContactSync() error {
 }
 
 func SyncContacts(namespace string) {
-	log.Info("Sync KaiOS Contacts ", namespace)
+	log.Info("Sync Google Contacts ", namespace)
 	if Status == false  || Client == nil {
 		return
 	}
@@ -80,19 +80,29 @@ func SyncContacts(namespace string) {
 		}
 		return nil
 	})
-	log.Info("Total queue: ", len(ContactsSyncQueue))
-	FlushContactSync()
+	log.Info("Total queue: ", len(GoogleContactsQueue))
+	SyncGoogleContact()
+}
+
+func RestoreGoogleContact() error {
+	if item, err := DequeueContactSync(); err == nil && Client != nil {
+		bd, _ := json.Marshal(item)
+		btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 3, Data: string(bd)})
+		if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+			log.Warn(err.Error())
+			return err
+		}
+	}
+	return nil
 }
 
 func RestoreContact(namespace string) {
-	log.Info("Sync KaiOS Contacts ", namespace)
+	log.Info("Restore Google Contacts ", namespace)
 	if Status == false  || Client == nil {
 		return
 	}
-	ContactsSyncQueue = nil
 	peoples := contacts.GetContacts(namespace)
 	contacts.SortContacts(peoples)
-	var list []types.GoogleContactRestore
 	global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		for _, p := range peoples {
 			key := strings.Join([]string{namespace, strings.Replace(p.ResourceName, "/", ":", 1)}, ":")
@@ -104,14 +114,10 @@ func RestoreContact(namespace string) {
 			} else {
 				return nil
 			}
-			list = append(list, types.GoogleContactRestore{Namespace: key, Metadata: metadata, Person: p})
-		}
-		item := types.TxRestoreGoogleContact3{List:	list}
-		bd, _ := json.Marshal(item)
-		btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 3, Data: string(bd)})
-		if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
-			log.Warn(err.Error())
+			EnqueueContactSync(types.TxSyncGoogleContact{Namespace: key, Metadata: metadata, Person: p}, false)
 		}
 		return nil
 	})
+	log.Info("Total queue: ", len(GoogleContactsQueue))
+	RestoreGoogleContact()
 }

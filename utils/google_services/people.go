@@ -26,7 +26,7 @@ var (
 	updateFields = "names,phoneNumbers,emailAddresses"
 )
 
-func GetContacts(config *oauth2.Config, account types.UserInfoAndToken) []*people.Person {
+func GetContacts(config *oauth2.Config, account *types.UserInfoAndToken) []*people.Person {
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
 	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
@@ -38,11 +38,11 @@ func GetContacts(config *oauth2.Config, account types.UserInfoAndToken) []*peopl
 	run := true;
 	var connections []*people.Person // type Person struct
 	var r *people.ListConnectionsResponse
-	var rErr error
-	r, rErr = srv.People.Connections.List("people/me").PageSize(1000).PersonFields(fields).Do()
+	var loopError error
+	r, loopError = srv.People.Connections.List("people/me").PageSize(1000).PersonFields(fields).Do()
 	for (run) {
-		if rErr != nil {
-			log.Warn("Unable to retrieve people: ", err)
+		if loopError != nil {
+			log.Warn("Unable to retrieve people: ", loopError)
 			run = false
 		} else {
 			if r.NextPageToken != "" {
@@ -52,7 +52,7 @@ func GetContacts(config *oauth2.Config, account types.UserInfoAndToken) []*peopl
 			if r.NextPageToken == "" {
 				run = false
 			} else {
-				r, rErr = srv.People.Connections.List("people/me").PageSize(20).PersonFields(fields).PageToken(r.NextPageToken).Do()
+				r, loopError = srv.People.Connections.List("people/me").PageSize(20).PersonFields(fields).PageToken(r.NextPageToken).Do()
 			}
 		}
 	}
@@ -61,7 +61,7 @@ func GetContacts(config *oauth2.Config, account types.UserInfoAndToken) []*peopl
 
 func CreateContacts() {}
 
-func UpdateContacts(config *oauth2.Config, account types.UserInfoAndToken, contacts map[string]*people.Person) (success []*people.Person, fail []*people.Person) {
+func UpdateContacts(config *oauth2.Config, account *types.UserInfoAndToken, contacts map[string]*people.Person) (success []*people.Person, fail []*people.Person) {
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
 	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
@@ -79,7 +79,7 @@ func UpdateContacts(config *oauth2.Config, account types.UserInfoAndToken, conta
 	return
 }
 
-func DeleteContacts(config *oauth2.Config, account types.UserInfoAndToken, contacts map[string]*people.Person) (success []*people.Person, fail []*people.Person) {
+func DeleteContacts(config *oauth2.Config, account *types.UserInfoAndToken, contacts map[string]*people.Person) (success []*people.Person, fail []*people.Person) {
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
 	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
@@ -99,7 +99,7 @@ func DeleteContacts(config *oauth2.Config, account types.UserInfoAndToken, conta
 
 func SearchContacts() {}
 
-func Sync(config *oauth2.Config, account types.UserInfoAndToken) {
+func Sync(config *oauth2.Config, account *types.UserInfoAndToken) {
 	connections := GetContacts(config, account)
 	if len(connections) > 0 {
 		personList := make(map[string]*people.Person)

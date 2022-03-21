@@ -58,12 +58,6 @@ type LocalContactMergedSync struct {
 	Metadata											`json:"metadata"`
 }
 
-type GoogleContactRestore struct {
-	Namespace string				`json:"namespace"`	//account:people:id
-	Metadata								`json:"metadata"`
-	Person *people.Person		`json:"person"`
-}
-
 //
 
 type TxSyncGoogleContact struct {
@@ -72,9 +66,7 @@ type TxSyncGoogleContact struct {
 	Person *people.Person		`json:"person"`
 }
 
-type TxRestoreGoogleContact3 struct {
-	List []GoogleContactRestore `json:"list"`
-}
+type TxRestoreGoogleContact3 struct {}
 
 type TxSyncLocalContact5 struct {
 	Metadata		map[string]Metadata					`json:"metadata"`
@@ -136,4 +128,9 @@ type RxSyncLocalContactFlag8 struct {
 type RxSyncSMSFlag10 struct {
 	Threads			map[int]MozMobileMessageThread	`json:"threads"`
 	Messages		map[int][]MozSmsMessage		`json:"messages"`
+}
+type RxRestoreContactFlag12 struct {
+	Namespace			string	`json:"namespace"`	//account:people:id
+	SyncID				string	`json:"sync_id,omitempty"`
+	SyncUpdated		string	`json:"sync_updated,omitempty"`
 }

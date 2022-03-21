@@ -53,7 +53,7 @@ func CheckIPAddress(ip, port string) (string, error) {
 	return ipAddr, nil 
 }
 
-func InitDatabaseIndex(accounts map[string]types.UserInfoAndToken) {
+func InitDatabaseIndex(accounts map[string]*types.UserInfoAndToken) {
 	for key, _ := range accounts {
 		index := strings.Join([]string{key, "people", "*"}, ":")
 		indexName := strings.Join([]string{"people", key}, "_")
@@ -61,6 +61,5 @@ func InitDatabaseIndex(accounts map[string]types.UserInfoAndToken) {
 		metadataIndex := strings.Join([]string{"metadata", key, "people", "*"}, ":")
 		metadataIndexName := strings.Join([]string{"metadata", key}, "_")
 		CONTACTS_DB.CreateIndex(metadataIndexName, metadataIndex, buntdb.IndexString)
-	// metadata:key:imei:people:*
 	}
 }

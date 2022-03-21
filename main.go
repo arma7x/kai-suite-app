@@ -153,7 +153,7 @@ func viewContactsList(title, namespace string) {
 	navigations.ViewContactsList(namespace, personsArr)
 }
 
-func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accounts map[string]types.UserInfoAndToken) {
+func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accounts map[string]*types.UserInfoAndToken) {
 	accountList.Objects = nil
 	namespaceArr := make([]string, 0, len(accounts))
 	for name := range accounts {
@@ -166,14 +166,19 @@ func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accou
 		card.SetSubTitle(accounts[namespace].User.Email)
 		card.SetContent(container.NewAdaptiveGrid(
 			2,
-			custom_widget.NewButton(namespace, "Sync Cloud Contact", func(scope string) {
-				log.Info("Sync Contact ", accounts[scope].User.Id)
+			custom_widget.NewButton(namespace, "Sync Cloud", func(scope string) {
+				log.Info("Sync Cloud ", accounts[scope].User.Id)
 				if authConfig, err := google_services.GetConfig(); err == nil {
-					google_services.Sync(authConfig, google_services.TokenRepository[accounts[scope].User.Id])
+					if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
+						google_services.TokenRepository[accounts[scope].User.Id].Token = token
+						google_services.Sync(authConfig, google_services.TokenRepository[accounts[scope].User.Id])
+					} else {
+						log.Warn(err.Error())
+					}
 				}
 			}),
-			custom_widget.NewButton(namespace, "Sync KaiOS Contacts", func(scope string) {
-				log.Info("Sync KaiOS Contacts ", scope)
+			custom_widget.NewButton(namespace, "Sync KaiOS", func(scope string) {
+				log.Info("Sync KaiOS ", scope)
 				websockethub.SyncContacts(scope)
 			}),
 			custom_widget.NewButton(namespace, "Restore Contacts", func(scope string) {

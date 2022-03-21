@@ -53,7 +53,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		mt, msg, err := conn.ReadMessage()
 		if err != nil {
 			Client = nil
-			ContactsSyncQueue = nil
+			GoogleContactsQueue = nil
 			clientVisibilityChan <- false
 			log.Warn(err.Error())
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) || err == io.EOF {
@@ -105,7 +105,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 										return nil
 									})
 								}
-								FlushContactSync()
+								SyncGoogleContact()
 							}
 						case 4:
 							data := types.RxSyncContactFlag4{}
@@ -164,7 +164,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 													return err
 												}
 												EnqueueContactSync(types.TxSyncGoogleContact{Namespace: data.Namespace, Metadata: metadata, Person: &person}, true)
-												return FlushContactSync()
+												return SyncGoogleContact()
 											} else {
 												log.Error(err.Error())
 												return err
@@ -179,7 +179,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 									}
 									return nil
 								}); err != nil {
-									FlushContactSync()
+									SyncGoogleContact()
 								}
 							}
 						case 6:
@@ -219,7 +219,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 									})
 								}
 							}
-							FlushContactSync()
+							SyncGoogleContact()
 						case 8:
 							data := types.RxSyncLocalContactFlag8{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
@@ -375,6 +375,35 @@ func handler(w http.ResponseWriter, r *http.Request) {
 								navigations.Messages = data.Messages
 								navigations.RefreshThreads()
 							}
+						case 12:
+							data := types.RxRestoreContactFlag12{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+								if data.SyncID != "error" {
+									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
+										metadata := types.Metadata{}
+										if metadata_s, err := tx.Get("metadata:" + data.Namespace); err == nil {
+											if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil {
+												metadata.SyncID = data.SyncID
+												metadata.SyncUpdated = data.SyncUpdated
+												if metadata_b, err := json.Marshal(metadata); err == nil {
+													tx.Set("metadata:" + data.Namespace, string(metadata_b[:]), nil)
+												} else {
+													log.Error(err.Error())
+													return err
+												}
+												return nil
+											}
+											log.Error(err.Error())
+											return err
+										} else {
+											log.Error(err.Error())
+											return err
+										}
+										return nil
+									})
+								}
+								RestoreGoogleContact()
+							}
 					}
 				}
 		}
@@ -411,7 +440,7 @@ func Stop(fn func(bool, error)) {
 		fn(Status, err)
 	} else {
 		if Client != nil {
-			ContactsSyncQueue = nil
+			GoogleContactsQueue = nil
 			Client.GetConn().WriteMessage(websocket.CloseMessage, []byte{})
 			Client.GetConn().Close()
 			Client = nil

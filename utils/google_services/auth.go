@@ -22,7 +22,7 @@ import (
 
 var(
 	AuthInstance *http.Client
-	TokenRepository = make(map[string]types.UserInfoAndToken)
+	TokenRepository = make(map[string]*types.UserInfoAndToken)
 )
 
 func init() {
@@ -55,7 +55,7 @@ func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
 	if user, err = FetchUserInfo(GetAuthClient(config, token)); err != nil {
 		return nil, err
 	}
-	TokenRepository[user.Id] = types.UserInfoAndToken{user, token}
+	TokenRepository[user.Id] = &types.UserInfoAndToken{user, token}
 
 	var b []byte
 	b, err = json.Marshal(&TokenRepository)
