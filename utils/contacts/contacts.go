@@ -1,6 +1,8 @@
 package contacts
 
 import (
+	"os"
+	"io"
 	"sort"
 	"strings"
 	"encoding/json"
@@ -11,7 +13,9 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"fyne.io/fyne/v2/dialog"
 	custom_widget "kai-suite/widgets"
+	"github.com/emersion/go-vcard"
 )
 
 func MakeContactCardWidget(namespace string, person *people.Person) fyne.CanvasObject {
@@ -68,4 +72,29 @@ func GetContacts(namespace string) []*people.Person {
 		log.Warn(err.Error())
 	}
 	return persons
+}
+
+func ImportContacts() {
+	log.Info("ImportContacts")
+	d := dialog.NewFileOpen(func(f fyne.URIReadCloser, err error) {
+		if err == nil {
+			f, err := os.Open(f.URI().Path())
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer f.Close()
+
+			dec := vcard.NewDecoder(f)
+			for {
+				card, err := dec.Decode()
+				if err == io.EOF {
+					break
+				} else if err != nil {
+					log.Fatal(err)
+				}
+				log.Info(card.PreferredValue(vcard.FieldFormattedName), " ", card.PreferredValue(vcard.FieldTelephone), " ", card.PreferredValue(vcard.FieldEmail))
+			}
+		}
+	}, global.WINDOW);
+	d.Show()
 }
