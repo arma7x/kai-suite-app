@@ -1,6 +1,7 @@
 package global
 
 import (
+	"crypto/rand"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -62,4 +63,15 @@ func InitDatabaseIndex(accounts map[string]*types.UserInfoAndToken) {
 		metadataIndexName := strings.Join([]string{"metadata", key}, "_")
 		CONTACTS_DB.CreateIndex(metadataIndexName, metadataIndex, buntdb.IndexString)
 	}
+}
+
+func RandomID() (uuid string) {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+	uuid = fmt.Sprintf("%X%X%X%X%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+	return
 }

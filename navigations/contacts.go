@@ -146,9 +146,9 @@ func RenderContactsContent(c *fyne.Container, syncCb func(), restoreCb func(), i
 				contactCardsContainer.Refresh()
 				paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 			}),
+      buttonImport,
 			buttonSync,
       buttonRestore,
-      buttonImport,
 			layout.NewSpacer(),
 			paginationLabel,
 			layout.NewSpacer(),

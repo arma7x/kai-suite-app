@@ -4,8 +4,12 @@ import (
 	"os"
 	"io"
 	"sort"
+	"time"
 	"strings"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"kai-suite/types"
 	"kai-suite/utils/global"
 	"github.com/tidwall/buntdb"
 	log "github.com/sirupsen/logrus"
@@ -51,7 +55,7 @@ func MakeContactCardWidget(namespace string, person *people.Person) fyne.CanvasO
 
 func SortContacts(persons []*people.Person) {
 	sort.Slice(persons, func(i, j int) bool {
-		return persons[i].Names[0].DisplayName < persons[j].Names[0].DisplayName
+		return persons[i].Names[0].UnstructuredName < persons[j].Names[0].UnstructuredName
 	})
 }
 
@@ -90,9 +94,55 @@ func ImportContacts() {
 				if err == io.EOF {
 					break
 				} else if err != nil {
-					log.Fatal(err)
+					log.Warn(err)
+					continue
 				}
-				log.Info(card.PreferredValue(vcard.FieldFormattedName), " ", card.PreferredValue(vcard.FieldTelephone), " ", card.PreferredValue(vcard.FieldEmail))
+				personID := global.RandomID()
+				person := people.Person{}
+				name := &people.Name{}
+				person.Names = make([]*people.Name, 1)
+				phoneNumber := &people.PhoneNumber{}
+				person.PhoneNumbers = make([]*people.PhoneNumber, 1)
+				emailAddress := &people.EmailAddress{}
+				person.EmailAddresses = make([]*people.EmailAddress, 1)
+				if card.PreferredValue(vcard.FieldFormattedName) != "" {
+					name.UnstructuredName = card.PreferredValue(vcard.FieldFormattedName)
+				}
+				if len(card.Names()) > 0 {
+					name.GivenName = card.Names()[0].GivenName
+				}
+				if len(card.Names()) > 0 {
+					name.FamilyName = card.Names()[0].FamilyName
+				}
+				if card.PreferredValue(vcard.FieldTelephone) != "" {
+					phoneNumber.Type = "mobile"
+					phoneNumber.Value = card.PreferredValue(vcard.FieldTelephone)
+				}
+				if card.PreferredValue(vcard.FieldEmail) != "" {
+					emailAddress.Type = "personal"
+					emailAddress.Value = card.PreferredValue(vcard.FieldEmail)
+				}
+				person.Names[0] = name
+				person.PhoneNumbers[0] = phoneNumber
+				person.EmailAddresses[0] = emailAddress
+				person.ResourceName = "people/" + personID
+				b, _ := person.MarshalJSON()
+				hash := sha256.Sum256(b)
+				metadata := types.Metadata{}
+				metadata.SyncID = personID
+				metadata.SyncUpdated = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+				metadata.Hash = hex.EncodeToString(hash[:])
+				metadata.Deleted = false
+				if metadata_b, err := json.Marshal(metadata); err == nil {
+					// log.Info(personID)
+					global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
+						key := "local:people:" + personID
+						metadataKey := "metadata:local:people:" + personID
+						tx.Set(key, string(b), nil)
+						tx.Set(metadataKey, string(metadata_b), nil)
+						return nil
+					})
+				}
 			}
 		}
 	}, global.WINDOW);
