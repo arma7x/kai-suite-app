@@ -176,7 +176,7 @@ func main() {
 		widget.NewButton("Messages", func() {
 			navigateMessagesContent(messagesContent)
 		}),
-		widget.NewButton("Contacts", func() {
+		widget.NewButton("Local Contacts", func() {
 			viewContactsList("Local Contacts", "local")
 		}),
 		widget.NewButton("Google Account", func() {

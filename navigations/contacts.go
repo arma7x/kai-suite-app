@@ -146,11 +146,13 @@ func RenderContactsContent(c *fyne.Container, syncCb func(), restoreCb func(), i
 				contactCardsContainer.Refresh()
 				paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 			}),
-      buttonImport,
-			buttonSync,
-      buttonRestore,
 			layout.NewSpacer(),
-			paginationLabel,
+			container.NewHBox(
+				paginationLabel,
+				buttonImport,
+				buttonSync,
+				buttonRestore,
+			),
 			layout.NewSpacer(),
 			widget.NewButton("Next Page", func() {
 				if contactPage + 1 > contactMaxPage {
