@@ -58,8 +58,6 @@ func GetContacts(config *oauth2.Config, account *types.UserInfoAndToken) ([]*peo
 	return connections, loopError
 }
 
-func CreateContacts() {}
-
 func UpdateContacts(config *oauth2.Config, account *types.UserInfoAndToken, contacts map[string]*people.Person) (success []*people.Person, fail []*people.Person) {
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
@@ -95,8 +93,6 @@ func DeleteContacts(config *oauth2.Config, account *types.UserInfoAndToken, cont
 	}
 	return
 }
-
-func SearchContacts() {}
 
 func Sync(config *oauth2.Config, account *types.UserInfoAndToken, removeContactCb func(string, *people.Person)) error {
 	if connections, err := GetContacts(config, account); err != nil {
