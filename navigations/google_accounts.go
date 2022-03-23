@@ -19,15 +19,16 @@ var (
 	viewContactsList func(string, string)
 )
 
+// TODO CACHE WIDGET
 func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[string]*types.UserInfoAndToken) {
 	log.Info("Google Services Rendered")
 	accountsContainer.Objects = nil
-	namespaceArr := make([]string, 0, len(accounts))
+	sortNamespace := make([]string, 0, len(accounts))
 	for name := range accounts {
-		namespaceArr = append(namespaceArr, name)
+		sortNamespace = append(sortNamespace, name)
 	}
-	sort.Strings(namespaceArr)
-	for _, namespace := range namespaceArr {
+	sort.Strings(sortNamespace)
+	for _, namespace := range sortNamespace {
 		card := &widget.Card{}
 		card.SetTitle(accounts[namespace].User.Name)
 		card.SetSubTitle(accounts[namespace].User.Email)
