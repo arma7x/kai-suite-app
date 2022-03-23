@@ -82,17 +82,7 @@ func onStatusChange(status bool, err error) {
 	}
 }
 
-func genDummyCards(list *fyne.Container) {
-	list.Objects = nil
-	for i := 1; i <= 10; i++ {
-		card := &widget.Card{}
-		card.SetTitle("Title")
-		card.SetSubTitle("Subtitle")
-		list.Add(card)
-	}
-}
-
-func renderConnectContent(c *fyne.Container) {
+func navigateConnectContent(c *fyne.Container) {
 	connectionContent.Show()
 	messagesContent.Hide()
 	contactsContent.Hide()
@@ -181,7 +171,7 @@ func main() {
 	fyne.CurrentApp().Settings().SetTheme(&custom_theme.LightMode{})
 	var menuButton *fyne.Container = container.NewVBox(
 		widget.NewButton("Connection", func() {
-			renderConnectContent(connectionContent)
+			navigateConnectContent(connectionContent)
 		}),
 		widget.NewButton("Messages", func() {
 			navigateMessagesContent(messagesContent)
@@ -205,7 +195,7 @@ func main() {
 	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts, websockethub.RestoreLocalContacts, contacts.ImportContacts)
 	messagesContent = container.NewMax()
 	navigations.RenderMessagesContent(messagesContent, websockethub.SendSMS)
-	renderConnectContent(connectionContent)
+	navigateConnectContent(connectionContent)
 
 	global.WINDOW.SetContent(container.NewBorder(
 		nil,

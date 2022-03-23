@@ -20,6 +20,7 @@ var (
 )
 
 func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[string]*types.UserInfoAndToken) {
+	log.Info("Google Services Rendered")
 	accountsContainer.Objects = nil
 	namespaceArr := make([]string, 0, len(accounts))
 	for name := range accounts {

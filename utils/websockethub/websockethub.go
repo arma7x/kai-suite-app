@@ -16,7 +16,6 @@ import (
 	"google.golang.org/api/people/v1"
 	"crypto/sha256"
 	"encoding/hex"
-	// "kai-suite/navigations"
 )
 
 var (
