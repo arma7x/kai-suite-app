@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"time"
+	// "time"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	clock = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+	// clock = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 	fields = "names,phoneNumbers,emailAddresses,metadata"
 	updateFields = "names,phoneNumbers,emailAddresses"
 )
