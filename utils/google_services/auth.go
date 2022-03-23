@@ -30,7 +30,6 @@ func init() {
 	log.Info("TokenRepository: ",len(TokenRepository))
 }
 
-// Request a token from the web, then returns the retrieved token.
 func GetTokenFromWeb(config *oauth2.Config) error {
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 	log.Info("Go to the following link in your browser then type the authorization code: ", authURL, "\n")
@@ -41,7 +40,6 @@ func GetTokenFromWeb(config *oauth2.Config) error {
 	return nil
 }
 
-// Saves a token to a file path.
 func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
 	tokensFile := global.ResolvePath("tokens.json")
 	var token *oauth2.Token
@@ -76,7 +74,6 @@ func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
 	return token, nil
 }
 
-// Retrieves a token from a local file.
 func tokenFromFile() error {
 	tokensFile := global.ResolvePath("tokens.json")
 	b, err := os.ReadFile(tokensFile)

@@ -25,13 +25,13 @@ var (
 	updateFields = "names,phoneNumbers,emailAddresses"
 )
 
-func GetContacts(config *oauth2.Config, account *types.UserInfoAndToken) []*people.Person {
+func GetContacts(config *oauth2.Config, account *types.UserInfoAndToken) ([]*people.Person, error) {
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
 	srv, err := people.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Warn("Unable to create people Client: ", err)
-		return nil
+		return nil, err
 	}
 
 	run := true;
@@ -55,7 +55,7 @@ func GetContacts(config *oauth2.Config, account *types.UserInfoAndToken) []*peop
 			}
 		}
 	}
-	return connections
+	return connections, loopError
 }
 
 func CreateContacts() {}
@@ -98,9 +98,10 @@ func DeleteContacts(config *oauth2.Config, account *types.UserInfoAndToken, cont
 
 func SearchContacts() {}
 
-func Sync(config *oauth2.Config, account *types.UserInfoAndToken, removeContactCb func(string, *people.Person)) {
-	connections := GetContacts(config, account)
-	if len(connections) > 0 {
+func Sync(config *oauth2.Config, account *types.UserInfoAndToken, removeContactCb func(string, *people.Person)) error {
+	if connections, err := GetContacts(config, account); err != nil {
+		return err
+	} else if len(connections) > 0 {
 		personList := make(map[string]*people.Person)
 		deleteList := make(map[string]*people.Person)
 		updateList := make(map[string]*people.Person)
@@ -270,6 +271,8 @@ func Sync(config *oauth2.Config, account *types.UserInfoAndToken, removeContactC
 			}
 			return nil
 		})
+		global.CONTACTS_DB.Shrink()
+		return nil
 	}
-	global.CONTACTS_DB.Shrink()
+	return errors.New("Unknown Error")
 }
