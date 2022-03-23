@@ -1,24 +1,21 @@
 package main
 
 import (
-	"sort"
+	//"sort"
 	"net"
 	"strconv"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/data/binding"
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websockethub"
 	"kai-suite/utils/google_services"
-	"kai-suite/types"
 	"kai-suite/theme"
 	"kai-suite/navigations"
 	log "github.com/sirupsen/logrus"
-	custom_widget "kai-suite/widgets"
 	"kai-suite/utils/contacts"
 	"fyne.io/systray"
 )
@@ -48,7 +45,7 @@ var buttonConnect = widget.NewButton("Connect", func() {
 			ipPortLabel.SetText(err.Error());
 		} else {
 			ipPortLabel.SetText("Ip Address: " + addr)
-			websockethub.Init(addr, websocketClientVisibilityChan)
+			websockethub.Init(addr, websocketClientVisibilityChan, navigations.Threads, navigations.Messages, navigations.RemoveContact, navigations.RefreshThreads)
 		}
 		go websockethub.Start(onStatusChange)
 	} else {
@@ -129,7 +126,7 @@ func renderConnectContent(c *fyne.Container) {
 	)
 }
 
-func renderMessagesContent(c *fyne.Container) {
+func navigateMessagesContent(c *fyne.Container) {
 	contentTitle.Set("Messages")
 	connectionContent.Hide()
 	messagesContent.Show()
@@ -152,87 +149,12 @@ func viewContactsList(title, namespace string) {
 	navigations.ViewContactsList(namespace, personsArr)
 }
 
-func genGoogleAccountCards(c *fyne.Container, accountList *fyne.Container, accounts map[string]*types.UserInfoAndToken) {
-	accountList.Objects = nil
-	namespaceArr := make([]string, 0, len(accounts))
-	for name := range accounts {
-		namespaceArr = append(namespaceArr, name)
-	}
-	sort.Strings(namespaceArr)
-	for _, namespace := range namespaceArr {
-		card := &widget.Card{}
-		card.SetTitle(accounts[namespace].User.Name)
-		card.SetSubTitle(accounts[namespace].User.Email)
-		card.SetContent(container.NewAdaptiveGrid(
-			2,
-			custom_widget.NewButton(namespace, "Sync Cloud", func(scope string) {
-				log.Info("Sync Cloud ", accounts[scope].User.Id)
-				if authConfig, err := google_services.GetConfig(); err == nil {
-					if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
-						google_services.TokenRepository[accounts[scope].User.Id].Token = token
-						google_services.Sync(authConfig, google_services.TokenRepository[accounts[scope].User.Id])
-					} else {
-						log.Warn(err.Error())
-					}
-				}
-			}),
-			custom_widget.NewButton(namespace, "Sync KaiOS", func(scope string) {
-				log.Info("Sync KaiOS ", scope)
-				websockethub.SyncContacts(scope)
-			}),
-			custom_widget.NewButton(namespace, "Restore Contacts", func(scope string) {
-				log.Info("Restore Contacts ", accounts[scope].User.Id)
-				websockethub.RestoreContact(scope)
-			}),
-			custom_widget.NewButton(namespace, "Contact List", func(scope string) {
-				log.Info("Contact List ", accounts[scope].User.Id)
-				viewContactsList(accounts[scope].User.Email + " Contacts", scope)
-			}),
-			widget.NewButton("Remove", func() {
-				log.Info("Remove ", accounts[namespace].User.Id)
-			}),
-		))
-		accountList.Add(card)
-	}
-}
-
-func renderGAContent(c *fyne.Container) {
+func navigateGoogleServices(c *fyne.Container) {
+	contentTitle.Set("Google Account")
 	connectionContent.Hide()
 	messagesContent.Hide()
 	contactsContent.Hide()
 	googleServicesContent.Show()
-	c.Objects = nil
-	contentTitle.Set("Google Account")
-	accountList := container.NewAdaptiveGrid(3)
-	genGoogleAccountCards(c, accountList, google_services.TokenRepository)
-	box := container.NewBorder(
-		container.NewHBox(
-			widget.NewButton("Add Google Account", func() {
-				if authConfig, err := google_services.GetConfig(); err == nil {
-					if err := google_services.GetTokenFromWeb(authConfig); err == nil {
-						var authCode string
-						d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
-							authCode = str
-						}, global.WINDOW)
-						d.SetOnClosed(func() {
-							if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
-								log.Info("TokenRepository: ",len(google_services.TokenRepository))
-								genGoogleAccountCards(c, accountList, google_services.TokenRepository)
-							} else {
-								log.Warn(err)
-							}
-						})
-						d.Show()
-					} else {
-						log.Warn(err)
-					}
-				}
-			}),
-		),
-		nil, nil, nil,
-		container.NewVScroll(container.NewVBox(accountList)),
-	)
-	c.Add(box)
 }
 
 func main() {
@@ -263,13 +185,13 @@ func main() {
 			renderConnectContent(connectionContent)
 		}),
 		widget.NewButton("Messages", func() {
-			renderMessagesContent(messagesContent)
+			navigateMessagesContent(messagesContent)
 		}),
 		widget.NewButton("Contacts", func() {
 			viewContactsList("Local Contacts", "local")
 		}),
 		widget.NewButton("Google Account", func() {
-			renderGAContent(googleServicesContent)
+			navigateGoogleServices(googleServicesContent)
 		}),
 	)
 	menuBox := container.NewVScroll(menuButton)
@@ -277,11 +199,12 @@ func main() {
 	menu.Add(menuBox)
 
 	connectionContent = container.NewMax()
-	messagesContent = container.NewMax()
-	contactsContent = container.NewMax()
-	googleServicesContent = container.NewMax()
 
+	googleServicesContent = container.NewMax()
+	navigations.RenderGoogleAccountContent(googleServicesContent, viewContactsList)
+	contactsContent = container.NewMax()
 	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts, websockethub.RestoreLocalContacts, contacts.ImportContacts)
+	messagesContent = container.NewMax()
 	navigations.RenderMessagesContent(messagesContent, websockethub.SendSMS)
 	renderConnectContent(connectionContent)
 

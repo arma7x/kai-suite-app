@@ -15,10 +15,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/people/v1"
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
+	//"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/dialog"
-	custom_widget "kai-suite/widgets"
+	//custom_widget "kai-suite/widgets"
 	"github.com/emersion/go-vcard"
 )
 
@@ -38,18 +38,18 @@ func MakeContactCardWidget(namespace string, person *people.Person) fyne.CanvasO
 	} else {
 		card.SetSubTitle("-")
 	}
-	id := namespace + ":" + strings.Replace(person.ResourceName, "/", ":", 1)
-	card.SetContent(container.NewHBox(
-		custom_widget.NewButton(id, "Detail", func(scope string) {
-			log.Info("Clicked detail ", scope)
-		}),
-		custom_widget.NewButton(id, "Edit", func(scope string) {
-			log.Info("Clicked edit ", scope)
-		}),
-		custom_widget.NewButton(id, "Delete", func(scope string) {
-			log.Info("Clicked delete ", scope)
-		}),
-	))
+	//id := namespace + ":" + strings.Replace(person.ResourceName, "/", ":", 1)
+	//card.SetContent(container.NewHBox(
+		//custom_widget.NewButton(id, "Detail", func(scope string) {
+			//log.Info("Clicked detail ", scope)
+		//}),
+		//custom_widget.NewButton(id, "Edit", func(scope string) {
+			//log.Info("Clicked edit ", scope)
+		//}),
+		//custom_widget.NewButton(id, "Delete", func(scope string) {
+			//log.Info("Clicked delete ", scope)
+		//}),
+	//))
 	return card
 }
 

@@ -16,7 +16,7 @@ import (
 	"google.golang.org/api/people/v1"
 	"crypto/sha256"
 	"encoding/hex"
-	"kai-suite/navigations"
+	// "kai-suite/navigations"
 )
 
 var (
@@ -33,6 +33,10 @@ var (
 	Status bool = false
 	Server http.Server
 	Client *types.Client
+	navThreads map[int]*types.MozMobileMessageThread
+	navMessages map[int][]*types.MozSmsMessage
+	removeContactCb func(string, *people.Person)
+	refreshThreadsCb func()
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -208,7 +212,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 											metadata.Deleted = true
 											if metadata_b, err := json.Marshal(metadata); err == nil {
 												tx.Set("metadata:" + data.Namespace, string(metadata_b[:]), nil)
-												navigations.RemoveContact(split[0], &person)
+												removeContactCb(split[0], &person)
 											} else {
 												return err
 											}
@@ -369,11 +373,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
 								// log.Info(data.Threads)
 								// log.Info(navigations.Threads)
-								navigations.Threads = data.Threads
+								navThreads = data.Threads
 								// log.Info(data.Messages)
 								// log.Info(navigations.Messages)
-								navigations.Messages = data.Messages
-								navigations.RefreshThreads()
+								navMessages = data.Messages
+								refreshThreadsCb()
 							}
 						case 12:
 							data := types.RxRestoreContactFlag12{}
@@ -410,10 +414,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Init(addr string, clientChan chan bool) {
+func Init(addr string, clientChan chan bool, navThreads map[int]*types.MozMobileMessageThread, navMessages map[int][]*types.MozSmsMessage, removeContactCb func(string, *people.Person), refreshThreadsCb func()) {
 	initialized = true
 	address = addr
 	clientVisibilityChan = clientChan
+	navThreads = navThreads
+	navMessages = navMessages
+	removeContactCb = removeContactCb
+	refreshThreadsCb = refreshThreadsCb
 }
 
 func Start(fn func(bool, error)) {

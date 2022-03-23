@@ -126,3 +126,26 @@ func RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	tokenSource := config.TokenSource(ctx, token)
 	return tokenSource.Token()
 }
+
+func RemoveAccount(id string) {
+	if _, found := TokenRepository[id]; found == true {
+		tokensFile := global.ResolvePath("tokens.json")
+		delete(TokenRepository, id)
+		var b []byte
+		b, err := json.Marshal(&TokenRepository)
+		if err != nil {
+			return
+		}
+
+		log.Info("Saving credential file to: ", tokensFile, "\n")
+		f, err := os.OpenFile(tokensFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			return
+		}
+		if _, err := f.Write(b); err != nil {
+			return
+		}
+		defer f.Close()
+		global.InitDatabaseIndex(TokenRepository)
+	}
+}

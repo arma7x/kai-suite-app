@@ -114,7 +114,7 @@ func RenderContactsContent(c *fyne.Container, syncCb func(), restoreCb func(), i
 	buttonRestore = widget.NewButton("Restore", func() {
 		restoreCb()
 	})
-	buttonImport = widget.NewButton("Import", func() {
+	buttonImport = widget.NewButton("Import VCF", func() {
 		log.Info("Import")
 		importCb()
 	})

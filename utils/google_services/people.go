@@ -17,7 +17,6 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/people/v1"
-	"kai-suite/navigations"
 )
 
 var (
@@ -99,7 +98,7 @@ func DeleteContacts(config *oauth2.Config, account *types.UserInfoAndToken, cont
 
 func SearchContacts() {}
 
-func Sync(config *oauth2.Config, account *types.UserInfoAndToken) {
+func Sync(config *oauth2.Config, account *types.UserInfoAndToken, removeContactCb func(string, *people.Person)) {
 	connections := GetContacts(config, account)
 	if len(connections) > 0 {
 		personList := make(map[string]*people.Person)
@@ -238,7 +237,7 @@ func Sync(config *oauth2.Config, account *types.UserInfoAndToken) {
 					key := strings.Replace(person.ResourceName, "/", ":", 1)
 					tx.Delete("metadata:" + account.User.Id + ":" + key)
 					tx.Delete(account.User.Id + ":" + key)
-					navigations.RemoveContact(account.User.Id, person)
+					removeContactCb(account.User.Id, person)
 				}
 				return nil
 			})
