@@ -32,8 +32,8 @@ var (
 	Status bool = false
 	Server http.Server
 	Client *types.Client
-	navThreads map[int]*types.MozMobileMessageThread
-	navMessages map[int][]*types.MozSmsMessage
+	reloadThreadsCb func(map[int]*types.MozMobileMessageThread)
+	reloadMessages func(map[int][]*types.MozSmsMessage)
 	removeContactCb func(string, *people.Person)
 	refreshThreadsCb func()
 )
@@ -370,12 +370,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 						case 10:
 							data := types.RxSyncSMSFlag10{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
-								// log.Info(data.Threads)
-								// log.Info(navigations.Threads)
-								navThreads = data.Threads
-								// log.Info(data.Messages)
-								// log.Info(navigations.Messages)
-								navMessages = data.Messages
+								reloadThreadsCb(data.Threads)
+								reloadMessages(data.Messages)
 								refreshThreadsCb()
 							}
 						case 12:
@@ -413,14 +409,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Init(addr string, clientChan chan bool, navThreads map[int]*types.MozMobileMessageThread, navMessages map[int][]*types.MozSmsMessage, removeContactCb func(string, *people.Person), refreshThreadsCb func()) {
+func Init(addr string, clientChan chan bool, _reloadThreadsCb func(map[int]*types.MozMobileMessageThread), _reloadMessages func(map[int][]*types.MozSmsMessage), _removeContactCb func(string, *people.Person), _refreshThreadsCb func()) {
 	initialized = true
 	address = addr
 	clientVisibilityChan = clientChan
-	navThreads = navThreads
-	navMessages = navMessages
-	removeContactCb = removeContactCb
-	refreshThreadsCb = refreshThreadsCb
+	reloadThreadsCb = _reloadThreadsCb
+	reloadMessages = _reloadMessages
+	removeContactCb = _removeContactCb
+	refreshThreadsCb = _refreshThreadsCb
 }
 
 func Start(fn func(bool, error)) {

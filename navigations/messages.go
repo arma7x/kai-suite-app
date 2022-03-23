@@ -41,6 +41,14 @@ var (
 	textMessage = binding.NewString()
 )
 
+func ReloadThreads(threads map[int]*types.MozMobileMessageThread) {
+	Threads = threads
+}
+
+func ReloadMessages(messages map[int][]*types.MozSmsMessage) {
+	Messages = messages
+}
+
 func ViewMessagesThread(threadId int) {
 	log.Info("View thread: ", threadId)
 	FocusedThread = threadId

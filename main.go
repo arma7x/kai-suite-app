@@ -44,7 +44,7 @@ var buttonConnect = widget.NewButton("Connect", func() {
 			ipPortLabel.SetText(err.Error());
 		} else {
 			ipPortLabel.SetText("Ip Address: " + addr)
-			websockethub.Init(addr, websocketClientVisibilityChan, navigations.Threads, navigations.Messages, navigations.RemoveContact, navigations.RefreshThreads)
+			websockethub.Init(addr, websocketClientVisibilityChan, navigations.ReloadThreads, navigations.ReloadMessages, navigations.RemoveContact, navigations.RefreshThreads)
 		}
 		go websockethub.Start(onStatusChange)
 	} else {
