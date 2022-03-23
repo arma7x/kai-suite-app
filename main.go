@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"sort"
 	"net"
 	"strconv"
 	"fyne.io/fyne/v2"
