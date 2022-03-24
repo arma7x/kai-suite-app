@@ -45,6 +45,16 @@ var (
 
 func ReloadThreads(threads map[int]*types.MozMobileMessageThread) {
 	Threads = threads
+	for _, t := range Threads {
+		if t.Id != FocusedThread { //  || global.VISIBILITY == false 
+			if t.UnreadCount > 0 {
+				global.APP.SendNotification(fyne.NewNotification(t.Participants[0], t.Body))
+			}
+		}
+	}
+	//if global.VISIBILITY == true {
+	//	global.WINDOW.RequestFocus()
+	//}
 }
 
 func ReloadMessages(messages map[int][]*types.MozSmsMessage) {
