@@ -41,6 +41,7 @@ var (
 	messagesScroller *container.Scroll
 	textMessageEntry = widget.NewMultiLineEntry()
 	textMessage = binding.NewString()
+	smsReadIdChan = make(chan []int)
 )
 
 func ReloadThreads(threads map[int]*types.MozMobileMessageThread) {
@@ -63,6 +64,7 @@ func ReloadMessages(messages map[int][]*types.MozSmsMessage) {
 
 func ViewMessagesThread(threadId int) {
 	log.Info("View thread: ", threadId)
+	var recvSMSId []int
 	FocusedThread = threadId
 	threadsBox.Hide()
 	messagesBox.Show()
@@ -118,6 +120,7 @@ func ViewMessagesThread(threadId int) {
 						),
 					)
 					messagesCardCache[threadId][m.Id].Card = container.NewBorder(nil,nil,card,nil)
+					recvSMSId = append(recvSMSId, m.Id)
 				}
 				log.Info("Load Message ", threadId, ": ", m.Id)
 				messagesContainer.Add(messagesCardCache[threadId][m.Id].Card)
@@ -126,6 +129,7 @@ func ViewMessagesThread(threadId int) {
 				messagesContainer.Add(item.Card)
 			}
 		}
+		smsReadIdChan <-recvSMSId
 		messagesContainer.Refresh()
 	}
 	time.AfterFunc(time.Second / 2, messagesScroller.ScrollToBottom)
@@ -196,7 +200,15 @@ func RefreshThreads() {
 	}
 }
 
-func RenderMessagesContent(c *fyne.Container, sendSMSCb func(receivers []string, message string, iccId string)) {
+func RenderMessagesContent(c *fyne.Container, sendSMSCb func([]string, string, string), syncSMSReadCb func([]int)) {
+	go func() {
+		for {
+			select {
+				case ids := <- smsReadIdChan:
+					syncSMSReadCb(ids)
+			}
+		}
+	}()
 	var newDialog dialog.Dialog
 	to := widget.NewEntry()
 	body := widget.NewMultiLineEntry()

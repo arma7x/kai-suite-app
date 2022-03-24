@@ -86,8 +86,8 @@ type TxSendSMS11 struct {
 	IccId				string		`json:"iccId,omitempty"`
 }
 
-type TxDeleteContact struct {
-	Namespace string				`json:"namespace"`	//account:people:id
+type TxSyncSMSRead13 struct {
+	Id []int	`json:"id"`
 }
 
 // On Rx, pop QUEUE, next QUEUE
@@ -129,6 +129,7 @@ type RxSyncSMSFlag10 struct {
 	Threads			map[int]*MozMobileMessageThread	`json:"threads"`
 	Messages		map[int][]*MozSmsMessage		`json:"messages"`
 }
+
 type RxRestoreContactFlag12 struct {
 	Namespace			string	`json:"namespace"`	//account:people:id
 	SyncID				string	`json:"sync_id,omitempty"`

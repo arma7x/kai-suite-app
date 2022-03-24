@@ -30,3 +30,16 @@ func SendSMS(receivers []string, message string, iccId string) {
 		}
 	}
 }
+
+func SyncSMSRead(id []int) {
+	if Client != nil {
+		item := types.TxSyncSMSRead13{
+			Id: id,
+		}
+		bd, _ := json.Marshal(item)
+		btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 13, Data: string(bd)})
+		if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+			log.Warn(err.Error())
+		}
+	}
+}
