@@ -167,7 +167,7 @@ func main() {
 		}
 	}()
 	defer global.CONTACTS_DB.Close()
-	global.APP = app.NewWithID("com.arma7x.kai-suite")
+	global.APP = app.NewWithID("Kai Suitee")
 	global.WINDOW = global.APP.NewWindow("Kai Suite")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
 	fyne.CurrentApp().Settings().SetTheme(&custom_theme.LightMode{})
