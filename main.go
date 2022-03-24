@@ -16,7 +16,9 @@ import (
 	"kai-suite/navigations"
 	log "github.com/sirupsen/logrus"
 	"kai-suite/utils/contacts"
+	"github.com/getlantern/systray"
 	// "fyne.io/systray"
+	"kai-suite/icon"
 )
 
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
@@ -204,23 +206,26 @@ func main() {
 		nil,
 		container.NewBorder(contentLabel, nil, nil, nil, connectionContent, messagesContent, contactsContent, googleServicesContent)),
 	)
-	//onExit := func() {
-		//global.WINDOW.Show()
-	//}
-	//global.WINDOW.SetCloseIntercept(func() {
-		//log.Info("Close")
-		//global.WINDOW.Hide()
-		//systray.Run(onReady, onExit)
-	//})
+	onExit := func() {}
+	global.WINDOW.SetCloseIntercept(func() {
+		global.WINDOW.Hide()
+	})
+	go systray.Run(onReady, onExit)
 	global.WINDOW.ShowAndRun()
 }
 
-//func onReady() {
-	//systray.SetTitle("Awesome App")
-	//systray.SetTooltip("Lantern")
-	//mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
-	//go func() {
-		//<-mQuit.ClickedCh
-		//systray.Quit()
-	//}()
-//}
+func onReady() {
+	systray.SetTemplateIcon(icon.Data, icon.Data)
+	// systray.SetTitle("Kai Suite")
+	systray.SetTooltip("Kai Suite")
+	mLaunch := systray.AddMenuItem("Launch", "Launch app")
+	mQuit := systray.AddMenuItem("Quit", "Quit app")
+	for {
+		select {
+			case <-mLaunch.ClickedCh:
+				global.WINDOW.Show()
+			case <-mQuit.ClickedCh:
+				global.WINDOW.Close()
+		}
+	}
+}
