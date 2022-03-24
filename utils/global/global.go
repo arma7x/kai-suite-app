@@ -17,7 +17,9 @@ import (
 
 var (
 	ROOT_PATH string
+	APP fyne.App
 	WINDOW fyne.Window
+	VISIBILITY = true
 	CONTACTS_DB *buntdb.DB
 )
 

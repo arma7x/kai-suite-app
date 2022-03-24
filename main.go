@@ -167,8 +167,8 @@ func main() {
 		}
 	}()
 	defer global.CONTACTS_DB.Close()
-	app := app.New()
-	global.WINDOW = app.NewWindow("Kai Suite")
+	global.APP = app.NewWithID("com.arma7x.kai-suite")
+	global.WINDOW = global.APP.NewWindow("Kai Suite")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
 	fyne.CurrentApp().Settings().SetTheme(&custom_theme.LightMode{})
 	var menuButton *fyne.Container = container.NewVBox(
@@ -209,6 +209,8 @@ func main() {
 	onExit := func() {}
 	global.WINDOW.SetCloseIntercept(func() {
 		global.WINDOW.Hide()
+		global.VISIBILITY = false
+		// global.APP.SendNotification(fyne.NewNotification("title", "content"))
 	})
 	go systray.Run(onReady, onExit)
 	global.WINDOW.ShowAndRun()
@@ -224,6 +226,7 @@ func onReady() {
 		select {
 			case <-mLaunch.ClickedCh:
 				global.WINDOW.Show()
+				global.VISIBILITY = true
 			case <-mQuit.ClickedCh:
 				global.WINDOW.Close()
 		}
