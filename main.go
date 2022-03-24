@@ -167,10 +167,11 @@ func main() {
 		}
 	}()
 	defer global.CONTACTS_DB.Close()
-	global.APP = app.NewWithID("Kai Suite")
+	global.APP = app.New()
+	global.APP.Settings().SetTheme(&custom_theme.LightMode{})
+	global.APP.SetIcon(&fyne.StaticResource{ StaticName: "Icon.png", StaticContent: icon.Data})
 	global.WINDOW = global.APP.NewWindow("Kai Suite")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
-	fyne.CurrentApp().Settings().SetTheme(&custom_theme.LightMode{})
 	var menuButton *fyne.Container = container.NewVBox(
 		widget.NewButton("Connection", func() {
 			navigateConnectContent(connectionContent)
