@@ -36,6 +36,7 @@ func MakeContactCardWidget(namespace string, person *people.Person) fyne.CanvasO
 			val = person.PhoneNumbers[0].Value
 		}
 		card.SetContent(widget.NewButtonWithIcon(val, theme.ContentCopyIcon(), func() {
+			// TODO TOAST
 			global.WINDOW.Clipboard().SetContent(val)
 		}))
 		//card.SetSubTitle(val)
