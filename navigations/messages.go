@@ -108,17 +108,21 @@ func RefreshThreads() {
 		if _, exist := threadsCardCache[t.Id]; exist == true {
 			if threadsCardCache[t.Id].Timestamp != t.Timestamp {
 				threadsCardCache[t.Id].Timestamp = t.Timestamp
-				threadsCardCache[t.Id] = &ThreadCardCached{}
 				threadsCardCache[t.Id].Timestamp = t.Timestamp
 				card := &widget.Card{}
 				card.SetTitle(t.Body)
 				card.SetSubTitle(t.Participants[0])
+				if t.UnreadCount > 0 {
+					card.SetSubTitle(t.Participants[0] + "(" + strconv.Itoa(t.UnreadCount) + ")")
+				}
+				tm := time.Unix(int64(t.Timestamp)/1000, (int64(t.Timestamp)%1000)*1000*1000).Local().Format(time.RFC1123)
 				card.SetContent(container.NewHBox(
 					custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
-					if i, err := strconv.Atoi(scope); err == nil {
-						ViewMessagesThread(i)
-					}
-				}),
+						if i, err := strconv.Atoi(scope); err == nil {
+							ViewMessagesThread(i)
+						}
+					}),
+					widget.NewLabel(tm),
 				))
 				threadsCardCache[t.Id].Card = card
 			}
@@ -130,12 +134,17 @@ func RefreshThreads() {
 			card := &widget.Card{}
 			card.SetTitle(t.Body)
 			card.SetSubTitle(t.Participants[0])
+			if t.UnreadCount > 0 {
+				card.SetSubTitle(t.Participants[0] + "(" + strconv.Itoa(t.UnreadCount) + ")")
+			}
+			tm := time.Unix(int64(t.Timestamp)/1000, (int64(t.Timestamp)%1000)*1000*1000).Local().Format(time.RFC1123)
 			card.SetContent(container.NewHBox(
 				custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
 					if i, err := strconv.Atoi(scope); err == nil {
 						ViewMessagesThread(i)
 					}
 				}),
+				widget.NewLabel(tm),
 			))
 			threadsCardCache[t.Id].Card = card
 		}
