@@ -14,6 +14,8 @@ import (
 	custom_widget "kai-suite/widgets"
 	"kai-suite/utils/global"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/layout"
 )
 
 type ThreadCardCached struct {
@@ -73,10 +75,38 @@ func ViewMessagesThread(threadId int) {
 						richText += word + " "
 					}
 				}
-				card.SetContent(widget.NewRichTextFromMarkdown(richText))
+				tm := time.Unix(int64(m.Timestamp)/1000, (int64(m.Timestamp)%1000)*1000*1000).Local().Format(time.RFC1123)
 				if m.Receiver != "" {
+					if m.Delivery == "error" {
+						card.SetContent(
+							container.NewVBox(
+								container.NewHBox(
+									widget.NewIcon(theme.WarningIcon()),
+									layout.NewSpacer(),
+									widget.NewRichTextFromMarkdown(richText),
+								),
+								widget.NewLabel(tm),
+							),
+						)
+					} else {
+						card.SetContent(
+							container.NewVBox(
+								container.NewHBox(
+									layout.NewSpacer(),
+									widget.NewRichTextFromMarkdown(richText),
+								),
+								widget.NewLabel(tm),
+							),
+						)
+					}
 					messagesCardCache[threadId][m.Id].Card = container.NewBorder(nil,nil,nil,card)
 				} else {
+					card.SetContent(
+						container.NewVBox(
+							widget.NewRichTextFromMarkdown(richText),
+							widget.NewLabel(tm),
+						),
+					)
 					messagesCardCache[threadId][m.Id].Card = container.NewBorder(nil,nil,card,nil)
 				}
 				log.Info("Load Message ", threadId, ": ", m.Id)
