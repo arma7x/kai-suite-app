@@ -214,6 +214,7 @@ func main() {
 		// global.APP.SendNotification(fyne.NewNotification("title", "content"))
 	})
 	go systray.Run(onReady, onExit)
+	global.WINDOW.CenterOnScreen()
 	global.WINDOW.ShowAndRun()
 }
 
