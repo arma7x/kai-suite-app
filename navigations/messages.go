@@ -20,6 +20,7 @@ import (
 
 type ThreadCardCached struct {
 	Timestamp int
+	UnreadCount int
 	Card fyne.CanvasObject
 }
 
@@ -150,9 +151,9 @@ func RefreshThreads() {
 	}
 	for _, t := range sortedThreads {
 		if _, exist := threadsCardCache[t.Id]; exist == true {
-			if threadsCardCache[t.Id].Timestamp != t.Timestamp {
+			if threadsCardCache[t.Id].Timestamp != t.Timestamp || threadsCardCache[t.Id].UnreadCount != t.UnreadCount {
 				threadsCardCache[t.Id].Timestamp = t.Timestamp
-				threadsCardCache[t.Id].Timestamp = t.Timestamp
+				threadsCardCache[t.Id].UnreadCount = t.UnreadCount
 				card := &widget.Card{}
 				card.SetTitle(t.Body)
 				card.SetSubTitle(t.Participants[0])
@@ -175,6 +176,7 @@ func RefreshThreads() {
 			log.Info("Load Thread ", t.Id)
 			threadsCardCache[t.Id] = &ThreadCardCached{}
 			threadsCardCache[t.Id].Timestamp = t.Timestamp
+			threadsCardCache[t.Id].UnreadCount = t.UnreadCount
 			card := &widget.Card{}
 			card.SetTitle(t.Body)
 			card.SetSubTitle(t.Participants[0])
@@ -200,7 +202,7 @@ func RefreshThreads() {
 	}
 }
 
-func RenderMessagesContent(c *fyne.Container, sendSMSCb func([]string, string, string), syncSMSReadCb func([]int)) {
+func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([]string, string, string), syncSMSReadCb func([]int)) {
 	go func() {
 		for {
 			select {
@@ -256,6 +258,7 @@ func RenderMessagesContent(c *fyne.Container, sendSMSCb func([]string, string, s
 					FocusedThread = 0
 					threadsBox.Show()
 					messagesBox.Hide()
+					syncSMSCb()
 					RefreshThreads()
 				}),
 				widget.NewButton("SEND", func(){

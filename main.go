@@ -197,7 +197,7 @@ func main() {
 	contactsContent = container.NewMax()
 	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts, websockethub.RestoreLocalContacts, contacts.ImportContacts)
 	messagesContent = container.NewMax()
-	navigations.RenderMessagesContent(messagesContent, websockethub.SendSMS, websockethub.SyncSMSRead)
+	navigations.RenderMessagesContent(messagesContent, websockethub.SyncSMS, websockethub.SendSMS, websockethub.SyncSMSRead)
 	navigateConnectContent(connectionContent)
 
 	global.WINDOW.SetContent(container.NewBorder(
