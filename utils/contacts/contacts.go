@@ -18,6 +18,7 @@ import (
 	//"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/theme"
 	//custom_widget "kai-suite/widgets"
 	"github.com/emersion/go-vcard"
 )
@@ -34,9 +35,12 @@ func MakeContactCardWidget(namespace string, person *people.Person) fyne.CanvasO
 		if val == "" {
 			val = person.PhoneNumbers[0].Value
 		}
-		card.SetSubTitle(val)
+		card.SetContent(widget.NewButtonWithIcon(val, theme.ContentCopyIcon(), func() {
+			global.WINDOW.Clipboard().SetContent(val)
+		}))
+		//card.SetSubTitle(val)
 	} else {
-		card.SetSubTitle("-")
+		//card.SetSubTitle("-")
 	}
 	//id := namespace + ":" + strings.Replace(person.ResourceName, "/", ":", 1)
 	//card.SetContent(container.NewHBox(
