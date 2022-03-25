@@ -15,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/people/v1"
 	"fyne.io/fyne/v2"
-	//"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
@@ -35,10 +35,13 @@ func MakeContactCardWidget(namespace string, person *people.Person) fyne.CanvasO
 		if val == "" {
 			val = person.PhoneNumbers[0].Value
 		}
-		card.SetContent(widget.NewButtonWithIcon(val, theme.ContentCopyIcon(), func() {
-			// TODO TOAST
-			global.WINDOW.Clipboard().SetContent(val)
-		}))
+		card.SetContent(container.NewHBox(
+			widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
+				// TODO TOAST
+				global.WINDOW.Clipboard().SetContent(val)
+			}),
+			widget.NewLabel(val),
+		))
 		//card.SetSubTitle(val)
 	} else {
 		//card.SetSubTitle("-")
