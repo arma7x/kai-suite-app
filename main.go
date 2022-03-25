@@ -221,6 +221,15 @@ func main() {
 		widget.NewButton("Google Account", func() {
 			navigateGoogleServices(googleServicesContent)
 		}),
+		widget.NewButton("Toggle Theme", func() {
+			if global.THEME == 0 {
+				global.APP.Settings().SetTheme(&custom_theme.DarkMode{})
+				global.THEME = 1
+			} else {
+				global.APP.Settings().SetTheme(&custom_theme.LightMode{})
+				global.THEME = 0
+			}
+		}),
 	)
 	menuBox := container.NewVScroll(menuButton)
 	menu := container.NewMax()

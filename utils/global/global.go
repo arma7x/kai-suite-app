@@ -20,6 +20,7 @@ var (
 	APP fyne.App
 	WINDOW fyne.Window
 	VISIBILITY = true
+	THEME = 0
 	CONTACTS_DB *buntdb.DB
 )
 
