@@ -47,12 +47,14 @@ func localContactListHandler(w http.ResponseWriter, r *http.Request) {
 func SyncLocalContacts() {
 	if Status == true || Client != nil {
 		global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
+			syncProgressChan <- true
 			persons := make(map[string]people.Person)
 			metadata := make(map[string]types.Metadata)
 			item := types.TxSyncLocalContact5{Metadata:	metadata, Persons: persons}
 			bd, _ := json.Marshal(item)
 			btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 5, Data: string(bd)})
 			if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
+				syncProgressChan <- false
 				log.Warn(err.Error())
 			}
 			return nil

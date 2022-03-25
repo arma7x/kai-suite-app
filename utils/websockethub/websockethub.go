@@ -274,7 +274,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 						case 10:
 							data := types.RxSyncLocalContactFlag10{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
-
 								log.Info("PushList: ", len(data.PushList))
 								for _, item := range data.PushList {
 									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
@@ -412,8 +411,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 										return nil
 									})
 								}
-
 								log.Info("MergedList: ", len(data.MergedList)) // TODO
+								syncProgressChan <- false
 							}
 						case 12:
 							data := types.RxSyncSMSFlag12{}
