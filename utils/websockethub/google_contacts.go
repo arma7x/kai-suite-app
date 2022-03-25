@@ -52,15 +52,21 @@ func SyncGoogleContact() error {
 		btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 1, Data: string(bd)})
 		if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
 			log.Warn(err.Error())
+			syncProgressChan <- false
 			return err
 		}
+	} else {
+		syncProgressChan <- false
 	}
 	return nil
 }
 
 func SyncContacts(namespace string) {
+	syncProgressChan <- true
 	log.Info("Sync Google Contacts ", namespace)
 	if Status == false  || Client == nil {
+		log.Warn("No client or no connection")
+		syncProgressChan <- false
 		return
 	}
 	peoples := contacts.GetContacts(namespace, "")
@@ -90,15 +96,21 @@ func RestoreGoogleContact() error {
 		btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 3, Data: string(bd)})
 		if err := Client.GetConn().WriteMessage(websocket.TextMessage, btx); err != nil {
 			log.Warn(err.Error())
+			syncProgressChan <- false
 			return err
 		}
+	} else {
+		syncProgressChan <- false
 	}
 	return nil
 }
 
 func RestoreContact(namespace string) {
+	syncProgressChan <- true
 	log.Info("Restore Google Contacts ", namespace)
 	if Status == false  || Client == nil {
+		log.Warn("No client or no connection")
+		syncProgressChan <- false
 		return
 	}
 	peoples := contacts.GetContacts(namespace, "")

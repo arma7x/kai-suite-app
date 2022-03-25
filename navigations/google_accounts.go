@@ -39,12 +39,21 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 				if authConfig, err := google_services.GetConfig(); err == nil {
 					if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
 						google_services.TokenRepository[accounts[scope].User.Id].Token = token
+						progress := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
 						if err := google_services.Sync(authConfig, google_services.TokenRepository[accounts[scope].User.Id], RemoveContact); err != nil {
-							log.Warn(err.Error())
+							progress.Hide()
+							dialog.ShowError(err, global.WINDOW)
+							log.Warn(err)
+						} else {
+							progress.Hide()
 						}
 					} else {
-						log.Warn(err.Error())
+						dialog.ShowError(err, global.WINDOW)
+						log.Warn(err)
 					}
+				} else {
+					dialog.ShowError(err, global.WINDOW)
+					log.Warn(err)
 				}
 			}),
 			custom_widget.NewButton(namespace, "Sync KaiOS", func(scope string) {
@@ -75,27 +84,34 @@ func RenderGoogleAccountContent(c *fyne.Container, viewContactsListCb func(strin
 	c.Objects = nil
 	accountsContainer = container.NewAdaptiveGrid(3)
 	renderGoogleAccountCards(accountsContainer, google_services.TokenRepository)
+	var tokenDialog dialog.Dialog
 	box := container.NewBorder(
 		container.NewHBox(
 			widget.NewButton("Add Google Account", func() {
 				if authConfig, err := google_services.GetConfig(); err == nil {
 					if err := google_services.GetTokenFromWeb(authConfig); err == nil {
 						var authCode string
-						d := dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
+						tokenDialog = dialog.NewEntryDialog("Auth Token", "Token", func(str string) {
 							authCode = str
 						}, global.WINDOW)
-						d.SetOnClosed(func() {
+						tokenDialog.SetOnClosed(func() {
 							if _, err := google_services.SaveToken(authConfig, authCode); err == nil {
 								log.Info("TokenRepository: ",len(google_services.TokenRepository))
 								renderGoogleAccountCards(accountsContainer, google_services.TokenRepository)
 							} else {
+								dialog.ShowError(err, global.WINDOW)
 								log.Warn(err)
 							}
 						})
-						d.Show()
+						tokenDialog.Show()
 					} else {
+						tokenDialog.Hide()
+						dialog.ShowError(err, global.WINDOW)
 						log.Warn(err)
 					}
+				} else {
+					dialog.ShowError(err, global.WINDOW)
+					log.Warn(err)
 				}
 			}),
 		),

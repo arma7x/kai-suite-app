@@ -16,12 +16,15 @@ import (
 	"google.golang.org/api/people/v1"
 	"crypto/sha256"
 	"encoding/hex"
+	custom_widget "kai-suite/widgets"
 )
 
 var (
 	initialized = false
 	address string
 	clientVisibilityChan chan bool
+	syncProgressChan = make(chan bool)
+	progressDialog *custom_widget.ProgressInfiniteDialog
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -37,6 +40,22 @@ var (
 	removeContactCb func(string, *people.Person)
 	refreshThreadsCb func()
 )
+
+func init() {
+	go func () {
+		for {
+			select {
+				case sync := <- syncProgressChan:
+					log.Info("syncProgressChan: ", sync)
+					if sync == true {
+						progressDialog = custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
+					} else {
+						progressDialog.Hide()
+					}
+			}
+		}
+	}()
+}
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Upgrade") != "websocket" && r.Header.Get("Connection") != "Upgrade" {
