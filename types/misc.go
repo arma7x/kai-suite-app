@@ -118,20 +118,20 @@ type RxSyncContactFlag6 struct {
 	Namespace			string	`json:"namespace"`	//account:people:id
 }
 
-type RxSyncLocalContactFlag8 struct {
+type RxRestoreContactFlag8 struct {
+	Namespace			string	`json:"namespace"`	//account:people:id
+	SyncID				string	`json:"sync_id,omitempty"`
+	SyncUpdated		string	`json:"sync_updated,omitempty"`
+}
+
+type RxSyncLocalContactFlag10 struct {
 	PushList		[]LocalContactSync				`json:"push_list"`
 	SyncList		[]LocalContactSync				`json:"sync_list"`
 	MergedList	[]LocalContactMergedSync	`json:"merged_list"`
 	DeleteList	[]Metadata								`json:"delete_list"`
 }
 
-type RxSyncSMSFlag10 struct {
+type RxSyncSMSFlag12 struct {
 	Threads			map[int]*MozMobileMessageThread	`json:"threads"`
 	Messages		map[int][]*MozSmsMessage		`json:"messages"`
-}
-
-type RxRestoreContactFlag12 struct {
-	Namespace			string	`json:"namespace"`	//account:people:id
-	SyncID				string	`json:"sync_id,omitempty"`
-	SyncUpdated		string	`json:"sync_updated,omitempty"`
 }

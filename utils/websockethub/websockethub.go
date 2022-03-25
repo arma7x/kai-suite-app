@@ -243,7 +243,36 @@ func handler(w http.ResponseWriter, r *http.Request) {
 							}
 							SyncGoogleContact()
 						case 8:
-							data := types.RxSyncLocalContactFlag8{}
+							data := types.RxRestoreContactFlag8{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+								if data.SyncID != "error" {
+									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
+										metadata := types.Metadata{}
+										if metadata_s, err := tx.Get("metadata:" + data.Namespace); err == nil {
+											if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil {
+												metadata.SyncID = data.SyncID
+												metadata.SyncUpdated = data.SyncUpdated
+												if metadata_b, err := json.Marshal(metadata); err == nil {
+													tx.Set("metadata:" + data.Namespace, string(metadata_b[:]), nil)
+												} else {
+													log.Error(err.Error())
+													return err
+												}
+												return nil
+											}
+											log.Error(err.Error())
+											return err
+										} else {
+											log.Error(err.Error())
+											return err
+										}
+										return nil
+									})
+								}
+								RestoreGoogleContact()
+							}
+						case 10:
+							data := types.RxSyncLocalContactFlag10{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
 
 								log.Info("PushList: ", len(data.PushList))
@@ -386,41 +415,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 								log.Info("MergedList: ", len(data.MergedList)) // TODO
 							}
-						case 10:
-							data := types.RxSyncSMSFlag10{}
+						case 12:
+							data := types.RxSyncSMSFlag12{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
 								reloadThreadsCb(data.Threads)
 								reloadMessages(data.Messages)
 								refreshThreadsCb()
-							}
-						case 12:
-							data := types.RxRestoreContactFlag12{}
-							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
-								if data.SyncID != "error" {
-									global.CONTACTS_DB.Update(func(tx *buntdb.Tx) error {
-										metadata := types.Metadata{}
-										if metadata_s, err := tx.Get("metadata:" + data.Namespace); err == nil {
-											if err := json.Unmarshal([]byte(metadata_s), &metadata); err == nil {
-												metadata.SyncID = data.SyncID
-												metadata.SyncUpdated = data.SyncUpdated
-												if metadata_b, err := json.Marshal(metadata); err == nil {
-													tx.Set("metadata:" + data.Namespace, string(metadata_b[:]), nil)
-												} else {
-													log.Error(err.Error())
-													return err
-												}
-												return nil
-											}
-											log.Error(err.Error())
-											return err
-										} else {
-											log.Error(err.Error())
-											return err
-										}
-										return nil
-									})
-								}
-								RestoreGoogleContact()
 							}
 					}
 				}
