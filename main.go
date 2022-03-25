@@ -17,8 +17,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"kai-suite/utils/contacts"
 	"github.com/getlantern/systray"
+	"fyne.io/fyne/v2/dialog"
 	// "fyne.io/systray"
 	"kai-suite/icon"
+	"kai-suite/types"
 )
 
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
@@ -127,7 +129,7 @@ func navigateMessagesContent(c *fyne.Container) {
 	navigations.RefreshThreads()
 }
 
-func viewContactsList(title, namespace string) {
+func viewContactsList(title, namespace, filter string) {
 	if _, exist := google_services.TokenRepository[namespace]; exist == false  && namespace != "local" {
 		return
 	}
@@ -136,7 +138,7 @@ func viewContactsList(title, namespace string) {
 	contactsContent.Show()
 	googleServicesContent.Hide()
 	contentTitle.Set(title)
-	personsArr := contacts.GetContacts(namespace)
+	personsArr := contacts.GetContacts(namespace, filter)
 	navigations.ViewContactsList(namespace, personsArr)
 }
 
@@ -146,6 +148,37 @@ func navigateGoogleServices(c *fyne.Container) {
 	messagesContent.Hide()
 	contactsContent.Hide()
 	googleServicesContent.Show()
+}
+
+func searchContacts(repository map[string]*types.UserInfoAndToken) {
+	accountsNames := []string{"Local"}
+	accountsMap := make(map[string]string)
+	accountsMap["Local"] = "local"
+	for k, v := range repository {
+		accountsMap[v.User.Email] = k
+		accountsNames = append(accountsNames, v.User.Email)
+	}
+	var searchDialog dialog.Dialog
+	keyword := widget.NewEntry()
+	accounts := widget.NewSelect(accountsNames, func(selected string) {})
+	form := &widget.Form{
+		Items: []*widget.FormItem{
+			{Text: "Keyword", Widget: keyword},
+			{Text: "Source", Widget: accounts},
+		},
+		SubmitText: "Search",
+		OnSubmit: func() {
+			if namespace, exist := accountsMap[accounts.Selected]; exist == true {
+				viewContactsList("Search " + accounts.Selected + " Contacts", namespace, keyword.Text)
+			}
+			searchDialog.Hide()
+		},
+	}
+	searchDialog = dialog.NewCustom("Search Contacts", "Cancel", container.NewMax(form), global.WINDOW);
+	searchDialog.Show()
+	sz := searchDialog.MinSize()
+	sz.Width = 400
+	searchDialog.Resize(sz)
 }
 
 func main() {
@@ -179,8 +212,11 @@ func main() {
 		widget.NewButton("Messages", func() {
 			navigateMessagesContent(messagesContent)
 		}),
+		widget.NewButton("Search Contacts", func() {
+			searchContacts(google_services.TokenRepository)
+		}),
 		widget.NewButton("Local Contacts", func() {
-			viewContactsList("Local Contacts", "local")
+			viewContactsList("Local Contacts", "local", "")
 		}),
 		widget.NewButton("Google Account", func() {
 			navigateGoogleServices(googleServicesContent)

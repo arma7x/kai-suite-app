@@ -64,7 +64,7 @@ func SortContacts(persons []*people.Person) {
 	})
 }
 
-func GetContacts(namespace string) []*people.Person {
+func GetContacts(namespace, filter string) []*people.Person {
 	indexName := strings.Join([]string{"people", namespace}, "_")
 	var persons []*people.Person
 	if err := global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
@@ -73,7 +73,29 @@ func GetContacts(namespace string) []*people.Person {
 			if err := json.Unmarshal([]byte(val), &person); err != nil {
 				return false
 			}
-			persons = append(persons, &person)
+			if filter != "" {
+				filter = strings.ToLower(filter)
+				if len(person.Names) > 0 {
+						if strings.Contains(strings.ToLower(person.Names[0].UnstructuredName), filter) {
+						persons = append(persons, &person)
+						return true
+					}
+				}
+				if len(person.PhoneNumbers) > 0 {
+					if strings.Contains(strings.ToLower(person.PhoneNumbers[0].Value), filter) {
+						persons = append(persons, &person)
+						return true
+					}
+				}
+				if len(person.EmailAddresses) > 0 {
+					if strings.Contains(strings.ToLower(person.EmailAddresses[0].Value), filter) {
+						persons = append(persons, &person)
+						return true
+					}
+				}
+			} else {
+				persons = append(persons, &person)
+			}
 			return true
 		})
 		return nil

@@ -16,7 +16,7 @@ import (
 
 var (
 	accountsContainer *fyne.Container
-	viewContactsList func(string, string)
+	viewContactsList func(string, string, string)
 )
 
 // TODO CACHE WIDGET
@@ -57,7 +57,7 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 			}),
 			custom_widget.NewButton(namespace, "Contact List", func(scope string) {
 				log.Info("Contact List ", accounts[scope].User.Id)
-				viewContactsList(accounts[scope].User.Email + " Contacts", scope)
+				viewContactsList(accounts[scope].User.Email + " Contacts", scope, "")
 			}),
 			widget.NewButton("Remove", func() {
 				log.Info("Remove ", accounts[namespace].User.Id)
@@ -70,7 +70,7 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 	accountsContainer.Refresh()
 }
 
-func RenderGoogleAccountContent(c *fyne.Container, viewContactsListCb func(string, string)) {
+func RenderGoogleAccountContent(c *fyne.Container, viewContactsListCb func(string, string, string)) {
 	viewContactsList = viewContactsListCb
 	c.Objects = nil
 	accountsContainer = container.NewAdaptiveGrid(3)

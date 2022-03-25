@@ -63,7 +63,7 @@ func SyncContacts(namespace string) {
 	if Status == false  || Client == nil {
 		return
 	}
-	peoples := contacts.GetContacts(namespace)
+	peoples := contacts.GetContacts(namespace, "")
 	contacts.SortContacts(peoples)
 	global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		for _, p := range peoples {
@@ -101,7 +101,7 @@ func RestoreContact(namespace string) {
 	if Status == false  || Client == nil {
 		return
 	}
-	peoples := contacts.GetContacts(namespace)
+	peoples := contacts.GetContacts(namespace, "")
 	contacts.SortContacts(peoples)
 	global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 		for _, p := range peoples {
