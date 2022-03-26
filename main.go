@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net"
-	"strconv"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -14,11 +12,10 @@ import (
 	"kai-suite/utils/google_services"
 	"kai-suite/theme"
 	"kai-suite/navigations"
-	log "github.com/sirupsen/logrus"
+	// log "github.com/sirupsen/logrus"
 	"kai-suite/utils/contacts"
 	"github.com/getlantern/systray"
 	"fyne.io/fyne/v2/dialog"
-	// "fyne.io/systray"
 	"kai-suite/icon"
 	"kai-suite/types"
 )
@@ -26,108 +23,12 @@ import (
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
 var _ fyne.Theme = (*custom_theme.DarkMode)(nil)
 
-var ip 		string = "(Select network card)"
-var port 	string = "4444"
-
 var connectionContent *fyne.Container
 var messagesContent *fyne.Container
 var contactsContent *fyne.Container
 var googleServicesContent *fyne.Container
 
-var websocketBtnTxtChan = make(chan string)
-var websocketClientVisibilityChan = make(chan bool)
-
 var contentTitle binding.String
-var deviceLabel = widget.NewLabel("Device: -")
-var ipPortLabel = widget.NewLabel("Ip Address: " + ip + ":" + port)
-var buttonConnect = widget.NewButton("Connect", func() {
-	if websockethub.Status == false {
-		addr, err := global.CheckIPAddress(ip, port)
-		if err != nil {
-			log.Warn(err.Error())
-			ipPortLabel.SetText(err.Error());
-		} else {
-			ipPortLabel.SetText("Ip Address: " + addr)
-			websockethub.Init(addr, websocketClientVisibilityChan, navigations.ReloadThreads, navigations.ReloadMessages, navigations.RemoveContact, navigations.RefreshThreads)
-		}
-		go websockethub.Start(onStatusChange)
-	} else {
-		websockethub.Stop(onStatusChange)
-	}
-})
-
-func getNetworkCardIPAddresses() (ipList []string) {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return
-	}
-	for _, address := range addrs {
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				ipList = append(ipList, ipnet.IP.String())
-			}
-		}
-	}
-	return
-}
-
-func onStatusChange(status bool, err error) {
-	if (status) {
-		log.Info("Connected")
-		contentTitle.Set("Connected")
-		websocketBtnTxtChan <- "Disconnect"
-	} else {
-		contentTitle.Set("Disconnected")
-		log.Info("Disconnected")
-		websocketBtnTxtChan <- "Connect"
-	}
-	if err != nil {
-		log.Warn(strconv.FormatBool(status), err.Error())
-	}
-}
-
-func navigateConnectContent(c *fyne.Container) {
-	connectionContent.Show()
-	messagesContent.Hide()
-	contactsContent.Hide()
-	googleServicesContent.Hide()
-	inputIp := widget.NewSelect(getNetworkCardIPAddresses(), func(selected string) {
-		ip = selected
-		ipPortLabel.SetText("Ip Address: " + ip + ":" + port)
-	})
-	inputIp.PlaceHolder = ip
-	inputPort := widget.NewEntry()
-	inputPort.Text = port
-	inputPort.OnChanged = func(val string) {
-		port = val
-		ipPortLabel.SetText("Ip Address: " + ip + ":" + port)
-	}
-	c.Objects = nil
-	if websockethub.Status == false {
-		contentTitle.Set("Disconnected")
-	} else {
-		contentTitle.Set("Connected")
-	}
-	c.Add(
-		container.NewVBox(
-			deviceLabel,
-			ipPortLabel,
-			inputIp,
-			inputPort,
-			buttonConnect,
-		),
-	)
-}
-
-func navigateMessagesContent(c *fyne.Container) {
-	contentTitle.Set("Messages")
-	connectionContent.Hide()
-	messagesContent.Show()
-	contactsContent.Hide()
-	googleServicesContent.Hide()
-	websockethub.SyncSMS()
-	navigations.RefreshThreads()
-}
 
 func viewContactsList(title, namespace, filter string) {
 	if _, exist := google_services.TokenRepository[namespace]; exist == false  && namespace != "local" {
@@ -140,14 +41,6 @@ func viewContactsList(title, namespace, filter string) {
 	contentTitle.Set(title)
 	personsArr := contacts.GetContacts(namespace, filter)
 	navigations.ViewContactsList(namespace, personsArr)
-}
-
-func navigateGoogleServices(c *fyne.Container) {
-	contentTitle.Set("Google Account")
-	connectionContent.Hide()
-	messagesContent.Hide()
-	contactsContent.Hide()
-	googleServicesContent.Show()
 }
 
 func searchContacts(repository map[string]*types.UserInfoAndToken) {
@@ -181,25 +74,37 @@ func searchContacts(repository map[string]*types.UserInfoAndToken) {
 	searchDialog.Resize(sz)
 }
 
+func navigateConnectContent() {
+	contentTitle.Set("Connection")
+	connectionContent.Show()
+	messagesContent.Hide()
+	contactsContent.Hide()
+	googleServicesContent.Hide()
+}
+
+func navigateMessagesContent() {
+	contentTitle.Set("Messages")
+	connectionContent.Hide()
+	messagesContent.Show()
+	contactsContent.Hide()
+	googleServicesContent.Hide()
+	websockethub.SyncSMS()
+	navigations.RefreshThreads()
+}
+
+func navigateGoogleServices() {
+	contentTitle.Set("Google Account")
+	connectionContent.Hide()
+	messagesContent.Hide()
+	contactsContent.Hide()
+	googleServicesContent.Show()
+}
+
 func main() {
+	defer global.CONTACTS_DB.Close()
 	contentTitle = binding.NewString()
 	contentTitle.Set("")
 	contentLabel := widget.NewLabelWithData(contentTitle)
-	go func() {
-		for {
-			select {
-				case txt := <- websocketBtnTxtChan:
-					buttonConnect.SetText(txt)
-				case present := <- websocketClientVisibilityChan:
-					if present {
-						deviceLabel.SetText("Device: " + websockethub.Client.GetDevice())
-					} else {
-						deviceLabel.SetText("Device: -")
-					}
-			}
-		}
-	}()
-	defer global.CONTACTS_DB.Close()
 	global.APP = app.New()
 	global.APP.Settings().SetTheme(&custom_theme.LightMode{})
 	global.APP.SetIcon(&fyne.StaticResource{ StaticName: "Icon.png", StaticContent: icon.Data})
@@ -207,10 +112,10 @@ func main() {
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
 	var menuButton *fyne.Container = container.NewVBox(
 		widget.NewButton("Connection", func() {
-			navigateConnectContent(connectionContent)
+			navigateConnectContent()
 		}),
 		widget.NewButton("Messages", func() {
-			navigateMessagesContent(messagesContent)
+			navigateMessagesContent()
 		}),
 		widget.NewButton("Search Contacts", func() {
 			searchContacts(google_services.TokenRepository)
@@ -219,7 +124,7 @@ func main() {
 			viewContactsList("Local Contacts", "local", "")
 		}),
 		widget.NewButton("Google Account", func() {
-			navigateGoogleServices(googleServicesContent)
+			navigateGoogleServices()
 		}),
 		widget.NewButton("Toggle Theme", func() {
 			if global.THEME == 0 {
@@ -236,14 +141,14 @@ func main() {
 	menu.Add(menuBox)
 
 	connectionContent = container.NewMax()
-
+	navigations.RenderConnectionContent(connectionContent)
 	googleServicesContent = container.NewMax()
 	navigations.RenderGoogleAccountContent(googleServicesContent, viewContactsList)
 	contactsContent = container.NewMax()
 	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts, websockethub.RestoreLocalContacts, contacts.ImportContacts)
 	messagesContent = container.NewMax()
 	navigations.RenderMessagesContent(messagesContent, websockethub.SyncSMS, websockethub.SendSMS, websockethub.SyncSMSRead)
-	navigateConnectContent(connectionContent)
+	navigateConnectContent()
 
 	global.WINDOW.SetContent(container.NewBorder(
 		nil,
@@ -256,7 +161,6 @@ func main() {
 	global.WINDOW.SetCloseIntercept(func() {
 		global.WINDOW.Hide()
 		global.VISIBILITY = false
-		// global.APP.SendNotification(fyne.NewNotification("title", "content"))
 	})
 	go systray.Run(onReady, onExit)
 	global.WINDOW.CenterOnScreen()
