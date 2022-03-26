@@ -155,7 +155,11 @@ func RefreshThreads() {
 				threadsCardCache[t.Id].Timestamp = t.Timestamp
 				threadsCardCache[t.Id].UnreadCount = t.UnreadCount
 				card := &widget.Card{}
-				card.SetTitle(t.Body)
+				if len(t.Body) > 50 {
+					card.SetTitle(t.Body[:50] + "...")
+				} else {
+					card.SetTitle(t.Body)
+				}
 				card.SetSubTitle(t.Participants[0])
 				if t.UnreadCount > 0 {
 					card.SetSubTitle(t.Participants[0] + "(" + strconv.Itoa(t.UnreadCount) + ")")
@@ -178,7 +182,11 @@ func RefreshThreads() {
 			threadsCardCache[t.Id].Timestamp = t.Timestamp
 			threadsCardCache[t.Id].UnreadCount = t.UnreadCount
 			card := &widget.Card{}
-			card.SetTitle(t.Body)
+			if len(t.Body) > 50 {
+				card.SetTitle(t.Body[:50] + "...")
+			} else {
+				card.SetTitle(t.Body)
+			}
 			card.SetSubTitle(t.Participants[0])
 			if t.UnreadCount > 0 {
 				card.SetSubTitle(t.Participants[0] + "(" + strconv.Itoa(t.UnreadCount) + ")")
