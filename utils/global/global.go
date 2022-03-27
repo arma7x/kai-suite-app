@@ -30,6 +30,13 @@ func init() {
 		log.Fatal(err)
 	}
 	ROOT_PATH = filepath.Dir(ex)
+  if _, err := os.Stat(ResolvePath("db/contacts.db")); os.IsNotExist(err) {
+		f, err := os.Create(ResolvePath("db/contacts.db"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+	}
 	CONTACTS_DB, err = buntdb.Open(ResolvePath("db/contacts.db"))
 	if err != nil {
 		log.Warn(err)
