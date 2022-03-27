@@ -63,7 +63,7 @@ func ReloadMessages(messages map[int][]*types.MozSmsMessage) {
 	Messages = messages
 }
 
-func ViewMessagesThread(threadId int) {
+func ViewThreadMessages(threadId int) {
 	log.Info("View thread: ", threadId)
 	var recvSMSId []int
 	FocusedThread = threadId
@@ -168,7 +168,7 @@ func RefreshThreads() {
 				card.SetContent(container.NewHBox(
 					custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
 						if i, err := strconv.Atoi(scope); err == nil {
-							ViewMessagesThread(i)
+							ViewThreadMessages(i)
 						}
 					}),
 					widget.NewRichTextFromMarkdown("*" + tm + "*."),
@@ -195,7 +195,7 @@ func RefreshThreads() {
 			card.SetContent(container.NewHBox(
 				custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
 					if i, err := strconv.Atoi(scope); err == nil {
-						ViewMessagesThread(i)
+						ViewThreadMessages(i)
 					}
 				}),
 				widget.NewRichTextFromMarkdown("*" + tm + "*."),
@@ -206,7 +206,7 @@ func RefreshThreads() {
 	}
 	threadsContainer.Refresh()
 	if FocusedThread != 0 {
-		ViewMessagesThread(FocusedThread)
+		ViewThreadMessages(FocusedThread)
 	}
 }
 
