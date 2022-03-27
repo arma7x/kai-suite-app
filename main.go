@@ -1,6 +1,7 @@
 package main
 
 import (
+	"runtime"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -184,8 +185,13 @@ func main() {
 }
 
 func onReady() {
-	res := resources.GetResource(resources.AppIcon, "AppIcon")
-	systray.SetTemplateIcon(res.StaticContent, res.StaticContent)
+	var resIcon *fyne.StaticResource
+	if runtime.GOOS == "windows" {
+		resIcon = resources.GetResource(resources.AppIconWin, "AppIcon")
+	} else {
+		resIcon = resources.GetResource(resources.AppIcon, "AppIcon")
+	}
+	systray.SetTemplateIcon(resIcon.StaticContent, resIcon.StaticContent)
 	// systray.SetTitle("Kai Suite")
 	systray.SetTooltip("Kai Suite")
 	mLaunch := systray.AddMenuItem("Launch", "Launch app")

@@ -113,10 +113,11 @@ func ImportContacts() {
 	d := dialog.NewFileOpen(func(f fyne.URIReadCloser, err error) {
 		if err == nil {
 			f, err := os.Open(f.URI().Path())
-			if err != nil {
-				log.Fatal(err)
-			}
 			defer f.Close()
+			if err != nil {
+				log.Warn(err)
+				return
+			}
 
 			dec := vcard.NewDecoder(f)
 			for {
