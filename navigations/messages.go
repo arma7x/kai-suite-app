@@ -98,7 +98,7 @@ func ViewMessagesThread(threadId int) {
 									layout.NewSpacer(),
 									widget.NewRichTextFromMarkdown(richText),
 								),
-								widget.NewLabel(tm),
+								widget.NewRichTextFromMarkdown("*" + tm + "*."),
 							),
 						)
 					} else {
@@ -108,7 +108,7 @@ func ViewMessagesThread(threadId int) {
 									layout.NewSpacer(),
 									widget.NewRichTextFromMarkdown(richText),
 								),
-								widget.NewLabel(tm),
+								widget.NewRichTextFromMarkdown("*" + tm + "*."),
 							),
 						)
 					}
@@ -117,7 +117,7 @@ func ViewMessagesThread(threadId int) {
 					card.SetContent(
 						container.NewVBox(
 							widget.NewRichTextFromMarkdown(richText),
-							widget.NewLabel(tm),
+							widget.NewRichTextFromMarkdown("*" + tm + "*."),
 						),
 					)
 					messagesCardCache[threadId][m.Id].Card = container.NewBorder(nil,nil,card,nil)
@@ -171,7 +171,7 @@ func RefreshThreads() {
 							ViewMessagesThread(i)
 						}
 					}),
-					widget.NewLabel(tm),
+					widget.NewRichTextFromMarkdown("*" + tm + "*."),
 				))
 				threadsCardCache[t.Id].Card = card
 			}
@@ -198,7 +198,7 @@ func RefreshThreads() {
 						ViewMessagesThread(i)
 					}
 				}),
-				widget.NewLabel(tm),
+				widget.NewRichTextFromMarkdown("*" + tm + "*."),
 			))
 			threadsCardCache[t.Id].Card = card
 		}
