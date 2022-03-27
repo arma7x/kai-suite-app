@@ -45,7 +45,7 @@ func onStatusChange(status bool, err error) {
 		StatusText = "Connected"
 		websocketBtnTxtChan <- "Disconnect"
 	} else {
-		// contentTitle.Set("Disconnected")
+		log.Info("Disconnected")
 		StatusText = "Disconnected"
 		websocketBtnTxtChan <- "Connect"
 	}
