@@ -17,7 +17,7 @@ import (
 	"kai-suite/utils/contacts"
 	"github.com/getlantern/systray"
 	"fyne.io/fyne/v2/dialog"
-	"kai-suite/icon"
+	"kai-suite/resources"
 	"kai-suite/types"
 )
 
@@ -109,7 +109,7 @@ func main() {
 	contentLabel.Bind(contentTitle)
 	global.APP = app.New()
 	global.APP.Settings().SetTheme(&custom_theme.LightMode{})
-	global.APP.SetIcon(&fyne.StaticResource{ StaticName: "Icon.png", StaticContent: icon.Data})
+	global.APP.SetIcon(resources.GetResource(resources.AppIcon, "AppIcon"))
 	global.WINDOW = global.APP.NewWindow("Kai Suite")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
 	var menuButton *fyne.Container = container.NewVBox(
@@ -181,7 +181,8 @@ func main() {
 }
 
 func onReady() {
-	systray.SetTemplateIcon(icon.Data, icon.Data)
+	res := resources.GetResource(resources.AppIcon, "AppIcon")
+	systray.SetTemplateIcon(res.StaticContent, res.StaticContent)
 	// systray.SetTitle("Kai Suite")
 	systray.SetTooltip("Kai Suite")
 	mLaunch := systray.AddMenuItem("Launch", "Launch app")
