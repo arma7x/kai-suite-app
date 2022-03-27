@@ -45,7 +45,7 @@ func localContactListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SyncLocalContacts() {
-	if Status == true || Client != nil {
+	if Status == true && Client != nil {
 		global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 			syncProgressChan <- true
 			persons := make(map[string]people.Person)
@@ -63,7 +63,7 @@ func SyncLocalContacts() {
 }
 
 func RestoreLocalContacts() {
-	if Status == true || Client != nil {
+	if Status == true && Client != nil {
 		global.CONTACTS_DB.View(func(tx *buntdb.Tx) error {
 			persons := make(map[string]people.Person)
 			metadata := make(map[string]types.Metadata)
