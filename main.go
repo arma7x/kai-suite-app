@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/theme"
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websockethub"
@@ -104,7 +105,8 @@ func main() {
 	defer global.CONTACTS_DB.Close()
 	contentTitle = binding.NewString()
 	contentTitle.Set("")
-	contentLabel := widget.NewLabelWithData(contentTitle)
+	contentLabel := widget.NewLabelWithStyle("", fyne.TextAlignLeading, fyne.TextStyle{Bold:true})
+	contentLabel.Bind(contentTitle)
 	global.APP = app.New()
 	global.APP.Settings().SetTheme(&custom_theme.LightMode{})
 	global.APP.SetIcon(&fyne.StaticResource{ StaticName: "Icon.png", StaticContent: icon.Data})
@@ -126,15 +128,6 @@ func main() {
 		widget.NewButton("Google Account", func() {
 			navigateGoogleServices()
 		}),
-		widget.NewButton("Toggle Theme", func() {
-			if global.THEME == 0 {
-				global.APP.Settings().SetTheme(&custom_theme.DarkMode{})
-				global.THEME = 1
-			} else {
-				global.APP.Settings().SetTheme(&custom_theme.LightMode{})
-				global.THEME = 0
-			}
-		}),
 	)
 	menuBox := container.NewVScroll(menuButton)
 	menu := container.NewMax()
@@ -153,9 +146,29 @@ func main() {
 	global.WINDOW.SetContent(container.NewBorder(
 		nil,
 		nil,
-		container.NewBorder(widget.NewLabel("KaiOS PC Suite"), nil, nil, nil, menu),
+		container.NewBorder(
+			widget.NewLabelWithStyle("KaiOS PC Suite", fyne.TextAlignLeading, fyne.TextStyle{Bold:true}),
+			nil, nil, nil,
+			menu,
+		),
 		nil,
-		container.NewBorder(contentLabel, nil, nil, nil, connectionContent, messagesContent, contactsContent, googleServicesContent)),
+		container.NewBorder(
+			container.NewBorder(
+				nil, nil,
+				contentLabel,
+				widget.NewButtonWithIcon("", theme.ColorPaletteIcon(), func() {
+					if global.THEME == 0 {
+						global.APP.Settings().SetTheme(&custom_theme.DarkMode{})
+						global.THEME = 1
+					} else {
+						global.APP.Settings().SetTheme(&custom_theme.LightMode{})
+						global.THEME = 0
+					}
+				}),
+			),
+			nil, nil, nil,
+			connectionContent, messagesContent, contactsContent, googleServicesContent),
+		),
 	)
 	onExit := func() {}
 	global.WINDOW.SetCloseIntercept(func() {

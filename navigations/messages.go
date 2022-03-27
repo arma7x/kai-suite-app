@@ -123,10 +123,10 @@ func ViewThreadMessages(threadId int) {
 					messagesCardCache[threadId][m.Id].Card = container.NewBorder(nil,nil,card,nil)
 					recvSMSId = append(recvSMSId, m.Id)
 				}
-				log.Info("Load Message ", threadId, ": ", m.Id)
+				// log.Info("Load Message ", threadId, ": ", m.Id)
 				messagesContainer.Add(messagesCardCache[threadId][m.Id].Card)
 			} else {
-				log.Info("Cached Message ", threadId, ": ", m.Id)
+				// log.Info("Cached Message ", threadId, ": ", m.Id)
 				messagesContainer.Add(item.Card)
 			}
 		}
@@ -175,9 +175,9 @@ func RefreshThreads() {
 				))
 				threadsCardCache[t.Id].Card = card
 			}
-			log.Info("Cached Thread ", t.Id)
+			// log.Info("Cached Thread ", t.Id)
 		} else {
-			log.Info("Load Thread ", t.Id)
+			// log.Info("Load Thread ", t.Id)
 			threadsCardCache[t.Id] = &ThreadCardCached{}
 			threadsCardCache[t.Id].Timestamp = t.Timestamp
 			threadsCardCache[t.Id].UnreadCount = t.UnreadCount

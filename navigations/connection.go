@@ -70,6 +70,7 @@ func getNetworkCardIPAddresses() (ipList []string) {
 }
 
 func RenderConnectionContent(c *fyne.Container) {
+	log.Info("Connection Rendered")
 	go func() {
 		for {
 			select {
@@ -77,7 +78,7 @@ func RenderConnectionContent(c *fyne.Container) {
 					buttonConnect.SetText(txt)
 				case present := <- websocketClientConnectedChan:
 					if present {
-						deviceLabel.SetText("Device: " + websockethub.Client.GetDevice())
+						deviceLabel.SetText("Device: " + websockethub.Client.GetDevice() + " " + websockethub.Client.GetIMEI())
 					} else {
 						deviceLabel.SetText("Device: -")
 					}
