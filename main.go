@@ -175,6 +175,7 @@ func main() {
 		),
 	)
 	onExit := func() {}
+	global.WINDOW.SetOnClosed(exit)
 	global.WINDOW.SetCloseIntercept(func() {
 		global.WINDOW.Hide()
 		global.VISIBILITY = false
@@ -182,6 +183,10 @@ func main() {
 	go systray.Run(onReady, onExit)
 	global.WINDOW.CenterOnScreen()
 	global.WINDOW.ShowAndRun()
+}
+
+func exit() {
+	websockethub.Stop(func(b bool, e error){})
 }
 
 func onReady() {
