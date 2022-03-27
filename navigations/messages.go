@@ -220,18 +220,20 @@ func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([
 		}
 	}()
 	var newDialog dialog.Dialog
-	to := widget.NewEntry()
+	recipient := widget.NewEntry()
 	body := widget.NewMultiLineEntry()
 	form := &widget.Form{
 		Items: []*widget.FormItem{
-			{Text: "To", Widget: to},
+			{Text: "Recipient", Widget: recipient},
 			{Text: "Body", Widget: body},
 		},
 		SubmitText: "Send",
 		OnSubmit: func() {
-			log.Info(to.Text, " ", body.Text)
-			if to.Text != "" && body.Text != "" {
-				sendSMSCb([]string{to.Text}, body.Text, "")
+			log.Info(recipient.Text, " ", body.Text)
+			if recipient.Text != "" && body.Text != "" {
+				sendSMSCb([]string{recipient.Text}, body.Text, "")
+				recipient.Text = ""
+				body.Text = ""
 			}
 			newDialog.Hide()
 		},
