@@ -30,14 +30,19 @@ func init() {
 		log.Fatal(err)
 	}
 	ROOT_PATH = filepath.Dir(ex)
-  if _, err := os.Stat(ResolvePath("db/contacts.db")); os.IsNotExist(err) {
-		f, err := os.Create(ResolvePath("db/contacts.db"))
-		if err != nil {
+	_, err = os.ReadFile(ResolvePath("db", "contacts.db"))
+	if err != nil {
+		log.Warn(err)
+		data := []byte("")
+		if err := os.WriteFile(ResolvePath("db", "contacts.db"), data, 0644); err != nil {
 			log.Fatal(err)
+		} else {
+			if _, err := os.ReadFile(ResolvePath("db", "contacts.db")); err != nil {
+				log.Fatal(err)
+			}
 		}
-		defer f.Close()
 	}
-	CONTACTS_DB, err = buntdb.Open(ResolvePath("db/contacts.db"))
+	CONTACTS_DB, err = buntdb.Open(ResolvePath("db", "contacts.db"))
 	if err != nil {
 		log.Warn(err)
 	}
