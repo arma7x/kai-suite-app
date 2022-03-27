@@ -128,6 +128,9 @@ func main() {
 		widget.NewButton("Google Account", func() {
 			navigateGoogleServices()
 		}),
+		widget.NewButton("Quit", func() {
+			global.WINDOW.Close()
+		}),
 	)
 	menuBox := container.NewVScroll(menuButton)
 	menu := container.NewMax()
