@@ -21,6 +21,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	//custom_widget "kai-suite/widgets"
 	"github.com/emersion/go-vcard"
+	custom_widget "kai-suite/widgets"
 )
 
 func MakeContactCardWidget(namespace string, person *people.Person) fyne.CanvasObject {
@@ -112,9 +113,14 @@ func ImportContacts() {
 	log.Info("ImportContacts")
 	d := dialog.NewFileOpen(func(f fyne.URIReadCloser, err error) {
 		if err == nil {
+			log.Info("Start Import")
+			progressDialog := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
 			f, err := os.Open(f.URI().Path())
 			defer f.Close()
 			if err != nil {
+				log.Info("Error Import")
+				progressDialog.Hide()
+				dialog.ShowError(err, global.WINDOW)
 				log.Warn(err)
 				return
 			}
@@ -175,6 +181,8 @@ func ImportContacts() {
 					})
 				}
 			}
+			progressDialog.Hide()
+			log.Info("Finish Import")
 		}
 	}, global.WINDOW);
 	d.Show()
