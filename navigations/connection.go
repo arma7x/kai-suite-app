@@ -3,6 +3,7 @@ package navigations
 import (
 	"net"
 	"strconv"
+	"net/url"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
@@ -108,6 +109,14 @@ func RenderConnectionContent(c *fyne.Container) {
 			inputIp,
 			inputPort,
 			buttonConnect,
+			widget.NewButton("Test Connection", func() {
+				if addr, err := global.CheckIPAddress(inputIp.Selected, inputPort.Text); err == nil && websockethub.Status == true {
+					testURL, _ := url.Parse("http://" + addr)
+					if err := fyne.CurrentApp().OpenURL(testURL); err != nil {
+						log.Warn(err)
+					}
+				}
+			}),
 		),
 	)
 }
