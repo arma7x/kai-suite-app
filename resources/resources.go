@@ -17,6 +17,7 @@ type Resource string
 const (
 	AppIcon Resource = "assets/icon.png"
 	AppIconWin Resource = "assets/icon.ico"
+	BulbIcon Resource = "assets/bulb.svg"
 )
 
 func GetResource(res Resource, name string) *fyne.StaticResource {

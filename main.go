@@ -6,8 +6,8 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/data/binding"
 	"kai-suite/utils/global"
 	_ "kai-suite/utils/logger"
 	"kai-suite/utils/websockethub"
@@ -25,12 +25,14 @@ import (
 var (
 	_ fyne.Theme = (*custom_theme.LightMode)(nil)
 	_ fyne.Theme = (*custom_theme.DarkMode)(nil)
+	contentTitle binding.String
 	guidesContent *fyne.Container
 	connectionContent *fyne.Container
 	messagesContent *fyne.Container
 	contactsContent *fyne.Container
 	googleServicesContent *fyne.Container
-	contentTitle binding.String
+	deviceLabel = widget.NewLabel("No Device")
+	connectionLabel = widget.NewLabel("Disconnected")
 )
 
 func viewContactsList(title, namespace, filter string) {
@@ -116,6 +118,27 @@ func navigateGoogleServices() {
 	googleServicesContent.Show()
 }
 
+func init() {
+	go func() {
+		for {
+			select {
+				case <- navigations.DeviceStatus:
+					if websockethub.Client != nil {
+						deviceLabel.SetText(websockethub.Client.GetDevice())
+					} else {
+						deviceLabel.SetText("No Device")
+					}
+				case <- navigations.ConnectionStatus:
+					if (websockethub.Status) {
+						connectionLabel.SetText("Connected")
+					} else {
+						connectionLabel.SetText("Disconnected")
+					}
+			}
+		}
+	}()
+}
+
 func main() {
 	defer global.CONTACTS_DB.Close()
 	contentTitle = binding.NewString()
@@ -166,6 +189,8 @@ func main() {
 	navigations.RenderMessagesContent(messagesContent, websockethub.SyncSMS, websockethub.SendSMS, websockethub.SyncSMSRead)
 	navigateGuideContent()
 
+	// theme.ColorPaletteIcon()
+	// resources.GetResource(resources.BulbIcon, "BulbIcon")
 	global.WINDOW.SetContent(container.NewBorder(
 		nil,
 		nil,
@@ -179,15 +204,19 @@ func main() {
 			container.NewBorder(
 				nil, nil,
 				contentLabel,
-				widget.NewButtonWithIcon("", theme.ColorPaletteIcon(), func() {
-					if global.THEME == 0 {
-						global.APP.Settings().SetTheme(&custom_theme.DarkMode{})
-						global.THEME = 1
-					} else {
-						global.APP.Settings().SetTheme(&custom_theme.LightMode{})
-						global.THEME = 0
-					}
-				}),
+				container.NewHBox(
+					deviceLabel,
+					connectionLabel,
+					widget.NewButtonWithIcon("", theme.ColorPaletteIcon(), func() {
+						if global.THEME == 0 {
+							global.APP.Settings().SetTheme(&custom_theme.DarkMode{})
+							global.THEME = 1
+						} else {
+							global.APP.Settings().SetTheme(&custom_theme.LightMode{})
+							global.THEME = 0
+						}
+					}),
+				),
 			),
 			nil, nil, nil,
 			guidesContent, connectionContent, messagesContent, contactsContent, googleServicesContent),

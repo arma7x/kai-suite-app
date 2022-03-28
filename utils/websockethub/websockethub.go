@@ -470,6 +470,7 @@ func Stop() error {
 		}
 		Status = false
 		connectionChan <- false
+		clientConnectedChan <- false
 	}
 	return nil
 }

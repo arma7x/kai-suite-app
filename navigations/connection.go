@@ -15,6 +15,8 @@ import (
 var StatusText = "Disconnected"
 var inputIp *widget.Select
 var inputPort *widget.Entry
+var DeviceStatus = make(chan bool)
+var ConnectionStatus = make(chan bool)
 
 var deviceLabel = widget.NewLabel("Device: -")
 var ipPortLabel = widget.NewLabel("")
@@ -49,6 +51,7 @@ func getNetworkCardIPAddresses() (ipList []string) {
 	}
 	return
 }
+
 func RenderConnectionContent(c *fyne.Container) {
 	websockethub.RegisterListener(ReloadThreads, ReloadMessages, RemoveContact, RefreshThreads)
 	log.Info("Connection Rendered")
@@ -58,18 +61,22 @@ func RenderConnectionContent(c *fyne.Container) {
 				case <- websockethub.GetClientConnectedChan():
 					if websockethub.Client != nil {
 						deviceLabel.SetText("Device: " + websockethub.Client.GetDevice() + " " + websockethub.Client.GetIMEI())
+						DeviceStatus <- true
 					} else {
 						deviceLabel.SetText("Device: -")
+						DeviceStatus <- false
 					}
 				case status := <- websockethub.GetConnectionChan():
 					if (websockethub.Status) {
 						StatusText = "Connected"
 						buttonConnect.SetText("Disconnect")
 						log.Info("Connected ", status)
+						ConnectionStatus <- true
 					} else {
 						StatusText = "Disconnected"
 						buttonConnect.SetText("Connect")
 						log.Info("Disconnected ", status)
+						ConnectionStatus <- false
 					}
 			}
 		}
