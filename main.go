@@ -125,7 +125,7 @@ func main() {
 	global.APP = app.New()
 	global.APP.Settings().SetTheme(&custom_theme.LightMode{})
 	global.APP.SetIcon(resources.GetResource(resources.AppIcon, "AppIcon"))
-	global.WINDOW = global.APP.NewWindow("Kai Suite")
+	global.WINDOW = global.APP.NewWindow("Kai Suite(TESTING)")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
 	var menuButton *fyne.Container = container.NewVBox(
 		widget.NewButton("Guides", func() {
