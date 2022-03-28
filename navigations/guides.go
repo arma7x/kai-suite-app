@@ -9,7 +9,7 @@ import (
 
 func RenderGuidesContent(c *fyne.Container) {
 	log.Info("Helps Rendered")
-	c.Hide()
+	c.Objects = nil
 	guidesContent := container.NewVBox(
 		widget.NewRichTextFromMarkdown("## Disclaimer: Please backup your contacts before testing"),
 		widget.NewRichTextFromMarkdown("#	Connection"),
