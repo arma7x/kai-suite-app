@@ -22,16 +22,16 @@ import (
 	"kai-suite/types"
 )
 
-var _ fyne.Theme = (*custom_theme.LightMode)(nil)
-var _ fyne.Theme = (*custom_theme.DarkMode)(nil)
-
-var guidesContent *fyne.Container
-var connectionContent *fyne.Container
-var messagesContent *fyne.Container
-var contactsContent *fyne.Container
-var googleServicesContent *fyne.Container
-
-var contentTitle binding.String
+var (
+	_ fyne.Theme = (*custom_theme.LightMode)(nil)
+	_ fyne.Theme = (*custom_theme.DarkMode)(nil)
+	guidesContent *fyne.Container
+	connectionContent *fyne.Container
+	messagesContent *fyne.Container
+	contactsContent *fyne.Container
+	googleServicesContent *fyne.Container
+	contentTitle binding.String
+)
 
 func viewContactsList(title, namespace, filter string) {
 	if _, exist := google_services.TokenRepository[namespace]; exist == false  && namespace != "local" {
