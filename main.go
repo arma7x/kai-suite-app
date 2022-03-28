@@ -25,6 +25,7 @@ import (
 var _ fyne.Theme = (*custom_theme.LightMode)(nil)
 var _ fyne.Theme = (*custom_theme.DarkMode)(nil)
 
+var guidesContent *fyne.Container
 var connectionContent *fyne.Container
 var messagesContent *fyne.Container
 var contactsContent *fyne.Container
@@ -36,6 +37,7 @@ func viewContactsList(title, namespace, filter string) {
 	if _, exist := google_services.TokenRepository[namespace]; exist == false  && namespace != "local" {
 		return
 	}
+	guidesContent.Hide()
 	connectionContent.Hide()
 	messagesContent.Hide()
 	contactsContent.Show()
@@ -76,8 +78,18 @@ func searchContacts(repository map[string]*types.UserInfoAndToken) {
 	searchDialog.Resize(sz)
 }
 
+func navigateGuideContent() {
+	contentTitle.Set("Guides")
+	guidesContent.Show()
+	connectionContent.Hide()
+	messagesContent.Hide()
+	contactsContent.Hide()
+	googleServicesContent.Hide()
+}
+
 func navigateConnectContent() {
 	contentTitle.Set("Connection")
+	guidesContent.Hide()
 	connectionContent.Show()
 	messagesContent.Hide()
 	contactsContent.Hide()
@@ -86,6 +98,7 @@ func navigateConnectContent() {
 
 func navigateMessagesContent() {
 	contentTitle.Set("Messages")
+	guidesContent.Hide()
 	connectionContent.Hide()
 	messagesContent.Show()
 	contactsContent.Hide()
@@ -96,6 +109,7 @@ func navigateMessagesContent() {
 
 func navigateGoogleServices() {
 	contentTitle.Set("Google Account")
+	guidesContent.Hide()
 	connectionContent.Hide()
 	messagesContent.Hide()
 	contactsContent.Hide()
@@ -114,6 +128,9 @@ func main() {
 	global.WINDOW = global.APP.NewWindow("Kai Suite")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
 	var menuButton *fyne.Container = container.NewVBox(
+		widget.NewButton("Guides", func() {
+			navigateGuideContent()
+		}),
 		widget.NewButton("Connection", func() {
 			navigateConnectContent()
 		}),
@@ -137,6 +154,8 @@ func main() {
 	menu := container.NewMax()
 	menu.Add(menuBox)
 
+	guidesContent = container.NewMax()
+	navigations.RenderGuidesContent(guidesContent)
 	connectionContent = container.NewMax()
 	navigations.RenderConnectionContent(connectionContent)
 	googleServicesContent = container.NewMax()
@@ -145,7 +164,7 @@ func main() {
 	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts, websockethub.RestoreLocalContacts, contacts.ImportContacts)
 	messagesContent = container.NewMax()
 	navigations.RenderMessagesContent(messagesContent, websockethub.SyncSMS, websockethub.SendSMS, websockethub.SyncSMSRead)
-	navigateConnectContent()
+	navigateGuideContent()
 
 	global.WINDOW.SetContent(container.NewBorder(
 		nil,
@@ -171,7 +190,7 @@ func main() {
 				}),
 			),
 			nil, nil, nil,
-			connectionContent, messagesContent, contactsContent, googleServicesContent),
+			guidesContent, connectionContent, messagesContent, contactsContent, googleServicesContent),
 		),
 	)
 	onExit := func() {}

@@ -108,15 +108,6 @@ func RenderConnectionContent(c *fyne.Container) {
 			inputIp,
 			inputPort,
 			buttonConnect,
-			widget.NewRichTextFromMarkdown("#	Local Contacts"),
-			widget.NewLabel("~ The origin of contact is KaiOS Device"),
-			widget.NewLabel("~ Please use Restore, if you accidentally delete any contacts on your device"),
-			widget.NewLabel("or when the KaiOS device is connected to Kai Suite for the first time"),
-			widget.NewLabel(""),
-			widget.NewRichTextFromMarkdown("#	Google Contacts"),
-			widget.NewLabel("~ The origin of contact is Google People API"),
-			widget.NewLabel("~ Please use Restore, if you accidentally delete any contacts on yourdevice"),
-			widget.NewLabel("or when the KaiOS device is connected to Kai Suite for the first time"),
 		),
 	)
 }
