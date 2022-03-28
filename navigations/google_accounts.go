@@ -68,9 +68,9 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 				log.Info("Contact List ", accounts[scope].User.Id)
 				viewContactsList(accounts[scope].User.Email + " Contacts", scope, "")
 			}),
-			widget.NewButton("Remove", func() {
-				log.Info("Remove ", accounts[namespace].User.Id)
-				google_services.RemoveAccount(accounts[namespace].User.Id)
+			custom_widget.NewButton(namespace, "Remove", func(scope string) {
+				log.Info("Remove ", accounts[scope].User.Id)
+				google_services.RemoveAccount(accounts[scope].User.Id)
 				renderGoogleAccountCards(accountsContainer, accounts)
 			}),
 		))

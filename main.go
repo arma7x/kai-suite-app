@@ -189,8 +189,6 @@ func main() {
 	navigations.RenderMessagesContent(messagesContent, websockethub.SyncSMS, websockethub.SendSMS, websockethub.SyncSMSRead)
 	navigateGuideContent()
 
-	// theme.ColorPaletteIcon()
-	// resources.GetResource(resources.BulbIcon, "BulbIcon")
 	global.WINDOW.SetContent(container.NewBorder(
 		nil,
 		nil,
@@ -207,7 +205,7 @@ func main() {
 				container.NewHBox(
 					deviceLabel,
 					connectionLabel,
-					widget.NewButtonWithIcon("", theme.ColorPaletteIcon(), func() {
+					widget.NewButtonWithIcon("", theme.NewThemedResource(resources.GetResource(resources.BulbIcon, "BulbIcon")), func() {
 						if global.THEME == 0 {
 							global.APP.Settings().SetTheme(&custom_theme.DarkMode{})
 							global.THEME = 1
