@@ -141,7 +141,7 @@ func RefreshThreads() {
 	threadsContainer.Objects = nil
 	var sortedThreads []*types.MozMobileMessageThread
 	for _, t := range Threads {
-		log.Info("Threads ", t.Id, " ", len(sortedThreads))
+		// log.Info("Threads ", t.Id, " ", len(sortedThreads))
 		sortedThreads = append(sortedThreads, t)
 	}
 	if len(sortedThreads) > 1 {

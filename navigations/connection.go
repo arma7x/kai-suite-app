@@ -2,7 +2,6 @@ package navigations
 
 import (
 	"net"
-	"strconv"
 	"net/url"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -17,9 +16,6 @@ var StatusText = "Disconnected"
 var inputIp *widget.Select
 var inputPort *widget.Entry
 
-var websocketBtnTxtChan = make(chan string)
-var websocketClientConnectedChan = make(chan bool)
-
 var deviceLabel = widget.NewLabel("Device: -")
 var ipPortLabel = widget.NewLabel("")
 var buttonConnect = widget.NewButton("Connect", func() {
@@ -32,28 +28,12 @@ var buttonConnect = widget.NewButton("Connect", func() {
 			return
 		} else {
 			ipPortLabel.SetText("Ip Address: " + addr)
-			websockethub.Init(addr, websocketClientConnectedChan, ReloadThreads, ReloadMessages, RemoveContact, RefreshThreads)
-			go websockethub.Start(onStatusChange)
+			go websockethub.Start(addr)
 		}
 	} else {
-		websockethub.Stop(onStatusChange)
+		websockethub.Stop()
 	}
 })
-
-func onStatusChange(status bool, err error) {
-	if (status) {
-		log.Info("Connected")
-		StatusText = "Connected"
-		websocketBtnTxtChan <- "Disconnect"
-	} else {
-		log.Info("Disconnected")
-		StatusText = "Disconnected"
-		websocketBtnTxtChan <- "Connect"
-	}
-	if err != nil {
-		log.Warn(strconv.FormatBool(status), err.Error())
-	}
-}
 
 func getNetworkCardIPAddresses() (ipList []string) {
 	addrs, err := net.InterfaceAddrs()
@@ -69,19 +49,27 @@ func getNetworkCardIPAddresses() (ipList []string) {
 	}
 	return
 }
-
 func RenderConnectionContent(c *fyne.Container) {
+	websockethub.RegisterListener(ReloadThreads, ReloadMessages, RemoveContact, RefreshThreads)
 	log.Info("Connection Rendered")
 	go func() {
 		for {
 			select {
-				case txt := <- websocketBtnTxtChan:
-					buttonConnect.SetText(txt)
-				case present := <- websocketClientConnectedChan:
-					if present {
+				case <- websockethub.GetClientConnectedChan():
+					if websockethub.Client != nil {
 						deviceLabel.SetText("Device: " + websockethub.Client.GetDevice() + " " + websockethub.Client.GetIMEI())
 					} else {
 						deviceLabel.SetText("Device: -")
+					}
+				case status := <- websockethub.GetConnectionChan():
+					if (websockethub.Status) {
+						StatusText = "Connected"
+						buttonConnect.SetText("Disconnect")
+						log.Info("Connected ", status)
+					} else {
+						StatusText = "Disconnected"
+						buttonConnect.SetText("Connect")
+						log.Info("Disconnected ", status)
 					}
 			}
 		}

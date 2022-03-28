@@ -205,7 +205,7 @@ func main() {
 }
 
 func exit() {
-	websockethub.Stop(func(b bool, e error){})
+	websockethub.Stop()
 }
 
 func onReady() {

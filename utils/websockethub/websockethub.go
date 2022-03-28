@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	initialized = false
 	address string
-	clientVisibilityChan chan bool
+	connectionChan = make(chan bool)
+	clientConnectedChan = make(chan bool)
 	syncProgressChan = make(chan bool)
 	progressDialog *custom_widget.ProgressInfiniteDialog
 	upgrader = websocket.Upgrader{
@@ -57,7 +57,7 @@ func init() {
 	}()
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func websocketHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Upgrade") != "websocket" && r.Header.Get("Connection") != "Upgrade" {
 		fmt.Fprintf(w, "PC Suite for KaiOS device")
 		return
@@ -68,7 +68,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	Client = types.CreateClient("Unknown", conn)
-	clientVisibilityChan <- true
+	clientConnectedChan <- true
 	log.Info("upgrade success")
 	defer Client.GetConn().Close()
 	for {
@@ -76,7 +76,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			Client = nil
 			GoogleContactsQueue = nil
-			clientVisibilityChan <- false
+			clientConnectedChan <- false
 			log.Warn(err.Error())
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) || err == io.EOF {
 				break
@@ -98,7 +98,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 								Client.SetIMEI(data.IMEI)
 								log.Info("IMEI: ", Client.GetIMEI())
 							}
-							clientVisibilityChan <- true
+							clientConnectedChan <- true
 						case 2:
 							data := types.RxSyncContactFlag2{}
 							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
@@ -427,38 +427,40 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Init(addr string, clientChan chan bool, _reloadThreadsCb func(map[int]*types.MozMobileMessageThread), _reloadMessages func(map[int][]*types.MozSmsMessage), _removeContactCb func(string, *people.Person), _refreshThreadsCb func()) {
-	initialized = true
-	address = addr
-	clientVisibilityChan = clientChan
+func GetConnectionChan() chan bool {
+	return connectionChan
+}
+
+func GetClientConnectedChan() chan bool {
+	return clientConnectedChan
+}
+
+func RegisterListener(_reloadThreadsCb func(map[int]*types.MozMobileMessageThread), _reloadMessages func(map[int][]*types.MozSmsMessage), _removeContactCb func(string, *people.Person), _refreshThreadsCb func()) {
 	reloadThreadsCb = _reloadThreadsCb
 	reloadMessages = _reloadMessages
 	removeContactCb = _removeContactCb
 	refreshThreadsCb = _refreshThreadsCb
 }
 
-func Start(fn func(bool, error)) {
-	if initialized == false {
-		return
-	}
+func Start(addr string) error {
+	address = addr
 	Status = true
-	fn(Status, nil)
+	connectionChan <- true
 	m := http.NewServeMux()
 	Server = http.Server{Addr: address, Handler: m}
-	m.HandleFunc("/", handler)
+	m.HandleFunc("/", websocketHandler)
 	m.HandleFunc("/local-contacts", localContactListHandler)
 	if err := Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		Status = false
-		fn(Status, err)
+		connectionChan <- false
+		return err
 	}
+	return nil
 }
 
-func Stop(fn func(bool, error)) {
-	if initialized == false {
-		return
-	}
+func Stop() error {
 	if err := Server.Shutdown(context.Background()); err != nil {
-		fn(Status, err)
+		return err
 	} else {
 		if Client != nil {
 			GoogleContactsQueue = nil
@@ -467,6 +469,7 @@ func Stop(fn func(bool, error)) {
 			Client = nil
 		}
 		Status = false
-		fn(Status, nil)
+		connectionChan <- false
 	}
+	return nil
 }
