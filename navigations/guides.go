@@ -13,7 +13,7 @@ func RenderGuidesContent(c *fyne.Container) {
 	guidesContent := container.NewVBox(
 		widget.NewRichTextFromMarkdown("#	Connections"),
 		widget.NewLabel("~ Use ifconfig(linux) or ipconfig(windows) to get your wi-fi ip address"),
-		widget.NewLabel("~ Please setup port forwarding, if your pc not using/connected to KaiOS hotspot/tethering"),
+		widget.NewLabel("~ Please setup port forwarding, if your pc/laptop not connected to KaiOS hotspot"),
 		widget.NewRichTextFromMarkdown("#	Local Contacts"),
 		widget.NewLabel("~ The origin of contact is KaiOS Device/VCF"),
 		widget.NewLabel("~ Please use Restore, if you accidentally delete any contacts on your device"),

@@ -170,7 +170,7 @@ func main() {
 		nil,
 		nil,
 		container.NewBorder(
-			widget.NewLabelWithStyle("KaiOS PC Suite", fyne.TextAlignLeading, fyne.TextStyle{Bold:true}),
+			widget.NewLabelWithStyle("KaiOS PC Suite(TESTING)", fyne.TextAlignLeading, fyne.TextStyle{Bold:true}),
 			nil, nil, nil,
 			menu,
 		),
