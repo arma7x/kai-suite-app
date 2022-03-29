@@ -90,6 +90,10 @@ type TxSyncSMSRead13 struct {
 	Id []int	`json:"id"`
 }
 
+type TxSyncSMSDelete15 struct {
+	Id []int	`json:"id"`
+}
+
 // On Rx, pop QUEUE, next QUEUE
 // successfully add or update contact data on kaios
 type RxSyncDevice0 struct {

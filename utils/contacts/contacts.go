@@ -20,7 +20,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	//custom_widget "kai-suite/widgets"
-	"github.com/emersion/go-vcard"
+	"github.com/signal-golang/go-vcard"
 	custom_widget "kai-suite/widgets"
 )
 
@@ -147,9 +147,14 @@ func ImportContacts() {
 				}
 				if len(card.Names()) > 0 {
 					name.GivenName = card.Names()[0].GivenName
-				}
-				if len(card.Names()) > 0 {
 					name.FamilyName = card.Names()[0].FamilyName
+				} else {
+					if card.PreferredValue(vcard.FieldTelephone) != "" {
+						name.GivenName = card.PreferredValue(vcard.FieldTelephone)
+					} else {
+						log.Warn("No contact name or phone number")
+						continue
+					}
 				}
 				if card.PreferredValue(vcard.FieldTelephone) != "" {
 					phoneNumber.Type = "mobile"
