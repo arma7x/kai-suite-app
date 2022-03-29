@@ -31,8 +31,8 @@ var (
 	messagesContent *fyne.Container
 	contactsContent *fyne.Container
 	googleServicesContent *fyne.Container
-	deviceLabel = widget.NewLabel("No Device")
-	connectionLabel = widget.NewLabel("Disconnected")
+	deviceIndicator = widget.NewButton("No Device", func() {})
+	connectionIndicator = widget.NewButtonWithIcon("", theme.NewThemedResource(resources.GetResource(resources.PowerOffIcon, "PowerOffIcon")), func() {})
 )
 
 func viewContactsList(title, namespace, filter string) {
@@ -124,15 +124,15 @@ func init() {
 			select {
 				case <- navigations.DeviceStatus:
 					if websockethub.Client != nil {
-						deviceLabel.SetText(websockethub.Client.GetDevice())
+						deviceIndicator.SetText(websockethub.Client.GetDevice())
 					} else {
-						deviceLabel.SetText("No Device")
+						deviceIndicator.SetText("No Device")
 					}
 				case <- navigations.ConnectionStatus:
 					if (websockethub.Status) {
-						connectionLabel.SetText("Connected")
+						connectionIndicator.SetIcon(theme.NewThemedResource(resources.GetResource(resources.PowerOnIcon, "PowerOnIcon")))
 					} else {
-						connectionLabel.SetText("Disconnected")
+						connectionIndicator.SetIcon(theme.NewThemedResource(resources.GetResource(resources.PowerOffIcon, "PowerOffIcon")))
 					}
 			}
 		}
@@ -203,8 +203,8 @@ func main() {
 				nil, nil,
 				contentLabel,
 				container.NewHBox(
-					deviceLabel,
-					connectionLabel,
+					deviceIndicator,
+					connectionIndicator,
 					widget.NewButtonWithIcon("", theme.NewThemedResource(resources.GetResource(resources.BulbIcon, "BulbIcon")), func() {
 						if global.THEME == 0 {
 							global.APP.Settings().SetTheme(&custom_theme.DarkMode{})
