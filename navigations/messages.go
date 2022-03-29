@@ -16,6 +16,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/canvas"
 )
 
 type ThreadCardCached struct {
@@ -63,6 +64,17 @@ func ReloadMessages(messages map[int][]*types.MozSmsMessage) {
 	Messages = messages
 }
 
+func renderMessageMenuItem(m *types.MozSmsMessage) *custom_widget.ContextMenuButton {
+	exportMenu := fyne.NewMenuItem("Copy", func() {
+		log.Info("Copy ", m.Id)
+	})
+	deleteMenu := fyne.NewMenuItem("Delete", func() {
+		log.Info("Delete ", m.Id)
+	})
+	menu := fyne.NewMenu("", exportMenu, deleteMenu)
+	return custom_widget.NewContextMenu(theme.MoreVerticalIcon(), menu)
+}
+
 func ViewThreadMessages(threadId int) {
 	log.Info("View thread: ", threadId)
 	var recvSMSId []int
@@ -88,7 +100,7 @@ func ViewThreadMessages(threadId int) {
 						richText += word + " "
 					}
 				}
-				tm := time.Unix(int64(m.Timestamp)/1000, (int64(m.Timestamp)%1000)*1000*1000).Local().Format(time.RFC1123)
+				tm := time.Unix(int64(m.Timestamp)/1000, (int64(m.Timestamp)%1000)*1000*1000).Local().Format("Mon, 02 Jan 2006 03:04 PM")
 				if m.Receiver != "" {
 					if m.Delivery == "error" {
 						card.SetContent(
@@ -98,7 +110,11 @@ func ViewThreadMessages(threadId int) {
 									layout.NewSpacer(),
 									widget.NewRichTextFromMarkdown(richText),
 								),
-								widget.NewRichTextFromMarkdown("*" + tm + "*."),
+								container.NewBorder(
+									nil, nil,
+									container.New(layout.NewHBoxLayout(), &canvas.Text{ Text: tm, TextSize: 11}),
+									renderMessageMenuItem(m),
+								),
 							),
 						)
 					} else {
@@ -108,7 +124,11 @@ func ViewThreadMessages(threadId int) {
 									layout.NewSpacer(),
 									widget.NewRichTextFromMarkdown(richText),
 								),
-								widget.NewRichTextFromMarkdown("*" + tm + "*."),
+								container.NewBorder(
+									nil, nil,
+									container.New(layout.NewHBoxLayout(), &canvas.Text{ Text: tm, TextSize: 11}),
+									renderMessageMenuItem(m),
+								),
 							),
 						)
 					}
@@ -117,7 +137,11 @@ func ViewThreadMessages(threadId int) {
 					card.SetContent(
 						container.NewVBox(
 							widget.NewRichTextFromMarkdown(richText),
-							widget.NewRichTextFromMarkdown("*" + tm + "*."),
+							container.NewBorder(
+								nil, nil,
+								renderMessageMenuItem(m),
+								container.New(layout.NewHBoxLayout(), &canvas.Text{ Text: tm, TextSize: 11}),
+							),
 						),
 					)
 					messagesCardCache[threadId][m.Id].Card = container.NewBorder(nil,nil,card,nil)
@@ -134,6 +158,17 @@ func ViewThreadMessages(threadId int) {
 		messagesContainer.Refresh()
 	}
 	time.AfterFunc(time.Second / 2, messagesScroller.ScrollToBottom)
+}
+
+func renderThreadMenuItem(id int) *custom_widget.ContextMenuButton {
+	exportMenu := fyne.NewMenuItem("Export", func() {
+		log.Info("Export ", id)
+	})
+	deleteMenu := fyne.NewMenuItem("Delete", func() {
+		log.Info("Delete ", id)
+	})
+	menu := fyne.NewMenu("", exportMenu, deleteMenu)
+	return custom_widget.NewContextMenu(theme.MoreVerticalIcon(), menu)
 }
 
 func RefreshThreads() {
@@ -164,14 +199,18 @@ func RefreshThreads() {
 				if t.UnreadCount > 0 {
 					card.SetSubTitle(t.Participants[0] + "(" + strconv.Itoa(t.UnreadCount) + ")")
 				}
-				tm := time.Unix(int64(t.Timestamp)/1000, (int64(t.Timestamp)%1000)*1000*1000).Local().Format(time.RFC1123)
-				card.SetContent(container.NewHBox(
-					custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
-						if i, err := strconv.Atoi(scope); err == nil {
-							ViewThreadMessages(i)
-						}
-					}),
-					widget.NewRichTextFromMarkdown("*" + tm + "*."),
+				tm := time.Unix(int64(t.Timestamp)/1000, (int64(t.Timestamp)%1000)*1000*1000).Local().Format("Mon, 02 Jan 2006 03:04 PM")
+				card.SetContent(container.NewBorder(
+					nil, nil,
+					container.New(layout.NewHBoxLayout(), &canvas.Text{ Text: tm, TextSize: 11}),
+					container.NewHBox(
+						custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
+							if i, err := strconv.Atoi(scope); err == nil {
+								ViewThreadMessages(i)
+							}
+						}),
+						renderThreadMenuItem(t.Id),
+					),
 				))
 				threadsCardCache[t.Id].Card = card
 			}
@@ -191,14 +230,18 @@ func RefreshThreads() {
 			if t.UnreadCount > 0 {
 				card.SetSubTitle(t.Participants[0] + "(" + strconv.Itoa(t.UnreadCount) + ")")
 			}
-			tm := time.Unix(int64(t.Timestamp)/1000, (int64(t.Timestamp)%1000)*1000*1000).Local().Format(time.RFC1123)
-			card.SetContent(container.NewHBox(
-				custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
-					if i, err := strconv.Atoi(scope); err == nil {
-						ViewThreadMessages(i)
-					}
-				}),
-				widget.NewRichTextFromMarkdown("*" + tm + "*."),
+			tm := time.Unix(int64(t.Timestamp)/1000, (int64(t.Timestamp)%1000)*1000*1000).Local().Format("Mon, 02 Jan 2006 03:04 PM")
+			card.SetContent(container.NewBorder(
+				nil, nil,
+				container.New(layout.NewHBoxLayout(), &canvas.Text{ Text: tm, TextSize: 11}),
+				container.NewHBox(
+					custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
+						if i, err := strconv.Atoi(scope); err == nil {
+							ViewThreadMessages(i)
+						}
+					}),
+					renderThreadMenuItem(t.Id),
+				),
 			))
 			threadsCardCache[t.Id].Card = card
 		}
@@ -211,6 +254,7 @@ func RefreshThreads() {
 }
 
 func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([]string, string, string), syncSMSReadCb func([]int)) {
+	log.Info("Messages Rendered")
 	go func() {
 		for {
 			select {
@@ -239,7 +283,6 @@ func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([
 		},
 	}
 	newDialog = dialog.NewCustom("New Message", "Cancel", container.NewMax(form), global.WINDOW);
-	log.Info("Messages Rendered")
 	c.Hide()
 	textMessageEntry.Bind(textMessage)
 	threadsCardCache = make(map[int]*ThreadCardCached)
