@@ -66,7 +66,7 @@ func ReloadMessages(messages map[int][]*types.MozSmsMessage) {
 
 func renderMessageMenuItem(m *types.MozSmsMessage) *custom_widget.ContextMenuButton {
 	exportMenu := fyne.NewMenuItem("Copy", func() {
-		log.Info("Copy ", m.Id)
+		global.WINDOW.Clipboard().SetContent(m.Body)
 	})
 	deleteMenu := fyne.NewMenuItem("Delete", func() {
 		log.Info("Delete ", m.Id)
@@ -172,7 +172,7 @@ func renderThreadMenuItem(id int) *custom_widget.ContextMenuButton {
 }
 
 func RefreshThreads() {
-	log.Info("Refresh Threads ", len(Threads))
+	log.Info("Threads Length: ", len(Threads))
 	threadsContainer.Objects = nil
 	var sortedThreads []*types.MozMobileMessageThread
 	for _, t := range Threads {
