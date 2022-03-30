@@ -31,6 +31,10 @@ type MessageCardCached struct {
 }
 
 var (
+	newMessageButton *widget.Button
+	newMessageDialog dialog.Dialog
+	messageRecipient *widget.Entry
+	messageBody *widget.Entry
 	FocusedThread int
 	Threads	map[int]*types.MozMobileMessageThread
 	Messages	map[int][]*types.MozSmsMessage
@@ -253,6 +257,14 @@ func RefreshThreads() {
 	}
 }
 
+func SendNewMessage(recipient, body string) {
+	messageRecipient.Text = recipient
+	messageBody.Text = body
+	ev := &fyne.PointEvent{}
+	ev.AbsolutePosition = fyne.CurrentApp().Driver().AbsolutePositionForObject(newMessageButton)
+	newMessageButton.Tapped(ev)
+}
+
 func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([]string, string, string), syncSMSReadCb func([]int)) {
 	log.Info("Messages Rendered")
 	go func() {
@@ -263,26 +275,31 @@ func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([
 			}
 		}
 	}()
-	var newDialog dialog.Dialog
-	recipient := widget.NewEntry()
-	body := widget.NewMultiLineEntry()
+	messageRecipient = widget.NewEntry()
+	messageBody = widget.NewMultiLineEntry()
 	form := &widget.Form{
 		Items: []*widget.FormItem{
-			{Text: "Recipient", Widget: recipient},
-			{Text: "Body", Widget: body},
+			{Text: "Recipient", Widget: messageRecipient},
+			{Text: "Body", Widget: messageBody},
 		},
 		SubmitText: "Send",
 		OnSubmit: func() {
-			log.Info(recipient.Text, " ", body.Text)
-			if recipient.Text != "" && body.Text != "" {
-				sendSMSCb([]string{recipient.Text}, body.Text, "")
-				recipient.Text = ""
-				body.Text = ""
+			log.Info(messageRecipient.Text, " ", messageBody.Text)
+			if messageRecipient.Text != "" && messageBody.Text != "" {
+				sendSMSCb([]string{messageRecipient.Text}, messageBody.Text, "")
+				messageRecipient.Text = ""
+				messageBody.Text = ""
 			}
-			newDialog.Hide()
+			newMessageDialog.Hide()
 		},
 	}
-	newDialog = dialog.NewCustom("New Message", "Cancel", container.NewMax(form), global.WINDOW);
+	newMessageDialog = dialog.NewCustom("New Message", "Cancel", container.NewMax(form), global.WINDOW);
+	newMessageButton = widget.NewButton("New Message", func() {
+		newMessageDialog.Show()
+		sz := newMessageDialog.MinSize()
+		sz.Width = 400
+		newMessageDialog.Resize(sz)
+	})
 	c.Hide()
 	textMessageEntry.Bind(textMessage)
 	threadsCardCache = make(map[int]*ThreadCardCached)
@@ -291,12 +308,7 @@ func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([
 	messagesContainer = container.NewVBox()
 	threadsBox = container.NewBorder(
 		container.NewHBox(
-			widget.NewButton("New Message", func() {
-				newDialog.Show()
-				sz := newDialog.MinSize()
-				sz.Width = 400
-				newDialog.Resize(sz)
-			}),
+			newMessageButton,
 		),
 		nil, nil, nil,
 		container.NewVScroll(container.NewVBox(threadsContainer)),

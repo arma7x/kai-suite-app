@@ -16,6 +16,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/buntdb"
 	"google.golang.org/api/people/v1"
+	"fyne.io/fyne/v2/theme"
+	custom_widget "kai-suite/widgets"
 )
 
 type ContactCardCache struct {
@@ -37,6 +39,40 @@ var (
 	contactPageSegment = 0
 	contactPageOffset = 0
 )
+
+func renderContactItem(phone string) *custom_widget.ContextMenuButton {
+	exportMenu := fyne.NewMenuItem("Copy", func() {
+		global.WINDOW.Clipboard().SetContent(phone)
+	})
+	deleteMenu := fyne.NewMenuItem("Send SMS", func() {
+		SendNewMessage(phone, "")
+	})
+	menu := fyne.NewMenu("", exportMenu, deleteMenu)
+	return custom_widget.NewContextMenu(theme.MoreVerticalIcon(), menu)
+}
+
+func makeContactCardWidget(namespace string, person *people.Person) fyne.CanvasObject {
+	card := &widget.Card{}
+	if len(person.Names) > 0 {
+		card.SetTitle(person.Names[0].UnstructuredName)
+	} else {
+		card.SetTitle("-")
+	}
+	if len(person.PhoneNumbers) > 0 {
+		val := person.PhoneNumbers[0].CanonicalForm
+		if val == "" {
+			val = person.PhoneNumbers[0].Value
+		}
+		card.SetContent(container.NewBorder(
+			nil, nil,
+			widget.NewLabel(val),
+			renderContactItem(val),
+		))
+	} else {
+		card.SetSubTitle("Phone number not available")
+	}
+	return card
+}
 
 func RemoveContact(namespace string, person *people.Person) {
 	if _, ok := contactContactCardCache[namespace][person.ResourceName]; ok {
@@ -68,14 +104,14 @@ func ViewContactsList(namespace string, personsArr []*people.Person) {
 					if _, ok := contactContactCardCache[namespace][person.ResourceName]; !ok {
 						contactContactCardCache[namespace][person.ResourceName] = &ContactCardCache{
 							Hash: metadata.Hash,
-							Card: contacts.MakeContactCardWidget(namespace, person),
+							Card: makeContactCardWidget(namespace, person),
 						}
 						// log.Info("NOT CACHE: ", metadata.Hash)
 					} else {
 						// log.Info("CACHE: ", metadata.Hash)
 						if contactContactCardCache[namespace][person.ResourceName].Hash != metadata.Hash {
 							contactContactCardCache[namespace][person.ResourceName].Hash = metadata.Hash
-							contactContactCardCache[namespace][person.ResourceName].Card = contacts.MakeContactCardWidget(namespace, person)
+							contactContactCardCache[namespace][person.ResourceName].Card = makeContactCardWidget(namespace, person)
 						}
 					}
 					contactCards = append(contactCards, contactContactCardCache[namespace][person.ResourceName].Card)
