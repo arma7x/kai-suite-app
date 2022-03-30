@@ -105,7 +105,7 @@ func navigateMessagesContent() {
 	messagesContent.Show()
 	contactsContent.Hide()
 	googleServicesContent.Hide()
-	websockethub.SyncSMS()
+	websockethub.SyncMessages()
 	navigations.RefreshThreads()
 }
 
@@ -186,7 +186,7 @@ func main() {
 	contactsContent = container.NewMax()
 	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts, websockethub.RestoreLocalContacts, contacts.ImportContacts)
 	messagesContent = container.NewMax()
-	navigations.RenderMessagesContent(messagesContent, websockethub.SyncSMS, websockethub.SendSMS, websockethub.SyncSMSRead)
+	navigations.RenderMessagesContent(messagesContent, websockethub.SyncMessages, websockethub.SendMessage, websockethub.SyncMessagesRead, websockethub.DeleteMessages)
 	navigateGuideContent()
 
 	global.WINDOW.SetContent(container.NewBorder(

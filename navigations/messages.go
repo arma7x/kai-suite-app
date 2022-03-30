@@ -17,6 +17,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/canvas"
+	_ "kai-suite/utils/websockethub"
 )
 
 type ThreadCardCached struct {
@@ -31,13 +32,13 @@ type MessageCardCached struct {
 }
 
 var (
+	FocusedThread int
+	Threads	map[int]*types.MozMobileMessageThread
+	Messages	map[int][]*types.MozSmsMessage
 	newMessageButton *widget.Button
 	newMessageDialog dialog.Dialog
 	messageRecipient *widget.Entry
 	messageBody *widget.Entry
-	FocusedThread int
-	Threads	map[int]*types.MozMobileMessageThread
-	Messages	map[int][]*types.MozSmsMessage
 	threadsCardCache map[int]*ThreadCardCached
 	messagesCardCache map[int]map[int]*MessageCardCached
 	threadsBox *fyne.Container
@@ -48,10 +49,16 @@ var (
 	textMessageEntry = widget.NewMultiLineEntry()
 	textMessage = binding.NewString()
 	smsReadIdChan = make(chan []int)
+	deleteMessagesFn = func(id []int){}
 )
 
 func ReloadThreads(threads map[int]*types.MozMobileMessageThread) {
 	Threads = threads
+	if _, focusExist := Threads[FocusedThread]; focusExist == false {
+		FocusedThread = 0
+		threadsBox.Show()
+		messagesBox.Hide()
+	}
 	for _, t := range Threads {
 		if t.Id != FocusedThread { //  || global.VISIBILITY == false 
 			if t.UnreadCount > 0 {
@@ -73,7 +80,9 @@ func renderMessageMenuItem(m *types.MozSmsMessage) *custom_widget.ContextMenuBut
 		global.WINDOW.Clipboard().SetContent(m.Body)
 	})
 	deleteMenu := fyne.NewMenuItem("Delete", func() {
-		log.Info("Delete ", m.Id)
+		ids := []int{m.Id}
+		log.Info("To delete ", ids," len: ", len(ids))
+		deleteMessagesFn(ids)
 	})
 	menu := fyne.NewMenu("", exportMenu, deleteMenu)
 	return custom_widget.NewContextMenu(theme.MoreVerticalIcon(), menu)
@@ -169,7 +178,16 @@ func renderThreadMenuItem(id int) *custom_widget.ContextMenuButton {
 		log.Info("Export ", id)
 	})
 	deleteMenu := fyne.NewMenuItem("Delete", func() {
-		log.Info("Delete ", id)
+		log.Info("To delete ", id, " ", len(Messages))
+		var ids []int
+		if messages, exist := Messages[id]; exist == true {
+			log.Info("Found ", id, " len: ", len(messages))
+			for _, m := range messages{
+				ids = append(ids, m.Id)
+			}
+			log.Info("To delete ", ids," len: ", len(ids))
+			deleteMessagesFn(ids)
+		}
 	})
 	menu := fyne.NewMenu("", exportMenu, deleteMenu)
 	return custom_widget.NewContextMenu(theme.MoreVerticalIcon(), menu)
@@ -265,7 +283,7 @@ func SendNewMessage(recipient, body string) {
 	newMessageButton.Tapped(ev)
 }
 
-func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([]string, string, string), syncSMSReadCb func([]int)) {
+func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([]string, string, string), syncSMSReadCb func([]int), deleteMessagesCb func([]int)) {
 	log.Info("Messages Rendered")
 	go func() {
 		for {
@@ -275,6 +293,7 @@ func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([
 			}
 		}
 	}()
+	deleteMessagesFn = deleteMessagesCb
 	messageRecipient = widget.NewEntry()
 	messageBody = widget.NewMultiLineEntry()
 	form := &widget.Form{
