@@ -17,7 +17,6 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/canvas"
-	_ "kai-suite/utils/websockethub"
 )
 
 type ThreadCardCached struct {
@@ -81,7 +80,7 @@ func renderMessageMenuItem(m *types.MozSmsMessage) *custom_widget.ContextMenuBut
 	})
 	deleteMenu := fyne.NewMenuItem("Delete", func() {
 		ids := []int{m.Id}
-		log.Info("To delete ", ids," len: ", len(ids))
+		// log.Info("To delete ", ids," len: ", len(ids))
 		deleteMessagesFn(ids)
 	})
 	menu := fyne.NewMenu("", exportMenu, deleteMenu)
@@ -178,14 +177,14 @@ func renderThreadMenuItem(id int) *custom_widget.ContextMenuButton {
 		log.Info("Export ", id)
 	})
 	deleteMenu := fyne.NewMenuItem("Delete", func() {
-		log.Info("To delete ", id, " ", len(Messages))
+		// log.Info("To delete ", id, " ", len(Messages))
 		var ids []int
 		if messages, exist := Messages[id]; exist == true {
-			log.Info("Found ", id, " len: ", len(messages))
+			// log.Info("Found ", id, " len: ", len(messages))
 			for _, m := range messages{
 				ids = append(ids, m.Id)
 			}
-			log.Info("To delete ", ids," len: ", len(ids))
+			// log.Info("To delete ", ids," len: ", len(ids))
 			deleteMessagesFn(ids)
 		}
 	})

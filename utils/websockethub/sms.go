@@ -45,7 +45,6 @@ func SyncMessagesRead(id []int) {
 }
 
 func DeleteMessages(id []int) {
-  log.Info("DeleteMessages: ", id)
 	if Client != nil {
 		item := types.TxSyncSMSDelete15{
 			Id: id,
