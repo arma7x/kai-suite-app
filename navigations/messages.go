@@ -294,6 +294,10 @@ func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([
 		},
 	}
 	newMessageDialog = dialog.NewCustom("New Message", "Cancel", container.NewMax(form), global.WINDOW);
+	newMessageDialog.SetOnClosed(func() {
+		messageRecipient.Text = ""
+		messageBody.Text = ""
+	})
 	newMessageButton = widget.NewButton("New Message", func() {
 		newMessageDialog.Show()
 		sz := newMessageDialog.MinSize()

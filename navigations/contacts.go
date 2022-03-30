@@ -69,7 +69,7 @@ func makeContactCardWidget(namespace string, person *people.Person) fyne.CanvasO
 			renderContactItem(val),
 		))
 	} else {
-		card.SetSubTitle("Phone number not available")
+		card.SetSubTitle("Not available")
 	}
 	return card
 }
