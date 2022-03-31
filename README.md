@@ -10,9 +10,7 @@ https://github.com/arma7x/kai-suite-client
 
 ## Status[WIP]
 
-## Guides
-
-### Disclaimer: Please backup your contacts before testing
+### Guides(Disclaimer: Please backup your contacts before testing)
 
 #### Connection
 ```- Use ifconfig(linux) or ipconfig(windows) to get your wi-fi ip address

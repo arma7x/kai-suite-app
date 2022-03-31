@@ -1,9 +1,11 @@
 package navigations
 
 import (
+	"net/url"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"fyne.io/fyne/v2/theme"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,7 +25,15 @@ func RenderGuidesContent(c *fyne.Container) {
 		widget.NewLabel("~ The origin of contact is Google People API"),
 		widget.NewLabel("~ Please use Restore, if you accidentally delete any contacts on yourdevice"),
 		widget.NewLabel("or when the KaiOS device is connected to Kai Suite for the first time"),
-		widget.NewRichTextFromMarkdown("#	Setup Google API"),
+		container.NewHBox(
+			widget.NewRichTextFromMarkdown("# Setup Google API"),
+			widget.NewButtonWithIcon("Open in browser", theme.LogoutIcon(), func(){
+				url, _ := url.Parse("https://github.com/arma7x/kai-suite-app/blob/master/README.md#guides")
+				if err := fyne.CurrentApp().OpenURL(url); err != nil {
+					log.Info(err)
+				}
+			}),
+		),
 		widget.NewLabel("Video tutorial https://youtu.be/Wk6pk-uRUOE"),
 		widget.NewLabel("1. Create new project, visit https://console.cloud.google.com/"),
 		widget.NewLabel("2. Enable People API & Calendar API"),
