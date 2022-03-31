@@ -13,7 +13,7 @@ func RenderGuidesContent(c *fyne.Container) {
 	log.Info("Helps Rendered")
 	c.Objects = nil
 	guidesContent := container.NewVBox(
-		widget.NewRichTextFromMarkdown("## Disclaimer: Please backup your contacts before testing"),
+		widget.NewRichTextFromMarkdown("## Disclaimer: Please backup your messages/contacts before testing"),
 		widget.NewRichTextFromMarkdown("#	Connection"),
 		widget.NewLabel("~ Use ifconfig(linux) or ipconfig(windows) to get your wi-fi ip address"),
 		widget.NewLabel("~ Please setup port forwarding, if your pc/laptop not connected to KaiOS hotspot"),
