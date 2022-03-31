@@ -10,7 +10,7 @@ https://github.com/arma7x/kai-suite-client
 
 ## Status[WIP]
 
-### Guides(Disclaimer: Please backup your contacts before testing)
+### Guides(Disclaimer: Please backup your messages/contacts before testing)
 
 #### Connection
 ```
