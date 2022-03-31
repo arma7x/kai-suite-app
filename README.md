@@ -32,7 +32,8 @@ or when the KaiOS device is connected to Kai Suite for the first time
 ```
 
 #### Setup Google API(https://youtu.be/Wk6pk-uRUOE)
-```1. Create new project, visit https://console.cloud.google.com/
+```
+1. Create new project, visit https://console.cloud.google.com/
 2. Enable People API & Calendar API
 3. Configure Consent Screen
 4. Create Credentials
