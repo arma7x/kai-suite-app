@@ -13,18 +13,21 @@ https://github.com/arma7x/kai-suite-client
 ### Guides(Disclaimer: Please backup your contacts before testing)
 
 #### Connection
-```- Use ifconfig(linux) or ipconfig(windows) to get your wi-fi ip address
+```
+- Use ifconfig(linux) or ipconfig(windows) to get your wi-fi ip address
 - Please setup port forwarding, if your pc/laptop not connected to KaiOS hotspot
 ```
 
 #### Local Contacts
-```- The origin of contact is KaiOS Device/VCF
+```
+- The origin of contact is KaiOS Device/VCF
 - Please use Restore, if you accidentally delete any contacts on your device
 or when the KaiOS device is connected to Kai Suite for the first time
 ```
 
 #### Google Contacts
-```- The origin of contact is Google People API
+```
+- The origin of contact is Google People API
 - Please use Restore, if you accidentally delete any contacts on yourdevice
 or when the KaiOS device is connected to Kai Suite for the first time
 ```
