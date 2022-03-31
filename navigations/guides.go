@@ -24,7 +24,15 @@ func RenderGuidesContent(c *fyne.Container) {
 		widget.NewLabel("~ Please use Restore, if you accidentally delete any contacts on yourdevice"),
 		widget.NewLabel("or when the KaiOS device is connected to Kai Suite for the first time"),
 		widget.NewRichTextFromMarkdown("#	Setup Google API"),
-		widget.NewLabel("~ TBD"),
+		widget.NewLabel("Video tutorial https://youtu.be/Wk6pk-uRUOE"),
+		widget.NewLabel("1. Create new project, visit https://console.cloud.google.com/"),
+		widget.NewLabel("2. Enable People API & Calendar API"),
+		widget.NewLabel("3. Configure Consent Screen"),
+		widget.NewLabel("4. Create Credentials"),
+		widget.NewLabel("5. Download the credential json file and rename it as credentials.json"),
+		widget.NewLabel("6. Open credentials.json, search for `http://localhost` and replace"),
+		widget.NewLabel("it with `urn:ietf:wg:oauth:2.0:oob`"),
+		widget.NewLabel("7. The credentials.json & Kai Suite(binary file) must reside in same folder/directory"),
 	)
 	contentScroller := container.NewVScroll(guidesContent)
 	c.Add(contentScroller)
