@@ -70,7 +70,7 @@ func GetContacts(namespace, filter string) []*people.Person {
 func ImportContacts() {
 	log.Info("ImportContacts")
 	d := dialog.NewFileOpen(func(f fyne.URIReadCloser, err error) {
-		if err == nil {
+		if err == nil && f != nil {
 			log.Info("Start Import")
 			progressDialog := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
 			f, err := os.Open(f.URI().Path())
