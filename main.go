@@ -184,7 +184,7 @@ func main() {
 	googleServicesContent = container.NewMax()
 	navigations.RenderGoogleAccountContent(googleServicesContent, viewContactsList)
 	contactsContent = container.NewMax()
-	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts, websockethub.RestoreLocalContacts, contacts.ImportContacts)
+	navigations.RenderContactsContent(contactsContent, websockethub.SyncLocalContacts, websockethub.RestoreLocalContacts, contacts.ImportContacts, viewContactsList)
 	messagesContent = container.NewMax()
 	navigations.RenderMessagesContent(messagesContent, websockethub.SyncMessages, websockethub.SendMessage, websockethub.SyncMessagesRead, websockethub.DeleteMessages)
 	navigateGuideContent()

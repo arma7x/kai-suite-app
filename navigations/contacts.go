@@ -34,6 +34,7 @@ var (
 	buttonSync *widget.Button
 	buttonRestore *widget.Button
 	buttonImport *widget.Button
+	buttonRefresh *widget.Button
 	contactPage = 0
 	contactMaxPage = 0
 	contactPageSegment = 0
@@ -85,10 +86,12 @@ func ViewContactsList(namespace string, personsArr []*people.Person) {
 		buttonSync.Show()
 		buttonRestore.Show()
 		buttonImport.Show()
+		buttonRefresh.Show()
 	} else {
 		buttonSync.Hide()
 		buttonRestore.Hide()
 		buttonImport.Hide()
+		buttonRefresh.Hide()
 	}
 	contactCards = nil
 	if contactContactCardCache[namespace] == nil {
@@ -137,7 +140,7 @@ func ViewContactsList(namespace string, personsArr []*people.Person) {
 	paginationString.Set(strconv.Itoa(contactPage) + "/" + strconv.Itoa(contactMaxPage))
 }
 
-func RenderContactsContent(c *fyne.Container, syncCb func(), restoreCb func(), importCb func()) {
+func RenderContactsContent(c *fyne.Container, syncCb func(), restoreCb func(), importCb func(), refreshCb func(string, string, string)) {
 	log.Info("Contacts Rendered")
 	c.Hide()
 	contactContactCardCache = make(map[string]map[string]*ContactCardCache)
@@ -153,6 +156,10 @@ func RenderContactsContent(c *fyne.Container, syncCb func(), restoreCb func(), i
 	buttonImport = widget.NewButton("Import VCF", func() {
 		log.Info("Import")
 		importCb()
+	})
+	buttonRefresh = widget.NewButton("Refresh", func() {
+		log.Info("Refresh")
+		refreshCb("Local Contacts", "local", "")
 	})
 	paginationLabel = widget.NewLabelWithData(paginationString)
 	c.Objects = nil
@@ -186,6 +193,7 @@ func RenderContactsContent(c *fyne.Container, syncCb func(), restoreCb func(), i
 			container.NewHBox(
 				paginationLabel,
 				buttonImport,
+				buttonRefresh,
 				buttonSync,
 				buttonRestore,
 			),
