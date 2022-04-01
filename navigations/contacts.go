@@ -154,11 +154,9 @@ func RenderContactsContent(c *fyne.Container, syncCb func(), restoreCb func(), i
 		restoreCb()
 	})
 	buttonImport = widget.NewButton("Import VCF", func() {
-		log.Info("Import")
 		importCb()
 	})
 	buttonRefresh = widget.NewButton("Refresh", func() {
-		log.Info("Refresh")
 		refreshCb("Local Contacts", "local", "")
 	})
 	paginationLabel = widget.NewLabelWithData(paginationString)
