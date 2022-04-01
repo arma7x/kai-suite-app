@@ -1,10 +1,12 @@
 package navigations
 
 import (
+	"errors"
 	"sort"
 	"time"
 	"strings"
 	"strconv"
+	"encoding/json"
 	"kai-suite/types"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -177,7 +179,31 @@ func ViewThreadMessages(threadId int) {
 
 func renderThreadMenuItem(id int) *custom_widget.ContextMenuButton {
 	exportMenu := fyne.NewMenuItem("Export", func() {
-		log.Info("Export ", id)
+		dialog.ShowFileSave(func(f fyne.URIWriteCloser, err error) {
+			if err == nil && f != nil {
+				defer f.Close()
+				if thread, exist := Messages[id]; exist == true {
+					if b, err := json.Marshal(thread); err == nil {
+						_, err := f.Write(b[:])
+						if err != nil {
+							dialog.ShowError(err, global.WINDOW)
+						}
+						err = f.Close()
+						if err != nil {
+							dialog.ShowError(err, global.WINDOW)
+						}
+						log.Info("Saved to...", f.URI())
+						dialog.ShowInformation("Success", f.URI().Path(), global.WINDOW);
+					} else {
+						dialog.ShowError(errors.New("Unknown Error"), global.WINDOW)
+					}
+				} else {
+					dialog.ShowError(errors.New("Thread not exist"), global.WINDOW)
+				}
+			} else {
+				dialog.ShowError(errors.New("Unknown Error"), global.WINDOW)
+			}
+		}, global.WINDOW)
 	})
 	deleteMenu := fyne.NewMenuItem("Delete", func() {
 		if messages, exist := Messages[id]; exist == true {
