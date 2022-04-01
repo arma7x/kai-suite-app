@@ -1,7 +1,6 @@
 package contacts
 
 import (
-	"os"
 	"io"
 	"sort"
 	"time"
@@ -73,7 +72,6 @@ func ImportContacts() {
 		if err == nil && f != nil {
 			log.Info("Start Import")
 			progressDialog := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
-			f, err := os.Open(f.URI().Path())
 			defer f.Close()
 			if err != nil {
 				log.Info("Error Import")
