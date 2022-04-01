@@ -32,7 +32,7 @@ var (
 	contactsContent *fyne.Container
 	googleServicesContent *fyne.Container
 	deviceIndicator = widget.NewButton("No Device", func() {})
-	connectionIndicator = widget.NewButtonWithIcon("", theme.NewThemedResource(resources.GetResource(resources.PowerOffIcon, "PowerOffIcon")), func() {})
+	connectionIndicator = widget.NewButtonWithIcon("Connection", theme.NewThemedResource(resources.GetResource(resources.PowerOffIcon, "PowerOffIcon")), navigateConnectContent)
 )
 
 func viewContactsList(title, namespace, filter string) {
@@ -153,9 +153,6 @@ func main() {
 	var menuButton *fyne.Container = container.NewVBox(
 		widget.NewButton("Guides", func() {
 			navigateGuideContent()
-		}),
-		widget.NewButton("Connection", func() {
-			navigateConnectContent()
 		}),
 		widget.NewButton("Messages", func() {
 			navigateMessagesContent()
