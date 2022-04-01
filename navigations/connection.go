@@ -60,7 +60,7 @@ func RenderConnectionContent(c *fyne.Container) {
 			select {
 				case <- websockethub.GetClientConnectedChan():
 					if websockethub.Client != nil {
-						deviceLabel.SetText("Device: " + websockethub.Client.GetDevice() + " " + websockethub.Client.GetIMEI())
+						deviceLabel.SetText("Device: " + websockethub.Client.GetDevice() + "[" + websockethub.Client.GetIMEI() + "]")
 						DeviceStatus <- true
 					} else {
 						deviceLabel.SetText("Device: -")
