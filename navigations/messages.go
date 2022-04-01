@@ -79,9 +79,12 @@ func renderMessageMenuItem(m *types.MozSmsMessage) *custom_widget.ContextMenuBut
 		global.WINDOW.Clipboard().SetContent(m.Body)
 	})
 	deleteMenu := fyne.NewMenuItem("Delete", func() {
-		ids := []int{m.Id}
-		// log.Info("To delete ", ids," len: ", len(ids))
-		deleteMessagesFn(ids)
+		dialog.ShowCustomConfirm("Confirm", "Yes", "No", container.NewMax(widget.NewLabel("Are sure to delete this message ?")), func(action bool) {
+			if action == true {
+				ids := []int{m.Id}
+				deleteMessagesFn(ids)
+			}
+		}, global.WINDOW)
 	})
 	menu := fyne.NewMenu("", exportMenu, deleteMenu)
 	return custom_widget.NewContextMenu(theme.MoreVerticalIcon(), menu)
@@ -177,15 +180,16 @@ func renderThreadMenuItem(id int) *custom_widget.ContextMenuButton {
 		log.Info("Export ", id)
 	})
 	deleteMenu := fyne.NewMenuItem("Delete", func() {
-		// log.Info("To delete ", id, " ", len(Messages))
-		var ids []int
 		if messages, exist := Messages[id]; exist == true {
-			// log.Info("Found ", id, " len: ", len(messages))
-			for _, m := range messages{
-				ids = append(ids, m.Id)
-			}
-			// log.Info("To delete ", ids," len: ", len(ids))
-			deleteMessagesFn(ids)
+			dialog.ShowCustomConfirm("Confirm", "Yes", "No", container.NewMax(widget.NewLabel("Are sure to delete this thread ?")), func(action bool) {
+				if action == true {
+					var ids []int
+					for _, m := range messages{
+						ids = append(ids, m.Id)
+					}
+					deleteMessagesFn(ids)
+				}
+			}, global.WINDOW)
 		}
 	})
 	menu := fyne.NewMenu("", exportMenu, deleteMenu)
