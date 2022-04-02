@@ -15,7 +15,8 @@ https://github.com/arma7x/kai-suite-client
 #### Connection
 ```
 - Use ifconfig(linux) or ipconfig(windows) to get your wi-fi ip address
-- Please setup port forwarding, if your pc/laptop not connected to KaiOS hotspot
+- Your computer and KaiOS device must connect to the same network. Please setup port forwarding,
+if your computer not connected to KaiOS Wi-Fi hotspot
 ```
 
 #### Local Contacts
