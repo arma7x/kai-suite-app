@@ -150,25 +150,28 @@ func main() {
 	global.APP.SetIcon(resources.GetResource(resources.AppIcon, "AppIcon"))
 	global.WINDOW = global.APP.NewWindow("Kai Suite(TESTING)")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
-	var menuButton *fyne.Container = container.NewVBox(
-		widget.NewButton("Guides", func() {
-			navigateGuideContent()
-		}),
-		widget.NewButton("Messages", func() {
-			navigateMessagesContent()
-		}),
-		widget.NewButton("Search Contacts", func() {
-			searchContacts(google_services.TokenRepository)
-		}),
-		widget.NewButton("Local Contacts", func() {
-			viewContactsList("Local Contacts", "local", "")
-		}),
-		widget.NewButton("Google Account", func() {
-			navigateGoogleServices()
-		}),
+	var menuButton *fyne.Container = container.NewBorder(
+		container.NewVBox(
+			widget.NewButton("Guides", func() {
+				navigateGuideContent()
+			}),
+			widget.NewButton("Messages", func() {
+				navigateMessagesContent()
+			}),
+			widget.NewButton("Search Contacts", func() {
+				searchContacts(google_services.TokenRepository)
+			}),
+			widget.NewButton("Local Contacts", func() {
+				viewContactsList("Local Contacts", "local", "")
+			}),
+			widget.NewButton("Google Account", func() {
+				navigateGoogleServices()
+			}),
+		),
 		widget.NewButton("Quit", func() {
 			global.WINDOW.Close()
 		}),
+		nil,nil,
 	)
 	menuBox := container.NewVScroll(menuButton)
 	menu := container.NewMax()
