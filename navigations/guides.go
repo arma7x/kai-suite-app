@@ -14,17 +14,22 @@ func RenderGuidesContent(c *fyne.Container) {
 	c.Objects = nil
 	guidesContent := container.NewVBox(
 		widget.NewRichTextFromMarkdown("## Disclaimer: Please backup your messages/contacts before testing"),
+		widget.NewSeparator(),
 		widget.NewRichTextFromMarkdown("#	Connection"),
-		widget.NewLabel("~ Use ifconfig(linux) or ipconfig(windows) to get your wi-fi ip address"),
-		widget.NewLabel("~ Please setup port forwarding, if your pc/laptop not connected to KaiOS hotspot"),
+		widget.NewLabel("1. Use ifconfig(linux) or ipconfig(windows) to get your Wi-Fi ip address"),
+		widget.NewLabel("2. Your computer and KaiOS device must connect to the same network. Please setup"),
+		widget.NewLabel("port forwarding, if your computer not connected to KaiOS Wi-Fi hotspot"),
+		widget.NewSeparator(),
 		widget.NewRichTextFromMarkdown("#	Local Contacts"),
-		widget.NewLabel("~ The origin of contact is KaiOS Device/VCF"),
-		widget.NewLabel("~ Please use Restore, if you accidentally delete any contacts on your device"),
+		widget.NewLabel("1. The origin of contact is KaiOS Device/VCF"),
+		widget.NewLabel("2. Please use Restore, if you accidentally delete any contacts on your device"),
 		widget.NewLabel("or when the KaiOS device is connected to Kai Suite for the first time"),
+		widget.NewSeparator(),
 		widget.NewRichTextFromMarkdown("#	Google Contacts"),
-		widget.NewLabel("~ The origin of contact is Google People API"),
-		widget.NewLabel("~ Please use Restore, if you accidentally delete any contacts on yourdevice"),
+		widget.NewLabel("1. The origin of contact is Google People API"),
+		widget.NewLabel("2. Please use Restore, if you accidentally delete any contacts on yourdevice"),
 		widget.NewLabel("or when the KaiOS device is connected to Kai Suite for the first time"),
+		widget.NewSeparator(),
 		container.NewHBox(
 			widget.NewRichTextFromMarkdown("# Setup Google API"),
 			widget.NewButtonWithIcon("Open in browser", theme.LogoutIcon(), func(){
