@@ -148,7 +148,7 @@ func main() {
 	global.APP = app.New()
 	global.APP.Settings().SetTheme(&custom_theme.LightMode{})
 	global.APP.SetIcon(resources.GetResource(resources.AppIcon, "AppIcon"))
-	global.WINDOW = global.APP.NewWindow("Kai Suite(TESTING)")
+	global.WINDOW = global.APP.NewWindow("Kai Suite(TEST)")
 	global.WINDOW.Resize(fyne.NewSize(800, 600))
 	var menuButton *fyne.Container = container.NewBorder(
 		container.NewVBox(
@@ -193,7 +193,7 @@ func main() {
 		nil,
 		nil,
 		container.NewBorder(
-			widget.NewLabelWithStyle("KaiOS PC Suite(TESTING)", fyne.TextAlignLeading, fyne.TextStyle{Bold:true}),
+			widget.NewLabelWithStyle("KaiOS PC Suite(TEST)", fyne.TextAlignLeading, fyne.TextStyle{Bold:true}),
 			nil, nil, nil,
 			menu,
 		),
