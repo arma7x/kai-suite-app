@@ -5,10 +5,11 @@ A pc suite for KaiOS device to manage events(Google Calendar/TODO) & contacts(lo
 and capability to send or received sms via desktop app.
 ```
 
-## Kai Suite KaiOS client
-https://github.com/arma7x/kai-suite-client
+### Kai Suite KaiOS client https://github.com/arma7x/kai-suite-client
 
-## Status[WIP]
+### Status[WIP]
+
+### Download link https://mega.nz/folder/AjAwDShY#HFWnRTrO7ffTiiLaLtDV3A
 
 ### Guides(Disclaimer: Please backup your messages/contacts before testing)
 
