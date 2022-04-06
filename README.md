@@ -1,8 +1,8 @@
 # Kai Suite[WIP]
 
 ```What is the purpose Kai Suite ?
-A pc suite for KaiOS device to manage events(Google Calendar[in-progress]) & contacts(locals/Google People)
-and capability to send or received sms via desktop app.
+A pc suite for KaiOS device to manage events(Google Calendar[in-progress]) & manage contacts(locals/Google People)
+and capability to send or received sms.
 ```
 
 ### Kai Suite KaiOS client https://github.com/arma7x/kai-suite-client
