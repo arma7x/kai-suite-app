@@ -14,7 +14,7 @@ import (
 	"kai-suite/utils/google_services"
 	"kai-suite/theme"
 	"kai-suite/navigations"
-	// log "github.com/sirupsen/logrus"
+	// "github.com/sirupsen/logrus"
 	"kai-suite/utils/contacts"
 	"github.com/getlantern/systray"
 	"fyne.io/fyne/v2/dialog"
@@ -145,7 +145,7 @@ func main() {
 	contentTitle.Set("")
 	contentLabel := widget.NewLabelWithStyle("", fyne.TextAlignLeading, fyne.TextStyle{Bold:true})
 	contentLabel.Bind(contentTitle)
-	global.APP = app.New()
+	global.APP = app.NewWithID("Kai Suite")
 	global.APP.Settings().SetTheme(&custom_theme.LightMode{})
 	global.APP.SetIcon(resources.GetResource(resources.AppIcon, "AppIcon"))
 	global.WINDOW = global.APP.NewWindow("Kai Suite(TEST)")

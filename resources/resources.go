@@ -20,6 +20,7 @@ const (
 	BulbIcon Resource = "assets/bulb.svg"
 	PowerOffIcon Resource = "assets/power-off-icon.svg"
 	PowerOnIcon Resource = "assets/power-on-icon.svg"
+	MultilangFont Resource = "assets/GoNotoCurrent.ttf" // https://github.com/satbyy/go-noto-universal/releases/
 )
 
 func GetResource(res Resource, name string) *fyne.StaticResource {

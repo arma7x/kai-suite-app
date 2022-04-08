@@ -5,6 +5,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
+	"kai-suite/resources"
 )
 
 type DarkMode struct{}
@@ -57,7 +58,7 @@ func (DarkMode) Font(s fyne.TextStyle) fyne.Resource {
 	if s.Italic {
 		return theme.DefaultTheme().Font(s)
 	}
-	return theme.DefaultTheme().Font(s)
+	return resources.GetResource(resources.MultilangFont, "MultilangFont")
 }
 
 func (DarkMode) Icon(n fyne.ThemeIconName) fyne.Resource {
