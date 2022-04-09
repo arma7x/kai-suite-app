@@ -245,7 +245,7 @@ func RefreshThreads() {
 				card := &widget.Card{}
 				tBody := utf8string.NewString(t.Body)
 				if tBody.RuneCount() > 50 {
-					card.SetTitle(tBody.Slice(0, 50))
+					card.SetTitle(tBody.Slice(0, 50) + "...")
 				} else {
 					card.SetTitle(tBody.String())
 				}
@@ -277,7 +277,7 @@ func RefreshThreads() {
 			card := &widget.Card{}
 			tBody := utf8string.NewString(t.Body)
 			if tBody.RuneCount() > 50 {
-				card.SetTitle(tBody.Slice(0, 50))
+				card.SetTitle(tBody.Slice(0, 50) + "...")
 			} else {
 				card.SetTitle(tBody.String())
 			}
