@@ -9,6 +9,7 @@ require (
 	github.com/signal-golang/go-vcard v0.1.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/tidwall/buntdb v1.2.9
+	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
 	google.golang.org/api v0.70.0
 )

@@ -46,18 +46,18 @@ func (DarkMode) Color(c fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
 }
 
 func (DarkMode) Font(s fyne.TextStyle) fyne.Resource {
-	if s.Monospace {
-		return theme.DefaultTheme().Font(s)
-	}
-	if s.Bold {
-		if s.Italic {
-			return theme.DefaultTheme().Font(s)
-		}
-		return theme.DefaultTheme().Font(s)
-	}
-	if s.Italic {
-		return theme.DefaultTheme().Font(s)
-	}
+	//if s.Monospace {
+		//return theme.DefaultTheme().Font(s)
+	//}
+	//if s.Bold {
+		//if s.Italic {
+			//return theme.DefaultTheme().Font(s)
+		//}
+		//return theme.DefaultTheme().Font(s)
+	//}
+	//if s.Italic {
+		//return theme.DefaultTheme().Font(s)
+	//}
 	return resources.GetResource(resources.MultilangFont, "MultilangFont")
 }
 

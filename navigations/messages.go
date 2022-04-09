@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"encoding/json"
 	"kai-suite/types"
+	"golang.org/x/exp/utf8string"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
@@ -19,6 +20,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/canvas"
+	
 )
 
 type ThreadCardCached struct {
@@ -241,10 +243,11 @@ func RefreshThreads() {
 				threadsCardCache[t.Id].Timestamp = t.Timestamp
 				threadsCardCache[t.Id].UnreadCount = t.UnreadCount
 				card := &widget.Card{}
-				if len(t.Body) > 50 {
-					card.SetTitle(t.Body[:50] + "...")
+				tBody := utf8string.NewString(t.Body)
+				if tBody.RuneCount() > 50 {
+					card.SetTitle(tBody.Slice(0, 50))
 				} else {
-					card.SetTitle(t.Body)
+					card.SetTitle(tBody.String())
 				}
 				card.SetSubTitle(t.Participants[0])
 				if t.UnreadCount > 0 {
@@ -272,10 +275,11 @@ func RefreshThreads() {
 			threadsCardCache[t.Id].Timestamp = t.Timestamp
 			threadsCardCache[t.Id].UnreadCount = t.UnreadCount
 			card := &widget.Card{}
-			if len(t.Body) > 50 {
-				card.SetTitle(t.Body[:50] + "...")
+			tBody := utf8string.NewString(t.Body)
+			if tBody.RuneCount() > 50 {
+				card.SetTitle(tBody.Slice(0, 50))
 			} else {
-				card.SetTitle(t.Body)
+				card.SetTitle(tBody.String())
 			}
 			card.SetSubTitle(t.Participants[0])
 			if t.UnreadCount > 0 {
@@ -332,7 +336,7 @@ func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([
 		},
 		SubmitText: "Send",
 		OnSubmit: func() {
-			log.Info(messageRecipient.Text, " ", messageBody.Text)
+			// log.Info(messageRecipient.Text, " ", messageBody.Text)
 			if messageRecipient.Text != "" && messageBody.Text != "" {
 				sendSMSCb([]string{messageRecipient.Text}, messageBody.Text, "")
 				messageRecipient.Text = ""
