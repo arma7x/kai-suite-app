@@ -3,7 +3,7 @@ package contacts
 import (
 	"io"
 	"sort"
-	"time"
+	//"time"
 	"strings"
 	"crypto/sha256"
 	"encoding/hex"
@@ -127,8 +127,8 @@ func ImportContacts() {
 				b, _ := person.MarshalJSON()
 				hash := sha256.Sum256(b)
 				metadata := types.Metadata{}
-				metadata.SyncID = personID
-				metadata.SyncUpdated = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+				//metadata.SyncID = personID
+				//metadata.SyncUpdated = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 				metadata.Hash = hex.EncodeToString(hash[:])
 				metadata.Deleted = false
 				if metadata_b, err := json.Marshal(metadata); err == nil {

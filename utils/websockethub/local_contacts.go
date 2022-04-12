@@ -30,7 +30,8 @@ func localContactListHandler(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal([]byte(val), &mt); err != nil {
 				return true
 			}
-			metadata[mt.SyncID] = mt
+			split := strings.Split(key, ":")
+			metadata[split[len(split) - 1]] = mt
 			return true
 		})
 		data := types.TxSyncLocalContact5{

@@ -1,4 +1,4 @@
-# Kai Suite[WIP]
+# Kai Suite[WIP][UNSTABLE]
 
 ```What is the purpose Kai Suite ?
 A pc suite for KaiOS device to manage events(Google Calendar[in-progress]) & manage contacts(locals/Google People)
