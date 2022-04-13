@@ -20,16 +20,16 @@ if your computer not connected to KaiOS Wi-Fi hotspot
 
 #### Local Contacts
 ```
-- The origin of contact is KaiOS Device/VCF
+- The origin of contact is from KaiOS Device/VCF
 - Please use Restore, if you accidentally delete any contacts on your device
-or when the KaiOS device is connected to Kai Suite for the first time
+or when your KaiOS device is connected to Kai Suite for the first time
 ```
 
 #### Google Contacts
 ```
-- The origin of contact is Google People API
-- Please use Restore, if you accidentally delete any contacts on yourdevice
-or when the KaiOS device is connected to Kai Suite for the first time
+- The origin of contact is from Google People
+- Please use Restore, if you accidentally delete any contacts on your device
+or when your KaiOS device is connected to Kai Suite for the first time
 ```
 
 #### Setup Google API(https://youtu.be/Wk6pk-uRUOE)
