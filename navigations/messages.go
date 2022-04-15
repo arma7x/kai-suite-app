@@ -329,6 +329,7 @@ func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([
 	deleteMessagesFn = deleteMessagesCb
 	messageRecipient = widget.NewEntry()
 	messageBody = widget.NewMultiLineEntry()
+	messageBody.Wrapping = fyne.TextWrapWord
 	form := &widget.Form{
 		Items: []*widget.FormItem{
 			{Text: "Recipient", Widget: messageRecipient},
@@ -357,6 +358,7 @@ func RenderMessagesContent(c *fyne.Container, syncSMSCb func(), sendSMSCb func([
 		newMessageDialog.Resize(sz)
 	})
 	c.Hide()
+	textMessageEntry.Wrapping = fyne.TextWrapWord
 	textMessageEntry.Bind(textMessage)
 	threadsCardCache = make(map[int]*ThreadCardCached)
 	messagesCardCache = make(map[int]map[int]*MessageCardCached)
