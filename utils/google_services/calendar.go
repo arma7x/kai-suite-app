@@ -2,17 +2,18 @@ package google_services
 
 import (
 	"context"
-	"net/http"
 	"time"
+	"kai-suite/types"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/calendar/v3"
 )
 
-func Calendar(client *http.Client) error {
+func SyncCalendar(config *oauth2.Config, account *types.UserInfoAndToken) error {
 	ctx := context.Background()
-
+	client := GetAuthClient(config, account.Token)
 	srv, err := calendar.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Error("Unable to retrieve Calendar client: ", err)

@@ -92,7 +92,7 @@ func DeleteContacts(config *oauth2.Config, account *types.UserInfoAndToken, cont
 	return
 }
 
-func Sync(config *oauth2.Config, account *types.UserInfoAndToken, removeContactCb func(string, *people.Person)) error {
+func SyncPeople(config *oauth2.Config, account *types.UserInfoAndToken, removeContactCb func(string, *people.Person)) error {
 	if connections, err := GetContacts(config, account); err != nil {
 		return err
 	} else if len(connections) > 0 {

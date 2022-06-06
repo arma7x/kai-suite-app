@@ -33,43 +33,74 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 		card := &widget.Card{}
 		card.SetTitle(accounts[namespace].User.Name)
 		card.SetSubTitle(accounts[namespace].User.Email)
-		card.SetContent(container.NewAdaptiveGrid(
-			2,
-			widget.NewButton("Sync Cloud", func() {
-				log.Info("Sync Cloud ", accounts[scope].User.Id)
-				if authConfig, err := google_services.GetConfig(); err == nil {
-					if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
-						google_services.TokenRepository[accounts[scope].User.Id].Token = token
-						progress := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
-						if err := google_services.Sync(authConfig, google_services.TokenRepository[accounts[scope].User.Id], RemoveContact); err != nil {
-							progress.Hide()
+		card.SetContent(container.NewVBox(
+			widget.NewLabelWithStyle("Peoples", fyne.TextAlignCenter, fyne.TextStyle{Bold:true}),
+			container.NewAdaptiveGrid(
+				2,
+				widget.NewButton("Sync Cloud", func() {
+					log.Info("Sync Cloud ", accounts[scope].User.Id)
+					if authConfig, err := google_services.GetConfig(); err == nil {
+						if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
+							google_services.TokenRepository[accounts[scope].User.Id].Token = token
+							progress := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
+							if err := google_services.SyncPeople(authConfig, google_services.TokenRepository[accounts[scope].User.Id], RemoveContact); err != nil {
+								progress.Hide()
+								dialog.ShowError(err, global.WINDOW)
+								log.Warn(err)
+							} else {
+								progress.Hide()
+							}
+						} else {
 							dialog.ShowError(err, global.WINDOW)
 							log.Warn(err)
-						} else {
-							progress.Hide()
 						}
 					} else {
 						dialog.ShowError(err, global.WINDOW)
 						log.Warn(err)
 					}
-				} else {
-					dialog.ShowError(err, global.WINDOW)
-					log.Warn(err)
-				}
-			}),
-			widget.NewButton("Sync KaiOS", func() {
-				log.Info("Sync KaiOS ", scope)
-				websockethub.SyncContacts(scope)
-			}),
-			widget.NewButton("Restore Contacts", func() {
-				log.Info("Restore Contacts ", accounts[scope].User.Id)
-				websockethub.RestoreContact(scope)
-			}),
-			widget.NewButton("Contact List", func() {
-				log.Info("Contact List ", accounts[scope].User.Id)
-				viewContactsList(accounts[scope].User.Email + " Contacts", scope, "")
-			}),
-			widget.NewButton("Remove", func() {
+				}),
+				widget.NewButton("Sync KaiOS", func() {
+					log.Info("Sync KaiOS ", scope)
+					websockethub.SyncContacts(scope)
+				}),
+				widget.NewButton("Restore Contacts", func() {
+					log.Info("Restore Contacts ", accounts[scope].User.Id)
+					websockethub.RestoreContact(scope)
+				}),
+				widget.NewButton("Contact List", func() {
+					log.Info("Contact List ", accounts[scope].User.Id)
+					viewContactsList(accounts[scope].User.Email + " Contacts", scope, "")
+				}),
+			),
+			widget.NewLabelWithStyle("Calendar", fyne.TextAlignCenter, fyne.TextStyle{Bold:true}),
+			container.NewAdaptiveGrid(
+				2,
+				widget.NewButton("Sync Cloud", func() {
+					log.Info("Sync Calendars ", accounts[scope].User.Id)
+					if authConfig, err := google_services.GetConfig(); err == nil {
+						if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
+							google_services.TokenRepository[accounts[scope].User.Id].Token = token
+							progress := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
+							if err := google_services.SyncCalendar(authConfig, google_services.TokenRepository[accounts[scope].User.Id]); err != nil {
+								progress.Hide()
+								dialog.ShowError(err, global.WINDOW)
+								log.Warn(err)
+							} else {
+								progress.Hide()
+							}
+						} else {
+							dialog.ShowError(err, global.WINDOW)
+							log.Warn(err)
+						}
+					} else {
+						dialog.ShowError(err, global.WINDOW)
+						log.Warn(err)
+					}
+				}),
+				widget.NewButton("Sync KaiOS", func() {}),
+				widget.NewButton("Event List", func() {}),
+			),
+			widget.NewButton("Remove This Account", func() {
 				log.Info("Remove ", accounts[scope].User.Id)
 				google_services.RemoveAccount(accounts[scope].User.Id)
 				renderGoogleAccountCards(accountsContainer, accounts)
