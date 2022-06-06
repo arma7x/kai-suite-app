@@ -20,7 +20,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/canvas"
-	
+
 )
 
 type ThreadCardCached struct {
@@ -63,7 +63,7 @@ func ReloadThreads(threads map[int]*types.MozMobileMessageThread) {
 		messagesBox.Hide()
 	}
 	for _, t := range Threads {
-		if t.Id != FocusedThread { //  || global.VISIBILITY == false 
+		if t.Id != FocusedThread { //  || global.VISIBILITY == false
 			if t.UnreadCount > 0 {
 				global.APP.SendNotification(fyne.NewNotification(t.Participants[0], t.Body))
 			}
@@ -237,7 +237,8 @@ func RefreshThreads() {
 			return sortedThreads[i].Timestamp > sortedThreads[j].Timestamp
 		})
 	}
-	for _, t := range sortedThreads {
+	for _, tr := range sortedThreads {
+		t := tr
 		if _, exist := threadsCardCache[t.Id]; exist == true {
 			if threadsCardCache[t.Id].Timestamp != t.Timestamp || threadsCardCache[t.Id].UnreadCount != t.UnreadCount {
 				threadsCardCache[t.Id].Timestamp = t.Timestamp
@@ -258,10 +259,8 @@ func RefreshThreads() {
 					nil, nil,
 					container.New(layout.NewHBoxLayout(), &canvas.Text{ Text: tm, TextSize: 11}),
 					container.NewHBox(
-						custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
-							if i, err := strconv.Atoi(scope); err == nil {
-								ViewThreadMessages(i)
-							}
+						widget.NewButton("View", func() {
+							ViewThreadMessages(t.Id)
 						}),
 						renderThreadMenuItem(t.Id),
 					),
@@ -290,10 +289,8 @@ func RefreshThreads() {
 				nil, nil,
 				container.New(layout.NewHBoxLayout(), &canvas.Text{ Text: tm, TextSize: 11}),
 				container.NewHBox(
-					custom_widget.NewButton(strconv.Itoa(t.Id), "View", func(scope string) {
-						if i, err := strconv.Atoi(scope); err == nil {
-							ViewThreadMessages(i)
-						}
+					widget.NewButton("View", func() {
+						ViewThreadMessages(t.Id)
 					}),
 					renderThreadMenuItem(t.Id),
 				),
