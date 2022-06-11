@@ -42,6 +42,7 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 					if authConfig, err := google_services.GetConfig(); err == nil {
 						if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
 							google_services.TokenRepository[accounts[scope].User.Id].Token = token
+							google_services.WriteTokensToFile()
 							progress := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
 							if err := google_services.SyncPeople(authConfig, google_services.TokenRepository[accounts[scope].User.Id], RemoveContact); err != nil {
 								progress.Hide()
@@ -80,6 +81,7 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 					if authConfig, err := google_services.GetConfig(); err == nil {
 						if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
 							google_services.TokenRepository[accounts[scope].User.Id].Token = token
+							google_services.WriteTokensToFile()
 							progress := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
 							if err := google_services.SyncCalendar(authConfig, google_services.TokenRepository[accounts[scope].User.Id]); err != nil {
 								progress.Hide()

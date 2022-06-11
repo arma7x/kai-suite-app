@@ -26,7 +26,7 @@ var(
 )
 
 func init() {
-	tokenFromFile()
+	readTokensFromFile()
 	log.Info("TokenRepository: ",len(TokenRepository))
 }
 
@@ -41,7 +41,6 @@ func GetTokenFromWeb(config *oauth2.Config) error {
 }
 
 func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
-	tokensFile := global.ResolvePath("tokens.json")
 	var token *oauth2.Token
 	var err error
 	token, err = config.Exchange(context.TODO(), authCode)
@@ -54,27 +53,32 @@ func SaveToken(config *oauth2.Config, authCode string) (*oauth2.Token, error) {
 		return nil, err
 	}
 	TokenRepository[user.Id] = &types.UserInfoAndToken{user, token}
+	WriteTokensToFile()
+	return token, nil
+}
 
+func WriteTokensToFile() {
+	tokensFile := global.ResolvePath("tokens.json")
 	var b []byte
+	var err error
 	b, err = json.Marshal(&TokenRepository)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	log.Info("Saving credential file to: ", tokensFile, "\n")
 	f, err := os.OpenFile(tokensFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if _, err := f.Write(b); err != nil {
-		return nil, err
+		return
 	}
 	defer f.Close()
 	global.InitDatabaseIndex(TokenRepository)
-	return token, nil
 }
 
-func tokenFromFile() error {
+func readTokensFromFile() error {
 	tokensFile := global.ResolvePath("tokens.json")
 	b, err := os.ReadFile(tokensFile)
 	if err != nil {
