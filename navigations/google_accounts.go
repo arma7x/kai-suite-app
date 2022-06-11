@@ -74,8 +74,8 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 			),
 			widget.NewLabelWithStyle("Calendar", fyne.TextAlignCenter, fyne.TextStyle{Bold:true}),
 			container.NewAdaptiveGrid(
-				2,
-				widget.NewButton("Sync Cloud", func() {
+				1,
+				widget.NewButton("Sync Calendar", func() {
 					log.Info("Sync Calendars ", accounts[scope].User.Id)
 					if authConfig, err := google_services.GetConfig(); err == nil {
 						if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
@@ -97,8 +97,6 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 						log.Warn(err)
 					}
 				}),
-				widget.NewButton("Sync KaiOS", func() {}),
-				widget.NewButton("Event List", func() {}),
 			),
 			widget.NewButton("Remove This Account", func() {
 				log.Info("Remove ", accounts[scope].User.Id)
