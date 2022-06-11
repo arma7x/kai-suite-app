@@ -33,22 +33,21 @@ func GetContacts(config *oauth2.Config, account *types.UserInfoAndToken) ([]*peo
 	}
 
 	run := true;
+	var loopError error
 	var connections []*people.Person // type Person struct
 	var r *people.ListConnectionsResponse
-	var loopError error
+
 	r, loopError = srv.People.Connections.List("people/me").PageSize(1000).PersonFields(fields).Do()
 	for (run) {
 		if loopError != nil {
 			log.Warn("Unable to retrieve people: ", loopError)
 			run = false
 		} else {
-			if r.NextPageToken != "" {
-				log.Info(r.NextPageToken)
-			}
 			connections = append(connections, r.Connections...)
 			if r.NextPageToken == "" {
 				run = false
 			} else {
+				log.Info(r.NextPageToken)
 				r, loopError = srv.People.Connections.List("people/me").PageSize(20).PersonFields(fields).PageToken(r.NextPageToken).Do()
 			}
 		}
