@@ -4,6 +4,7 @@ import(
 	"golang.org/x/oauth2"
 	google_oauth2 "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/people/v1"
+	"google.golang.org/api/calendar/v3"
 )
 
 type UserInfoAndToken struct {
@@ -138,4 +139,21 @@ type RxSyncLocalContactFlag10 struct {
 type RxSyncSMSFlag12 struct {
 	Threads			map[int]*MozMobileMessageThread	`json:"threads"`
 	Messages		map[int][]*MozSmsMessage		`json:"messages"`
+}
+
+// @TODO
+
+type TxSyncEvents17 struct {
+	Namespace		string						`json:"namespace"`		// account
+}
+
+type RxSyncEvents14 struct {
+	Namespace		string						`json:"namespace"`		// account
+	UnsyncEvents 	[]*calendar.Event			`json:"unsync_events"`	// unsync local events from device
+}
+
+type TxSyncEvents19 struct {
+	Namespace		string						`json:"namespace"`		// account
+	Events 			[]*calendar.Event			`json:"events"`			// sync events from cloud
+	SyncedEvents 	[]*calendar.Event			`json:"synced_events"`	// to remove unsync local events on device
 }
