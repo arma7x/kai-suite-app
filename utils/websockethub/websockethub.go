@@ -153,18 +153,18 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 										person.Names[0].FamilyName = data.KaiContact.FamilyName[0]
 									}
 									if len(data.KaiContact.Tel) > 0 {
-										if len(data.KaiContact.Tel[0].Type) > 0 { 
+										if len(data.KaiContact.Tel[0].Type) > 0 {
 											person.PhoneNumbers[0].Type = data.KaiContact.Tel[0].Type[0]
 										}
-										if len(data.KaiContact.Tel[0].Value) > 0 { 
+										if len(data.KaiContact.Tel[0].Value) > 0 {
 											person.PhoneNumbers[0].Value = data.KaiContact.Tel[0].Value
 										}
 									}
 									if len(data.KaiContact.Email) > 0 {
-										if len(data.KaiContact.Email[0].Type) > 0 { 
+										if len(data.KaiContact.Email[0].Type) > 0 {
 											person.EmailAddresses[0].Type = data.KaiContact.Email[0].Type[0]
 										}
-										if len(data.KaiContact.Email[0].Value) > 0 { 
+										if len(data.KaiContact.Email[0].Value) > 0 {
 											person.EmailAddresses[0].Value = data.KaiContact.Email[0].Value
 										}
 									}
@@ -296,18 +296,18 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 											name.FamilyName = item.KaiContact.FamilyName[0]
 										}
 										if len(item.KaiContact.Tel) > 0 {
-											if len(item.KaiContact.Tel[0].Type) > 0 { 
+											if len(item.KaiContact.Tel[0].Type) > 0 {
 												phoneNumber.Type = item.KaiContact.Tel[0].Type[0]
 											}
-											if len(item.KaiContact.Tel[0].Value) > 0 { 
+											if len(item.KaiContact.Tel[0].Value) > 0 {
 												phoneNumber.Value = item.KaiContact.Tel[0].Value
 											}
 										}
 										if len(item.KaiContact.Email) > 0 {
-											if len(item.KaiContact.Email[0].Type) > 0 { 
+											if len(item.KaiContact.Email[0].Type) > 0 {
 												emailAddress.Type = item.KaiContact.Email[0].Type[0]
 											}
-											if len(item.KaiContact.Email[0].Value) > 0 { 
+											if len(item.KaiContact.Email[0].Value) > 0 {
 												emailAddress.Value = item.KaiContact.Email[0].Value
 											}
 										}
@@ -363,18 +363,18 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 											person.Names[0].FamilyName = item.KaiContact.FamilyName[0]
 										}
 										if len(item.KaiContact.Tel) > 0 {
-											if len(item.KaiContact.Tel[0].Type) > 0 { 
+											if len(item.KaiContact.Tel[0].Type) > 0 {
 												person.PhoneNumbers[0].Type = item.KaiContact.Tel[0].Type[0]
 											}
-											if len(item.KaiContact.Tel[0].Value) > 0 { 
+											if len(item.KaiContact.Tel[0].Value) > 0 {
 												person.PhoneNumbers[0].Value = item.KaiContact.Tel[0].Value
 											}
 										}
 										if len(item.KaiContact.Email) > 0 {
-											if len(item.KaiContact.Email[0].Type) > 0 { 
+											if len(item.KaiContact.Email[0].Type) > 0 {
 												person.EmailAddresses[0].Type = item.KaiContact.Email[0].Type[0]
 											}
-											if len(item.KaiContact.Email[0].Value) > 0 { 
+											if len(item.KaiContact.Email[0].Value) > 0 {
 												person.EmailAddresses[0].Value = item.KaiContact.Email[0].Value
 											}
 										}
@@ -420,6 +420,12 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 								reloadThreadsCb(data.Threads)
 								reloadMessages(data.Messages)
 								refreshThreadsCb()
+							}
+						case 14:
+							syncProgressChan <- false
+							data := types.RxSyncEvents14{}
+							if err := json.Unmarshal([]byte(rx.Data), &data); err == nil {
+								StartSyncEvent(data.Namespace, data.UnsyncEvents);
 							}
 					}
 				}

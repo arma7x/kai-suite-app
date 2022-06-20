@@ -78,18 +78,11 @@ func renderGoogleAccountCards(accountsContainer *fyne.Container, accounts map[st
 				1,
 				widget.NewButton("Sync Calendar", func() {
 					log.Info("Sync Calendars ", accounts[scope].User.Id)
-					if authConfig, err := google_services.GetConfig(); err == nil {
+					if _, err := google_services.GetConfig(); err == nil {
 						if token, err := google_services.RefreshToken(google_services.TokenRepository[accounts[scope].User.Id].Token); err == nil {
 							google_services.TokenRepository[accounts[scope].User.Id].Token = token
 							google_services.WriteTokensToFile()
-							progress := custom_widget.NewProgressInfinite("Synchronizing", "Please wait...", global.WINDOW)
-							if err := google_services.SyncCalendar(authConfig, google_services.TokenRepository[accounts[scope].User.Id]); err != nil {
-								progress.Hide()
-								dialog.ShowError(err, global.WINDOW)
-								log.Warn(err)
-							} else {
-								progress.Hide()
-							}
+							websockethub.InitSyncCalendar(accounts[scope].User.Id)
 						} else {
 							dialog.ShowError(err, global.WINDOW)
 							log.Warn(err)

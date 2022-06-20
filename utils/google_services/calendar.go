@@ -11,19 +11,20 @@ import (
 	"google.golang.org/api/calendar/v3"
 )
 
-func SyncCalendar(config *oauth2.Config, account *types.UserInfoAndToken) error {
+func SyncCalendar(config *oauth2.Config, account *types.UserInfoAndToken, unsync_events []*calendar.Event) ([]*calendar.Event, error) {
+	// TODO push unsync_events to server before fetch events from server
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
 	srv, err := calendar.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Error("Unable to retrieve Calendar client: ", err)
-		return err
+		return nil, err
 	}
 
 	t := time.Now().Format(time.RFC3339)
 	run := true
 	var loopError error
-	var events []*calendar.Event // type Person struct
+	var events []*calendar.Event // type Event struct
 	var r *calendar.Events
 
 	r, loopError = srv.Events.List("primary").ShowDeleted(false).SingleEvents(true).TimeMin(t).MaxResults(10).OrderBy("startTime").Do()
@@ -41,16 +42,5 @@ func SyncCalendar(config *oauth2.Config, account *types.UserInfoAndToken) error 
 			}
 		}
 	}
-	for _, item := range events {
-		date_start := item.Start.DateTime
-		if date_start == "" {
-			date_start = item.Start.Date
-		}
-		date_end := item.End.DateTime
-		if date_end == "" {
-			date_end = item.End.Date
-		}
-		log.Printf("%v, %v, %v, %v, %v\n", item.Id, item.Summary, item.Description, date_start, date_end)
-	}
-	return nil
+	return events, err
 }

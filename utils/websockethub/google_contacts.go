@@ -18,7 +18,7 @@ var(
 )
 
 func EnqueueContactSync(item types.TxSyncGoogleContact, urgent bool) {
-  if urgent {
+	if urgent {
 		GoogleContactsQueue = append(GoogleContactsQueue, item)
 	} else {
 		GoogleContactsQueue = append([]types.TxSyncGoogleContact{item}, GoogleContactsQueue...)
@@ -43,7 +43,7 @@ func GetLastContactSync() (item types.TxSyncGoogleContact, err error) {
 		return
 	}
 	item = GoogleContactsQueue[size - 1]
-	return 
+	return
 }
 
 func SyncGoogleContact() error {
