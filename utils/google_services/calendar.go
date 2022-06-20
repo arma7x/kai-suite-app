@@ -11,14 +11,28 @@ import (
 	"google.golang.org/api/calendar/v3"
 )
 
-func SyncCalendar(config *oauth2.Config, account *types.UserInfoAndToken, unsync_events []*calendar.Event) ([]*calendar.Event, error) {
+func SyncCalendar(config *oauth2.Config, account *types.UserInfoAndToken, unsync_events []*calendar.Event) ([]*calendar.Event, []*calendar.Event, error) {
+	var failEvents []*calendar.Event // type Event struct
 	// TODO push unsync_events to server before fetch events from server
+	// (r *EventsService) Insert(calendarId string, event *Event)
+	log.Info("Sync Calendars ", account.User.Id, ' ', len(unsync_events))
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
 	srv, err := calendar.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Error("Unable to retrieve Calendar client: ", err)
-		return nil, err
+		return nil, nil, err
+	}
+
+	if len(unsync_events) > 0 {
+		evtSrv := calendar.NewEventsService(srv);
+		for _, evt := range unsync_events {
+			evt.Id = ""
+			if _, err := evtSrv.Insert("primary", evt).Do(); err != nil {
+				log.Error("Err insert ", err)
+				failEvents = append(failEvents, evt)
+			}
+		}
 	}
 
 	t := time.Now().Format(time.RFC3339)
@@ -42,5 +56,5 @@ func SyncCalendar(config *oauth2.Config, account *types.UserInfoAndToken, unsync
 			}
 		}
 	}
-	return events, err
+	return failEvents, events, err
 }

@@ -155,5 +155,5 @@ type RxSyncEvents14 struct {
 type TxSyncEvents19 struct {
 	Namespace		string						`json:"namespace"`		// account
 	Events 			[]*calendar.Event			`json:"events"`			// sync events from cloud
-	SyncedEvents 	[]*calendar.Event			`json:"synced_events"`	// to remove unsync local events on device
+	UnsyncEvents 	[]*calendar.Event			`json:"unsync_events"`	// to remove unsync local events on device
 }

@@ -23,13 +23,12 @@ func InitSyncCalendar(namespace string) {
 }
 
 func StartSyncEvent(namespace string, unsync_events []*calendar.Event) {
-	log.Info("Sync Calendars ", namespace, len(unsync_events))
 	if authConfig, err := google_services.GetConfig(); err == nil {
 		if token, err := google_services.RefreshToken(google_services.TokenRepository[namespace].Token); err == nil {
 			google_services.TokenRepository[namespace].Token = token
 			google_services.WriteTokensToFile()
 			syncProgressChan <- true
-			if events, err := google_services.SyncCalendar(authConfig, google_services.TokenRepository[namespace], unsync_events); err != nil {
+			if failEvents, events, err := google_services.SyncCalendar(authConfig, google_services.TokenRepository[namespace], unsync_events); err != nil {
 				syncProgressChan <- false
 				log.Warn(err.Error())
 			} else {
@@ -45,7 +44,7 @@ func StartSyncEvent(namespace string, unsync_events []*calendar.Event) {
 					//log.Printf("%v, %v, %v, %v, %v\n", item.Id, item.Summary, item.Description, date_start, date_end)
 				//}
 				syncProgressChan <- false
-				item := types.TxSyncEvents19{Namespace: namespace, Events: events, SyncedEvents: unsync_events}
+				item := types.TxSyncEvents19{Namespace: namespace, Events: events, UnsyncEvents: failEvents}
 				bd, _ := json.Marshal(item)
 				btx, _ := json.Marshal(types.WebsocketMessageFlag {Flag: 19, Data: string(bd)})
 				Client.GetConn().WriteMessage(websocket.TextMessage, btx)
