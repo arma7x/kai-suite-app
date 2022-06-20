@@ -13,8 +13,6 @@ import (
 
 func SyncCalendar(config *oauth2.Config, account *types.UserInfoAndToken, unsync_events []*calendar.Event) ([]*calendar.Event, []*calendar.Event, error) {
 	var failEvents []*calendar.Event // type Event struct
-	// TODO push unsync_events to server before fetch events from server
-	// (r *EventsService) Insert(calendarId string, event *Event)
 	log.Info("Sync Calendars ", account.User.Id, ' ', len(unsync_events))
 	ctx := context.Background()
 	client := GetAuthClient(config, account.Token)
