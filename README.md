@@ -1,3 +1,5 @@
+# Please use this app https://github.com/arma7x/kaios-web-suite
+
 # Kai Suite[TESTING]
 
 ```What is the purpose Kai Suite ?
